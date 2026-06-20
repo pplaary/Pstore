@@ -175,23 +175,22 @@ const FTS5_SPECIAL_RE = /[")(\-:^~]/;
  * 1. 先用 tokenizeChinese 将输入拆分为 token
  * 2. 每个 token 用一对双引号包裹
  * 3. 若 token 含 FTS5 保留字符（" ) ( - : ^ ~），整体包裹后运算符放在引号外侧
- * 4. 末尾 token 追加 `*`（FTS5 前缀通配符），放在引号外右侧
- * 5. 若输入已含 `*`，保留原样不重复追加
+ * 4. 多 token 时末尾追加 `*`（FTS5 前缀通配符），放在引号外右侧；单 token 不加
+ * 5. 多 token 结果用外括号包裹以实现 FTS5 AND 语义
+ * 6. 若输入已含 `*`，保留原样不重复追加
  *
  * 确定性示例：
- *   escapeFts5('(550ml)')   → '"(550ml)"*'
- *   escapeFts5('可乐')      → '"可" "乐"*'
- *   escapeFts5('可乐*')     → '"可" "乐"*'
+ *   escapeFts5('(550ml)')   → '"(550ml)"'
+ *   escapeFts5('可乐')      → '("可" "乐"*)'
+ *   escapeFts5('可乐*')     → '("可" "乐"*)'
  *   escapeFts5('')          → ''
  */
 export function escapeFts5(query: string): string {
   const tokens = tokenizeChinese(query);
   if (tokens.length === 0) return '';
 
-  return tokens
+  const quoted = tokens
     .map((token, i) => {
-      const isLast = i === tokens.length - 1;
-
       // 检查是否已有末尾通配符
       let core = token;
       let hasWildcard = false;
@@ -200,21 +199,27 @@ export function escapeFts5(query: string): string {
         hasWildcard = true;
       }
 
-      const needsQuoting = FTS5_SPECIAL_RE.test(core) || core.length > 0;
+      // 空 token 跳过（空格等）
+      if (core.length === 0) return '';
 
-      // 所有非空 token 均用双引号包裹，以保证 FTS5 正确分词
-      if (needsQuoting) {
-        if (hasWildcard || isLast) {
-          return `"${core}"*`;
-        }
-        return `"${core}"`;
+      // 所有非空 token 均用双引号包裹
+      if (hasWildcard) {
+        return `"${core}"*`;
       }
-
-      // 空 token（不应出现，防御性处理）
-      return '';
+      return `"${core}"`;
     })
-    .filter(Boolean)
-    .join(' ');
+    .filter(Boolean);
+
+  if (quoted.length === 0) return '';
+
+  // 多 token：末尾追加 * 并用外括号包裹实现 AND 语义
+  if (quoted.length > 1) {
+    quoted[quoted.length - 1] = quoted[quoted.length - 1].replace(/"$/, '"*');
+    return `(${quoted.join(' ')})`;
+  }
+
+  // 单 token：直接返回，不加 *
+  return quoted[0];
 }
 
 // ==================== FTS5 索引重建 ====================
