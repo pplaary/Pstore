@@ -97,8 +97,9 @@ async function loadMigrationScript(
   try {
     // 动态导入迁移脚本：src/db/migrations/v{version}.ts
     const mod = await import(`./migrations/v${version}`);
-    if (typeof mod.migrate === 'function') {
-      await mod.migrate(db);
+    const fn = (mod as { migrate?: unknown }).migrate;
+    if (typeof fn === 'function') {
+      await fn(db);
     } else {
       throw new Error(`Migration v${version} 未导出 migrate 函数`);
     }
