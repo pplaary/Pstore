@@ -132,7 +132,8 @@ export async function addProduct(
 
     await db.runAsync(
       `INSERT INTO product_fts (rowid, pinyin, searchText)
-       VALUES (last_insert_rowid(), ?, ?)`,
+       VALUES ((SELECT rowid FROM product WHERE id = ?), ?, ?)`,
+      id,
       pinyinValue,
       searchText,
     );

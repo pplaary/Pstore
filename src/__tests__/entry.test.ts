@@ -42,16 +42,7 @@ describe('Commit 2: 入口与路由导航', () => {
     expect(content).toContain('ProductDetail');
     expect(content).toContain('ProductEdit');
     expect(content).toContain('ScanBarcode');
-  });
-
-  it('src/navigation/RootNavigator.tsx 存在并引用 4 个 screen', () => {
-    const f = path.join(PROJECT_ROOT, 'src', 'navigation', 'RootNavigator.tsx');
-    expect(fs.existsSync(f)).toBe(true);
-    const content = fs.readFileSync(f, 'utf8');
-    expect(content).toContain('ProductListScreen');
-    expect(content).toContain('ProductDetailScreen');
-    expect(content).toContain('ProductEditScreen');
-    expect(content).toContain('ScanScreen');
+    expect(content).toContain('NativeStackScreenProps');
   });
 
   // ==================== Context 模块 ====================

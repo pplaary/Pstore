@@ -2,19 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as SQLite from 'expo-sqlite';
 import { initDatabase } from './src/db/init';
 import { StoreProvider } from './src/context/store';
 import { ProductListScreen } from './src/screens/ProductListScreen';
 import { ProductDetailScreen } from './src/screens/ProductDetailScreen';
 import { ProductEditScreen } from './src/screens/ProductEditScreen';
 import { ScanScreen } from './src/screens/ScanScreen';
-
-export type RootStackParamList = {
-  ProductList: undefined;
-  ProductDetail: { id: string };
-  ProductEdit: { id?: string; barcode?: string };
-  ScanBarcode: undefined;
-};
+import type { RootStackParamList } from './src/navigation/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -32,7 +27,7 @@ function ErrorUI({ message, onRetry }: { message: string; onRetry: () => void })
 }
 
 export default function App() {
-  const [db, setDb] = useState<ReturnType<typeof initDatabase> extends Promise<infer T> ? T : never | null>(null);
+  const [db, setDb] = useState<SQLite.SQLiteDatabase | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +36,7 @@ export default function App() {
     setError(null);
     initDatabase()
       .then((database) => {
-        setDb(database as any);
+        setDb(database);
         setLoading(false);
       })
       .catch((err) => {
