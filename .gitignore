@@ -26,6 +26,7 @@ coverage/
 # Misc
 *.log
 npm-debug.log*
-`ntemp/
-`ntasks/
-`ndocs/
+# Project temp/planning/docs
+temp/
+tasks/
+docs/
