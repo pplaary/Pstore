@@ -4,13 +4,22 @@
  * 覆盖：findByBarcode / findByNameSimilarity / getAllMergeCandidates / mergeProducts。
  */
 
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 import {
   findByBarcode,
   findByNameSimilarity,
   getAllMergeCandidates,
   mergeProducts,
 } from '../duplicate';
+
+// pinyin-pro 的 .mjs 在 Vite SSR 模式下有正则语法问题，必须 mock
+vi.mock('pinyin-pro', () => {
+  const mod = { pinyin: (text: string, _opts?: Record<string, unknown>) => {
+    if (!text) return '';
+    return text.split('').filter((c: string) => /[一-鿿]/.test(c)).map(() => 'b').join(' ');
+  }};
+  return { pinyin: mod.pinyin, default: mod };
+});
 
 // ==================== 内存模拟 SQLite ====================
 
