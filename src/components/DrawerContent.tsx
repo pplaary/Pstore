@@ -98,6 +98,12 @@ export default function DrawerContent(props: any) {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.menuItem}
+            onPress={() => props.navigation.navigate('ProductList', { filter: 'deleted' })}
+          >
+            <Text style={styles.menuItemText}>🗑 已删除商品</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItem}
             onPress={() => props.navigation.navigate('DuplicateList')}
           >
             <Text style={styles.menuItemText}>🔍 重复检测</Text>

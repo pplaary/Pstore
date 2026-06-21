@@ -30,40 +30,51 @@ const STATUS_LABELS: Record<string, string> = {
   TO_BE_PURCHASED: '待采',
 };
 
-export function ProductListScreen({ navigation }: ProductListScreenProps) {
+export function ProductListScreen({ navigation, route }: ProductListScreenProps) {
   const { db, products, refreshProducts } = useStore();
+  const filter = route.params?.filter;
 
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
-  // 右上角 "+" 按钮
+  // 右上角 "+" 按钮（仅管理模式/未过滤已删除时显示）
   useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={styles.headerButton}
-          onPress={() => navigation.navigate('ProductEdit', {})}
-        >
-          <Text style={styles.headerButtonText}>+</Text>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
+    if (filter === 'deleted') {
+      navigation.setOptions({ headerRight: undefined });
+    } else {
+      navigation.setOptions({
+        headerRight: () => (
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => navigation.navigate('ProductEdit', {})}
+          >
+            <Text style={styles.headerButtonText}>+</Text>
+          </TouchableOpacity>
+        ),
+      });
+    }
+  }, [navigation, filter]);
 
   // 执行搜索/过滤
   const doSearch = useCallback(async () => {
     try {
-      const result = await searchProducts(db, query.trim(), {
+      const options: any = {
         category: selectedCategory ?? undefined,
         sortBy: 'relevance',
-      });
+      };
+      // 管理模式查看已删除商品时 includeDeleted=true
+      if (filter === 'deleted') {
+        options.includeDeleted = true;
+        // 过滤条件会在 buildFilters 中不添加 isDeleted=0
+      }
+      const result = await searchProducts(db, query.trim(), options);
       setFilteredProducts(result);
     } catch (e) {
       console.error('ProductListScreen: 搜索失败', e);
       setFilteredProducts([]);
     }
-  }, [db, query, selectedCategory]);
+  }, [db, query, selectedCategory, filter]);
 
   // 搜索词或分类变化时实时搜索
   React.useEffect(() => {

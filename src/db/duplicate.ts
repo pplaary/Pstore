@@ -12,6 +12,7 @@ import * as SQLite from 'expo-sqlite';
 import { normalizedSimilarity } from '../utils/levenshtein';
 import { tokenizeChinese } from './tokenizer';
 import type { Product, MergeCandidate, MergeResult } from './types';
+import { pinyin } from 'pinyin-pro';
 
 // ==================== 条码重复检测 ====================
 
@@ -46,6 +47,8 @@ export async function findByNameSimilarity(
   db: SQLite.SQLiteDatabase,
   name: string,
   excludeId?: string,
+  refPrice?: number,
+  refSpec?: string,
 ): Promise<Product[]> {
   const rows = await db.getAllAsync<Record<string, unknown>>(
     `SELECT * FROM product WHERE isDeleted = 0`,
@@ -58,7 +61,17 @@ export async function findByNameSimilarity(
 
     const sim = normalizedSimilarity(name, product.name);
     if (sim >= 0.9) {
-      candidates.push(product);
+      // spec §5.7：名称相似 ≥ 90% 时，若提供了参考价格/规格，还需至少一项一致
+      if (refPrice != null || refSpec) {
+        const priceMatch = refPrice != null && product.price != null && refPrice === product.price;
+        const specMatch = refSpec && product.spec && refSpec === product.spec;
+        if (priceMatch || specMatch) {
+          candidates.push(product);
+        }
+      } else {
+        // 无参考信息时，返回所有相似度 ≥ 0.9 的结果
+        candidates.push(product);
+      }
     }
   }
 
@@ -101,9 +114,9 @@ export async function getAllMergeCandidates(
         continue;
       }
 
-      // 名称相似度 ≥ 90%
+      // 名称相似度 ≥ 90% + 售价/规格至少一项一致（spec §5.7）
       const sim = normalizedSimilarity(a.name, b.name);
-      if (sim >= 0.9) {
+      if (sim >= 0.9 && (a.price === b.price || a.spec === b.spec)) {
         const key = [a.id, b.id].sort().join('|');
         if (!seen.has(key)) {
           seen.add(key);
@@ -179,7 +192,7 @@ export async function mergeProducts(
     );
 
     // 重建 FTS 索引
-    const newPinyin = generatePinyinForRow(keep.name, mergedAliases);
+    const newPinyin = generatePinyinForRow(keep.name);
     const newSearchText = generateSearchTextForRow(keep.name, mergedAliases);
 
     await db.runAsync(
@@ -239,15 +252,10 @@ function mapRow(row: Record<string, unknown>): Product {
 /**
  * 生成拼音首字母（与 product.ts 相同的逻辑）。
  */
-function generatePinyinForRow(name: string, _aliases?: string): string {
-  // 简单实现：取每个字符的首字母（非 CJK 保留原样）
-  // 实际项目中应使用 pinyin-pro，这里做简化处理用于 FTS 索引重建
-  return name
-    .split('')
-    .filter((c) => /[a-zA-Z]/.test(c))
-    .join('')
-    .toUpperCase()
-    .slice(0, 20);
+function generatePinyinForRow(name: string): string {
+  return pinyin(name, { pattern: 'first', toneType: 'none', type: 'string' })
+    .replace(/\s+/g, '')
+    .toUpperCase();
 }
 
 /**

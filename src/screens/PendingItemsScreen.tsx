@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { useStore } from '../context/store';
 import { useModeStore } from '../store/mode';
-import { getAll, deleteById } from '../db/pending';
+import { getAll, deleteById, convertToProduct } from '../db/pending';
 import type { PendingItem } from '../db/types';
 
 export function PendingItemsScreen({ navigation }: any) {
@@ -45,10 +45,15 @@ export function PendingItemsScreen({ navigation }: any) {
   }, [loadItems]);
 
   const handleConvert = useCallback(
-    (item: PendingItem) => {
-      navigation.navigate('ProductEdit', { barcode: item.barcode });
+    async (item: PendingItem) => {
+      try {
+        const barcode = await convertToProduct(db, item.id);
+        navigation.navigate('ProductEdit', { barcode });
+      } catch (e) {
+        console.error('PendingItemsScreen: 转换失败', e);
+      }
     },
-    [navigation],
+    [db, navigation],
   );
 
   const handleDelete = useCallback(

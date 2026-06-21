@@ -7,6 +7,7 @@
 
 import * as SQLite from 'expo-sqlite';
 import type { PendingItem } from './types';
+import { randomUUID } from 'expo-crypto';
 
 // ==================== createOrUpdate ====================
 
@@ -26,7 +27,7 @@ export async function createOrUpdate(
     `INSERT INTO pending_items (id, barcode, scannedAt)
      VALUES (?, ?, ?)
      ON CONFLICT(barcode) DO UPDATE SET scannedAt = excluded.scannedAt`,
-    crypto.randomUUID(),
+    randomUUID(),
     barcode,
     now,
   );

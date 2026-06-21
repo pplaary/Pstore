@@ -16,7 +16,7 @@ export type RootStackParamList = {
 
 export type DrawerParamList = {
   Home: undefined;
-  ProductList: undefined;
+  ProductList: { filter?: string };
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<RootStackParamList, T>;

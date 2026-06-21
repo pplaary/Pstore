@@ -25,6 +25,8 @@ export interface SearchOptions {
   sortBy?: SortBy;
   /** 返回数量上限，默认不限制 */
   limit?: number;
+  /** 是否包含已删除商品，默认 false */
+  includeDeleted?: boolean;
 }
 
 // ==================== 辅助函数 ====================
@@ -60,7 +62,9 @@ function buildFilters(options?: SearchOptions): {
   const params: unknown[] = [];
 
   // 默认排除已删除
-  clauses.push('p.isDeleted = 0');
+  if (!options?.includeDeleted) {
+    clauses.push('p.isDeleted = 0');
+  }
 
   if (options?.status) {
     clauses.push('p.status = ?');
@@ -85,8 +89,8 @@ function buildOrderBy(sortBy?: SortBy): string {
       return 'p.updatedAt DESC';
     case 'relevance':
     default:
-      // 在售优先 + FTS5 bm25 关联度排序
-      return "CASE WHEN p.status = 'IN_SHOP' THEN 0 ELSE 1 END, rank";
+      // 默认：在售优先 + 名称字典序
+      return "CASE WHEN p.status = 'IN_SHOP' THEN 0 ELSE 1 END, p.name ASC";
   }
 }
 
@@ -129,16 +133,25 @@ export async function searchProducts(
     return rows.map(mapRow);
   }
 
-  // 有 FTS5 查询词：JOIN product_fts
+  // 有 FTS5 查询词：JOIN product_fts，使用 4 档位排序
   const { clauses, params } = buildFilters(options);
-  const orderBy = buildOrderBy(options?.sortBy);
+  const rawQuery = query.trim();
+  const pinyinUpper = rawQuery.toUpperCase();
 
   let sql = `SELECT p.*
              FROM product p
              JOIN product_fts fts ON p.rowid = fts.rowid
              WHERE fts MATCH ?
                AND ${clauses.join(' AND ')}
-             ORDER BY ${orderBy}`;
+             ORDER BY
+               CASE
+                 WHEN p.name = ? THEN 1
+                 WHEN p.aliases LIKE '%' || ? || '%' THEN 2
+                 WHEN p.pinyin LIKE '%' || ? || '%' THEN 3
+                 ELSE 4
+               END,
+               CASE WHEN p.status = 'IN_SHOP' THEN 0 ELSE 1 END,
+               p.name ASC`;
 
   if (options?.limit) {
     sql += ` LIMIT ${options.limit}`;
@@ -147,6 +160,9 @@ export async function searchProducts(
   const rows = await db.getAllAsync<Record<string, unknown>>(
     sql,
     ftsQuery,
+    rawQuery,
+    rawQuery,
+    pinyinUpper,
     ...params,
   );
   return rows.map(mapRow);
