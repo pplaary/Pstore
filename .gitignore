@@ -27,3 +27,5 @@ coverage/
 *.log
 npm-debug.log*
 `ntemp/
+`ntasks/
+`ndocs/
