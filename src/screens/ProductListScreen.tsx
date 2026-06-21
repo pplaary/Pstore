@@ -13,7 +13,10 @@ import { useStore } from '../context/store';
 import { searchProducts } from '../db/search';
 import { CATEGORIES } from '../db/types';
 import type { Product } from '../db/types';
-import type { ProductListScreenProps } from '../navigation/types';
+import type { DrawerScreenProps } from '@react-navigation/drawer';
+import type { DrawerParamList } from '../navigation/types';
+
+export type ProductListScreenProps = DrawerScreenProps<DrawerParamList, 'ProductList'>;
 
 const STATUS_COLORS: Record<string, string> = {
   IN_SHOP: '#16A34A',

@@ -1,17 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import * as SQLite from 'expo-sqlite';
 import { initDatabase } from './src/db/init';
 import { StoreProvider } from './src/context/store';
-import { ProductListScreen } from './src/screens/ProductListScreen';
-import { ProductDetailScreen } from './src/screens/ProductDetailScreen';
-import { ProductEditScreen } from './src/screens/ProductEditScreen';
-import { ScanScreen } from './src/screens/ScanScreen';
-import type { RootStackParamList } from './src/navigation/types';
-
-const Stack = createNativeStackNavigator<RootStackParamList>();
+import { RootNavigator } from './src/navigation/RootNavigator';
 
 function ErrorUI({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
@@ -27,7 +19,7 @@ function ErrorUI({ message, onRetry }: { message: string; onRetry: () => void })
 }
 
 export default function App() {
-  const [db, setDb] = useState<SQLite.SQLiteDatabase | null>(null);
+  const [db, setDb] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,30 +57,7 @@ export default function App() {
   return (
     <StoreProvider db={db}>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="ProductList">
-          <Stack.Screen
-            name="ProductList"
-            component={ProductListScreen}
-            options={{ title: 'PStore' }}
-          />
-          <Stack.Screen
-            name="ProductDetail"
-            component={ProductDetailScreen}
-            options={{ title: '商品详情' }}
-          />
-          <Stack.Screen
-            name="ProductEdit"
-            component={ProductEditScreen}
-            options={({ route }) => ({
-              title: route.params?.id ? '编辑商品' : '新增商品',
-            })}
-          />
-          <Stack.Screen
-            name="ScanBarcode"
-            component={ScanScreen}
-            options={{ title: '扫码' }}
-          />
-        </Stack.Navigator>
+        <RootNavigator />
       </NavigationContainer>
     </StoreProvider>
   );
@@ -96,43 +65,16 @@ export default function App() {
 
 const styles = StyleSheet.create({
   loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC',
   },
   errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    padding: 32,
+    flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC', padding: 32,
   },
-  errorIcon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  errorTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#DC2626',
-    marginBottom: 8,
-  },
-  errorMessage: {
-    fontSize: 14,
-    color: '#64748B',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
+  errorIcon: { fontSize: 48, marginBottom: 16 },
+  errorTitle: { fontSize: 18, fontWeight: '700', color: '#DC2626', marginBottom: 8 },
+  errorMessage: { fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 24 },
   retryButton: {
-    backgroundColor: '#2563EB',
-    borderRadius: 10,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
+    backgroundColor: '#2563EB', borderRadius: 10, paddingHorizontal: 32, paddingVertical: 12,
   },
-  retryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
+  retryButtonText: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
 });

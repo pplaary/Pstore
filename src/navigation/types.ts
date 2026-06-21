@@ -3,15 +3,26 @@
  */
 
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { DrawerScreenProps as RNDrawerScreenProps } from '@react-navigation/drawer';
 
 export type RootStackParamList = {
-  ProductList: undefined;
+  MainDrawer: undefined;
   ProductDetail: { id: string };
   ProductEdit: { id?: string; barcode?: string };
   ScanBarcode: undefined;
 };
 
-export type ProductListScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductList'>;
-export type ProductDetailScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductDetail'>;
-export type ProductEditScreenProps = NativeStackScreenProps<RootStackParamList, 'ProductEdit'>;
-export type ScanScreenProps = NativeStackScreenProps<RootStackParamList, 'ScanBarcode'>;
+export type DrawerParamList = {
+  Home: undefined;
+  ProductList: undefined;
+};
+
+export type RootStackScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<RootStackParamList, T>;
+export type DrawerScreenProps<T extends keyof DrawerParamList> = RNDrawerScreenProps<DrawerParamList, T>;
+
+// 便捷类型别名
+export type ProductListScreenProps = RootStackScreenProps<'ProductList'>;
+export type ProductDetailScreenProps = RootStackScreenProps<'ProductDetail'>;
+export type ProductEditScreenProps = RootStackScreenProps<'ProductEdit'>;
+export type ScanScreenProps = RootStackScreenProps<'ScanBarcode'>;
+export type HomeScreenProps = DrawerScreenProps<'Home'>;
