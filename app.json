@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "PStore",
+    "slug": "pstore",
+    "version": "1.0.0",
+    "platforms": ["android"],
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2563EB"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2563EB"
+      },
+      "permissions": ["CAMERA"]
+    },
+    "assetBundlePatterns": ["assets/**"],
+    "ios": {
+      "supportsTablet": true
+    }
+  }
+}

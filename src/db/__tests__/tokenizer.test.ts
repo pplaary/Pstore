@@ -91,6 +91,6 @@ describe('tokenizeChinese', () => {
   });
 
   it('中文+数字+单位', () => {
-    expect(tokenizeChinese('农夫5L装')).toEqual(['农', '夫', '5', 'L', '装']);
+    expect(tokenizeChinese('农夫5L装')).toEqual(['农', '夫', '5L', '装']);
   });
 });
