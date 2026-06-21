@@ -14,7 +14,7 @@ import type { Product } from './types';
 // ==================== 常量 ====================
 
 const DB_NAME = 'pstore.db';
-export const CURRENT_SCHEMA_VERSION = 1;
+export const CURRENT_SCHEMA_VERSION = 2;
 
 // ==================== 路径 ====================
 

@@ -71,3 +71,20 @@ export interface VerifyResult {
   passed: boolean;
   detail: string;
 }
+
+// ==================== 重复检测类型 ====================
+
+/** 重复检测候选 */
+export interface MergeCandidate {
+  productA: Product;
+  productB: Product;
+  reason: 'barcode' | 'name_similarity';
+  similarity?: number; // 仅 name_similarity 时有值
+}
+
+/** 合并结果 */
+export interface MergeResult {
+  keptId: string; // 保留的商品 ID
+  mergedId: string; // 被合并（软删除）的商品 ID
+  mergedName: string; // 被合并的商品名（已写入保留商品的 aliases）
+}
