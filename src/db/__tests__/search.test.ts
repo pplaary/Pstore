@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { tokenizeChinese } from '../tokenizer';
-import { escapeFts5 } from '../init';
+import { escapeFts5 } from '../fts5';
 
 describe('escapeFts5', () => {
   // ==================== spec §6.2 确定性示例 ====================
@@ -34,9 +34,10 @@ describe('escapeFts5', () => {
 
   // ==================== 转义边界 ====================
 
-  it('含双引号的 token 被包裹', () => {
+  it('含双引号的 CJK 分隔 token 各自被包裹', () => {
+    // tokenizeChinese('5"屏') → ['5"', '屏']（非CJK " 与 CJK 屏 分属不同 token）
     const result = escapeFts5('5"屏');
-    expect(result).toBe('"5"屏"');
+    expect(result).toBe('("5"" "屏"*)');
   });
 
   it('含 - 的 token 被正确转义', () => {

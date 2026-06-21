@@ -7,7 +7,7 @@
  */
 
 import * as SQLite from 'expo-sqlite';
-import { escapeFts5 } from './init';
+import { escapeFts5 } from './fts5';
 import type { Product, ProductStatus } from './types';
 
 // ==================== 类型 ====================
