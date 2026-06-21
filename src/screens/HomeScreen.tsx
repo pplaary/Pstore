@@ -18,14 +18,16 @@ import {
   StyleSheet,
   Modal,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useStore } from '../context/store';
 import { useCartStore } from '../store/cart';
 import { useModeStore } from '../store/mode';
 import { searchProducts } from '../db/search';
+import { updateProduct, softDeleteProduct } from '../db/product';
 import { PinModal } from '../components/PinModal';
-import type { Product } from '../db/types';
+import type { Product, ProductStatus } from '../db/types';
 import type { HomeScreenProps } from '../navigation/types';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -43,13 +45,16 @@ const STATUS_LABELS: Record<string, string> = {
 export function HomeScreen({ navigation }: HomeScreenProps) {
   const { db, refreshProducts } = useStore();
   const { items, total, addToCart, removeFromCart, removeItem, clearCart } = useCartStore();
-  const { isManagement, enterManagement, exitManagement } = useModeStore();
+  const { isManagement, exitManagement } = useModeStore();
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [cartExpanded, setCartExpanded] = useState(false);
   const [checkoutVisible, setCheckoutVisible] = useState(false);
   const [pinVisible, setPinVisible] = useState(false);
+  const [batchMode, setBatchMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [statusMenuId, setStatusMenuId] = useState<string | null>(null);
   const tapCountRef = useRef(0);
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -94,7 +99,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         setPinVisible(true);
       }
     }
-  }, [isManagement, enterManagement, exitManagement]);
+  }, [isManagement, exitManagement]);
 
   // 顶部栏
   useLayoutEffect(() => {
@@ -121,28 +126,143 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     addToCart(product.id, product.name, product.price);
   }, [addToCart]);
 
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelectedIds(new Set(filteredProducts.map((p) => p.id)));
+  }, [filteredProducts]);
+
+  const deselectAll = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleBatchDelete = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    Alert.alert(
+      '确认删除',
+      `确定删除选中的 ${selectedIds.size} 个商品？`,
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '删除',
+          style: 'destructive',
+          onPress: async () => {
+            for (const id of selectedIds) {
+              await softDeleteProduct(db, id);
+            }
+            setSelectedIds(new Set());
+            setBatchMode(false);
+            doSearch();
+          },
+        },
+      ],
+    );
+  }, [selectedIds, db, doSearch]);
+
+  const handleBatchStatus = useCallback(async (status: ProductStatus) => {
+    if (selectedIds.size === 0) return;
+    for (const id of selectedIds) {
+      await updateProduct(db, id, { status });
+    }
+    setSelectedIds(new Set());
+    setBatchMode(false);
+    doSearch();
+  }, [selectedIds, db, doSearch]);
+
+  const handleItemLongPress = useCallback((item: Product) => {
+    if (!isManagement || batchMode) return;
+    // 长按弹出操作菜单
+    Alert.alert(
+      item.name,
+      '选择操作',
+      [
+        { text: '编辑', onPress: () => navigation.navigate('ProductEdit', { id: item.id }) },
+        {
+          text: '改状态',
+          onPress: () => {
+            Alert.alert('改状态', '选择新状态', [
+              { text: '在售', onPress: () => updateProduct(db, item.id, { status: 'IN_SHOP' }).then(doSearch) },
+              { text: '缺货', onPress: () => updateProduct(db, item.id, { status: 'OUT_OF_STOCK' }).then(doSearch) },
+              { text: '待采', onPress: () => updateProduct(db, item.id, { status: 'TO_BE_PURCHASED' }).then(doSearch) },
+              { text: '取消', style: 'cancel' },
+            ]);
+          },
+        },
+        {
+          text: '软删除',
+          style: 'destructive',
+          onPress: async () => {
+            Alert.alert(
+              '确认删除',
+              `确定删除「${item.name}」？`,
+              [
+                { text: '取消', style: 'cancel' },
+                {
+                  text: '删除',
+                  style: 'destructive',
+                  onPress: async () => {
+                    await softDeleteProduct(db, item.id);
+                    doSearch();
+                  },
+                },
+              ],
+            );
+          },
+        },
+        { text: '取消', style: 'cancel' },
+      ],
+    );
+  }, [isManagement, batchMode, db, navigation, doSearch]);
+
   // 渲染商品
-  const renderItem = ({ item }: { item: Product }) => (
-    <TouchableOpacity
-      style={styles.productItem}
-      onPress={() => navigation.navigate('ProductDetail', { id: item.id })}
-      onLongPress={() => handleAddToCart(item)}
-    >
-      <View style={styles.productLeft}>
-        <Text style={styles.productName} numberOfLines={1}>{item.name}</Text>
-        {item.spec && <Text style={styles.productSpec} numberOfLines={1}>{item.spec}</Text>}
-      </View>
-      <View style={styles.productRight}>
-        <Text style={styles.productPrice}>¥{item.price.toFixed(2)}</Text>
-        <TouchableOpacity
-          style={styles.addCartBtn}
-          onPress={() => handleAddToCart(item)}
-        >
-          <Text style={styles.addCartBtnText}>+</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
+  const renderItem = ({ item }: { item: Product }) => {
+    const isSelected = selectedIds.has(item.id);
+    return (
+      <TouchableOpacity
+        style={[styles.productItem, batchMode && isSelected && styles.productItemSelected]}
+        onPress={() => {
+          if (batchMode) {
+            toggleSelect(item.id);
+          } else {
+            navigation.navigate('ProductDetail', { id: item.id });
+          }
+        }}
+        onLongPress={() => {
+          if (isManagement && !batchMode) {
+            setStatusMenuId(item.id);
+          }
+        }}
+      >
+        {batchMode && (
+          <View style={[styles.checkbox, isSelected && styles.checkboxChecked]}>
+            {isSelected && <Text style={styles.checkboxMark}>✓</Text>}
+          </View>
+        )}
+        <View style={styles.productLeft}>
+          <Text style={styles.productName} numberOfLines={1}>{item.name}</Text>
+          {item.spec && <Text style={styles.productSpec} numberOfLines={1}>{item.spec}</Text>}
+        </View>
+        <View style={styles.productRight}>
+          <Text style={styles.productPrice}>¥{item.price.toFixed(2)}</Text>
+          {!batchMode && (
+            <TouchableOpacity
+              style={styles.addCartBtn}
+              onPress={() => handleAddToCart(item)}
+            >
+              <Text style={styles.addCartBtnText}>+</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const isEmpty = !query.trim() && !selectedCategory
     ? filteredProducts.length === 0
@@ -269,6 +389,50 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         onClose={() => setPinVisible(false)}
         onSuccess={() => setPinVisible(false)}
       />
+
+      {/* 管理模式 FAB 按钮 */}
+      {isManagement && !batchMode && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => navigation.navigate('ProductEdit', {})}
+        >
+          <Text style={styles.fabText}>+</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* 批量管理工具栏 */}
+      {batchMode && (
+        <View style={styles.batchToolbar}>
+          <Text style={styles.batchToolbarText}>已选 {selectedIds.size} 项</Text>
+          <View style={styles.batchToolbarRow}>
+            <TouchableOpacity style={styles.batchBtn} onPress={selectAll}>
+              <Text style={styles.batchBtnText}>全选</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.batchBtn} onPress={deselectAll}>
+              <Text style={styles.batchBtnText}>反选</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.batchBtn}
+              onPress={() => {
+                Alert.alert('批量改状态', '选择目标状态', [
+                  { text: '在售', onPress: () => handleBatchStatus('IN_SHOP') },
+                  { text: '缺货', onPress: () => handleBatchStatus('OUT_OF_STOCK') },
+                  { text: '待采', onPress: () => handleBatchStatus('TO_BE_PURCHASED') },
+                  { text: '取消', style: 'cancel' },
+                ]);
+              }}
+            >
+              <Text style={styles.batchBtnText}>改状态</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.batchBtn, styles.batchBtnDanger]} onPress={handleBatchDelete}>
+              <Text style={[styles.batchBtnText, styles.batchBtnDangerText]}>删除</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.batchBtn, styles.batchBtnExit]} onPress={() => { setBatchMode(false); setSelectedIds(new Set()); }}>
+              <Text style={styles.batchBtnExitText}>退出</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -373,4 +537,45 @@ const styles = StyleSheet.create({
     paddingVertical: 12, alignItems: 'center',
   },
   modalCloseBtnText: { fontSize: 16, fontWeight: '600', color: '#FFF' },
+  checkbox: {
+    width: 22, height: 22, borderRadius: 11,
+    borderWidth: 2, borderColor: '#CBD5E1',
+    marginRight: 8, alignItems: 'center', justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#2563EB', borderColor: '#2563EB',
+  },
+  checkboxMark: { color: '#FFF', fontSize: 14, fontWeight: '700' },
+  productItemSelected: {
+    backgroundColor: '#EFF6FF',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 80, right: 16,
+    width: 56, height: 56, borderRadius: 28,
+    backgroundColor: '#2563EB',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#2563EB', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 6, elevation: 4,
+  },
+  fabText: { fontSize: 28, color: '#FFF', fontWeight: '300' },
+  batchToolbar: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: '#1E293B', paddingHorizontal: 12, paddingVertical: 8,
+  },
+  batchToolbarText: {
+    fontSize: 12, color: '#94A3B8', marginBottom: 6,
+  },
+  batchToolbarRow: {
+    flexDirection: 'row', gap: 6,
+  },
+  batchBtn: {
+    flex: 1, paddingVertical: 8, borderRadius: 6,
+    backgroundColor: '#334155', alignItems: 'center',
+  },
+  batchBtnText: { fontSize: 12, color: '#FFF', fontWeight: '600' },
+  batchBtnDanger: { backgroundColor: '#DC2626' },
+  batchBtnDangerText: { color: '#FFF' },
+  batchBtnExit: { backgroundColor: '#475569' },
+  batchBtnExitText: { color: '#FFF' },
 });
