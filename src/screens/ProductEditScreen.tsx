@@ -40,13 +40,21 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
   const [price, setPrice] = useState('');
   const [spec, setSpec] = useState('');
   const [barcode, setBarcode] = useState('');
+  const [aliases, setAliases] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [status, setStatus] = useState<ProductStatus>(IN_SHOP);
   const [saving, setSaving] = useState(false);
 
   // 编辑模式：加载现有商品
+  // 新增模式且从扫码页来：预填 barcode
   useEffect(() => {
-    if (!existingId) return;
+    if (!existingId) {
+      const fromBarcode = route.params?.barcode;
+      if (fromBarcode) {
+        setBarcode(fromBarcode);
+      }
+      return;
+    }
     let cancelled = false;
     const load = async () => {
       const { getProductById } = await import('../db/product');
@@ -56,6 +64,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
       setPrice(String(product.price));
       setSpec(product.spec ?? '');
       setBarcode(product.barcode ?? '');
+      setAliases(product.aliases ?? '');
       setCategory((product.category as string) ?? CATEGORIES[0]);
       setStatus(product.status);
     };
@@ -63,7 +72,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
     return () => {
       cancelled = true;
     };
-  }, [existingId, db]);
+  }, [existingId, db, route.params?.barcode]);
 
   // 保存
   const handleSave = useCallback(async () => {
@@ -87,6 +96,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         price: priceNum,
         spec: spec.trim() || undefined,
         barcode: barcode.trim() || undefined,
+        aliases: aliases.trim() || undefined,
         category,
         status,
       };
@@ -103,7 +113,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
     } finally {
       setSaving(false);
     }
-  }, [name, price, spec, barcode, category, status, existingId, db, navigation]);
+  }, [name, price, spec, barcode, aliases, category, status, existingId, db, navigation]);
 
   const isEdit = Boolean(existingId);
 
@@ -170,6 +180,19 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
           onChangeText={setBarcode}
           returnKeyType="next"
           autoCapitalize="none"
+        />
+      </View>
+
+      {/* 别名 */}
+      <View style={styles.field}>
+        <Text style={styles.fieldLabel}>别名</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="逗号分隔多个别名，如：百事,可乐"
+          placeholderTextColor="#94A3B8"
+          value={aliases}
+          onChangeText={setAliases}
+          returnKeyType="next"
         />
       </View>
 
