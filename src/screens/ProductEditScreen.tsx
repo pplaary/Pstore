@@ -139,6 +139,19 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         />
       </View>
 
+      {/* 别名 */}
+      <View style={styles.field}>
+        <Text style={styles.fieldLabel}>别名</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="逗号分隔多个别名，如：百事,可乐"
+          placeholderTextColor="#94A3B8"
+          value={aliases}
+          onChangeText={setAliases}
+          returnKeyType="next"
+        />
+      </View>
+
       {/* 价格（必填） */}
       <View style={styles.field}>
         <Text style={styles.fieldLabel}>
@@ -180,19 +193,6 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
           onChangeText={setBarcode}
           returnKeyType="next"
           autoCapitalize="none"
-        />
-      </View>
-
-      {/* 别名 */}
-      <View style={styles.field}>
-        <Text style={styles.fieldLabel}>别名</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="逗号分隔多个别名，如：百事,可乐"
-          placeholderTextColor="#94A3B8"
-          value={aliases}
-          onChangeText={setAliases}
-          returnKeyType="next"
         />
       </View>
 
@@ -263,26 +263,6 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         <Text style={styles.saveButtonText}>{saving ? '保存中...' : '保存'}</Text>
       </TouchableOpacity>
     </ScrollView>
-  );
-}
-
-function Field({
-  label,
-  required,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <View style={styles.field}>
-      <Text style={styles.fieldLabel}>
-        {label}
-        {required && <Text style={styles.required}> *</Text>}
-      </Text>
-      {children}
-    </View>
   );
 }
 
