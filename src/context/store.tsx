@@ -23,6 +23,7 @@ interface StoreProviderProps {
 export function StoreProvider({ db, children }: StoreProviderProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const refreshRef = useRef(0);
+  const failCountRef = useRef(0);
 
   const refreshProducts = useCallback(async () => {
     refreshRef.current += 1;
@@ -31,9 +32,14 @@ export function StoreProvider({ db, children }: StoreProviderProps) {
       const all = await getAllProducts(db);
       if (token === refreshRef.current) {
         setProducts(all);
+        failCountRef.current = 0;
       }
     } catch (e) {
       console.error('refreshProducts 失败:', e);
+      failCountRef.current += 1;
+      if (failCountRef.current >= 3) {
+        Alert.alert('数据库异常', '连续操作失败，请重启应用');
+      }
     }
   }, [db]);
 
