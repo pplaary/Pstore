@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+n1-server/node_modules/
 
 # Expo
 .expo/

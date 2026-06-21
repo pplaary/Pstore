@@ -1,11 +1,11 @@
 /**
- * Zustand store — 同步配置状态
+ * 同步配置 Zustand Store
  *
- * 持久化到 AsyncStorage（persist middleware）。
+ * 纯内存态，存储 N1 服务器 URL 和同步状态。
+ * Phase 4 先用内存态，后续可接入 AsyncStorage 持久化。
  */
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 export interface SyncConfigState {
   serverUrl: string | null;
@@ -18,30 +18,23 @@ export interface SyncConfigState {
   reset: () => void;
 }
 
-export const useSyncConfigStore = create<SyncConfigState>()(
-  persist(
-    (set) => ({
+export const useSyncConfigStore = create<SyncConfigState>()((set) => ({
+  serverUrl: null,
+  lastSyncAt: null,
+  lastPushAt: null,
+  isSyncing: false,
+  setServerUrl: (url) => set({ serverUrl: url }),
+  setSyncStatus: (status) =>
+    set((s) => ({
+      lastSyncAt: status.lastSyncAt ?? s.lastSyncAt,
+      lastPushAt: status.lastPushAt ?? s.lastPushAt,
+    })),
+  setIsSyncing: (v) => set({ isSyncing: v }),
+  reset: () =>
+    set({
       serverUrl: null,
       lastSyncAt: null,
       lastPushAt: null,
       isSyncing: false,
-      setServerUrl: (url) => set({ serverUrl: url }),
-      setSyncStatus: (status) =>
-        set((s) => ({
-          lastSyncAt: status.lastSyncAt ?? s.lastSyncAt,
-          lastPushAt: status.lastPushAt ?? s.lastPushAt,
-        })),
-      setIsSyncing: (v) => set({ isSyncing: v }),
-      reset: () =>
-        set({
-          serverUrl: null,
-          lastSyncAt: null,
-          lastPushAt: null,
-          isSyncing: false,
-        }),
     }),
-    {
-      name: 'sync-config',
-    },
-  ),
-);
+}));

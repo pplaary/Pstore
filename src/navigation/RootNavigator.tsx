@@ -22,7 +22,9 @@ import { ProductEditScreen } from '../screens/ProductEditScreen';
 import { ScanScreen } from '../screens/ScanScreen';
 import { PendingItemsScreen } from '../screens/PendingItemsScreen';
 import { DuplicateScreen } from '../screens/DuplicateScreen';
+import { ConfigScreen } from '../screens/ConfigScreen';
 import DrawerContent from '../components/DrawerContent';
+import { SyncStatusIcon } from '../components/SyncStatusIcon';
 import type { RootStackParamList } from './types';
 import type { DrawerParamList } from './types';
 
@@ -53,6 +55,11 @@ export function RootNavigator() {
       }}
     >
       <Stack.Screen name="MainDrawer" component={MainDrawer} />
+      <Stack.Screen
+        name="Config"
+        component={ConfigScreen}
+        options={{ presentation: 'card', headerShown: true, title: '配置中心' }}
+      />
       <Stack.Screen
         name="ProductDetail"
         component={ProductDetailScreen}

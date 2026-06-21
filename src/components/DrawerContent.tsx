@@ -122,7 +122,7 @@ export default function DrawerContent(props: any) {
         <Text style={styles.sectionTitle}>功能</Text>
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => alert('同步配置功能开发中')}
+          onPress={() => props.navigation.navigate('Config')}
         >
           <Text style={styles.menuItemText}>🔄 同步配置</Text>
         </TouchableOpacity>
