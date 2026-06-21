@@ -165,20 +165,15 @@ async function createSchemaV1(db: SQLite.SQLiteDatabase): Promise<void> {
 // ==================== FTS5 搜索辅助 ====================
 
 /**
- * FTS5 保留字符正则： " ) ( - : ^ ~
- */
-const FTS5_SPECIAL_RE = /[")(\-:^~]/;
-
-/**
  * 对 FTS5 查询词做转义处理。
  *
- * 规则（spec §6.2）：
+ * 策略：所有 token 均用双引号包裹（比按需包裹更安全，无需逐 token 检测保留字符）。
+ * 流程：
  * 1. 先用 tokenizeChinese 将输入拆分为 token
  * 2. 每个 token 用一对双引号包裹
- * 3. 若 token 含 FTS5 保留字符（" ) ( - : ^ ~），整体包裹后运算符放在引号外侧
- * 4. 多 token 时末尾追加 `*`（FTS5 前缀通配符），放在引号外右侧；单 token 不加
- * 5. 多 token 结果用外括号包裹以实现 FTS5 AND 语义
- * 6. 若输入已含 `*`，保留原样不重复追加
+ * 3. 多 token 时末尾追加 `*`（FTS5 前缀通配符），放在引号外右侧；单 token 不加
+ * 4. 多 token 结果用外括号包裹以实现 FTS5 AND 语义
+ * 5. 若输入已含 `*`，保留原样不重复追加
  *
  * 确定性示例：
  *   escapeFts5('(550ml)')   → '"(550ml)"'
