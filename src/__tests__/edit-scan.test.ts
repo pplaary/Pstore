@@ -78,9 +78,9 @@ describe('Commit 5: 商品编辑与扫码页', () => {
     expect(content).toContain('navigation.goBack');
   });
 
-  it('ScanScreen 包含空条码校验', () => {
+  it('ScanScreen 包含空条码校验（disabled 提交按钮）', () => {
     const f = path.join(PROJECT_ROOT, 'src', 'screens', 'ScanScreen.tsx');
     const content = fs.readFileSync(f, 'utf8');
-    expect(content).toContain('请输入或扫描条码');
+    expect(content).toContain('disabled={!barcodeInput.trim()}');
   });
 });
