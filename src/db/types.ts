@@ -88,3 +88,26 @@ export interface MergeResult {
   mergedId: string; // 被合并（软删除）的商品 ID
   mergedName: string; // 被合并的商品名（已写入保留商品的 aliases）
 }
+
+// ==================== 同步类型 ====================
+
+/** 同步状态 */
+export interface SyncStatus {
+  lastSyncAt: string | null;
+  lastPushAt: string | null;
+  serverUrl: string | null;
+  isConnected: boolean;
+}
+
+/** 推送变更（客户端 → 服务端） */
+export interface PushChange {
+  id: string;
+  name: string;
+  price: number;
+  barcode: string | null;
+  category: string;
+  unit: string;
+  imageUri: string | null;
+  isDeleted: number;
+  updatedAt: string;
+}
