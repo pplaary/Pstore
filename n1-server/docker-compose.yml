@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  n1:
+    build: .
+    container_name: pstore-n1
+    ports:
+      - "3141:3141"
+    volumes:
+      - n1-data:/data
+    environment:
+      - CONFIG_PIN=0000
+      - DATA_DIR=/data
+      - PORT=3141
+    restart: unless-stopped
+
+volumes:
+  n1-data:

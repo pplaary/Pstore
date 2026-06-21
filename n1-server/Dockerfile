@@ -5,10 +5,10 @@ RUN apk add --no-cache python3 make g++
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm ci && npm prune --production
+RUN npm ci
 
 COPY src ./src
-RUN npm run build
+RUN npm run build && npm prune --production
 
 EXPOSE 3141
 VOLUME ["/data"]
