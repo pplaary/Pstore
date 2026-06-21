@@ -10,10 +10,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Switch } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
+import { useModeStore } from '../store/mode';
 import { useCartStore } from '../store/cart';
 
 export default function DrawerContent(props: any) {
-  const isManagement = false;
+  const { isManagement } = useModeStore();
   const { items, total, clearCart } = useCartStore();
 
   const totalQty = items.reduce((s, i) => s + i.quantity, 0);

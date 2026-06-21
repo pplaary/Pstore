@@ -17,8 +17,8 @@ import {
   Modal,
   Keyboard,
 } from 'react-native';
-import { useModeStore } from './mode';
-import { usePinStore } from './pin';
+import { useModeStore } from '../store/mode';
+import { usePinStore } from '../store/pin';
 
 interface PinModalProps {
   visible: boolean;
