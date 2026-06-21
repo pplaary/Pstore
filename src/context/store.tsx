@@ -1,0 +1,60 @@
+import React, { createContext, useContext, useState, useCallback, useRef, useMemo } from 'react';
+import * as SQLite from 'expo-sqlite';
+import type { Product } from '../db/types';
+import { getAllProducts } from '../db/product';
+
+// ==================== Context 类型 ====================
+
+interface StoreContextValue {
+  db: SQLite.SQLiteDatabase;
+  products: Product[];
+  refreshProducts: () => Promise<void>;
+}
+
+const StoreContext = createContext<StoreContextValue | null>(null);
+
+// ==================== Provider ====================
+
+interface StoreProviderProps {
+  db: SQLite.SQLiteDatabase;
+  children: React.ReactNode;
+}
+
+export function StoreProvider({ db, children }: StoreProviderProps) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const refreshRef = useRef(0);
+
+  const refreshProducts = useCallback(async () => {
+    refreshRef.current += 1;
+    const token = refreshRef.current;
+    try {
+      const all = await getAllProducts(db);
+      if (token === refreshRef.current) {
+        setProducts(all);
+      }
+    } catch (e) {
+      console.error('refreshProducts 失败:', e);
+    }
+  }, [db]);
+
+  const value = useMemo(
+    () => ({ db, products, refreshProducts }),
+    [db, products, refreshProducts],
+  );
+
+  return (
+    <StoreContext.Provider value={value}>
+      {children}
+    </StoreContext.Provider>
+  );
+}
+
+// ==================== Hook ====================
+
+export function useStore(): StoreContextValue {
+  const ctx = useContext(StoreContext);
+  if (!ctx) {
+    throw new Error('useStore 必须在 StoreProvider 内使用');
+  }
+  return ctx;
+}
