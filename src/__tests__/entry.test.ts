@@ -1,7 +1,8 @@
 /**
  * Commit 2: 应用入口与路由导航 — 集成测试
  *
- * 验证文件存在性与模块导出，避免导入触发 Node 24 ESM 解析问题。
+ * 验证文件存在性与模块导出。
+ * 注意：避免导入 expo-sqlite 原生模块（需真机/模拟器）。
  */
 
 import { describe, expect, it } from 'vitest';

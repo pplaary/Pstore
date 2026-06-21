@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+
+# Build outputs
+*.tsbuildinfo
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+
+# Local config
+.env
+.env.local
+
+# Misc
+*.log
+npm-debug.log*
