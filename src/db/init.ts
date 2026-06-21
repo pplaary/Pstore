@@ -10,6 +10,7 @@
 import * as SQLite from 'expo-sqlite';
 import { tokenizeChinese } from './tokenizer';
 import type { Product } from './types';
+import { performRecovery } from '../services/backup/recovery';
 
 // ==================== 常量 ====================
 
@@ -30,13 +31,38 @@ export function getDatabasePath(): string {
 // ==================== 初始化入口 ====================
 
 /**
- * 打开（或创建）数据库并执行 Schema 迁移。
- * 返回可用于后续操作的 SQLiteDatabase 实例。
+ * 底层：打开数据库并执行 Schema 迁移（不含崩溃恢复）。
+ * 供 recovery 模块内部使用，避免循环依赖。
  */
-export async function initDatabase(): Promise<SQLite.SQLiteDatabase> {
+export async function openAndMigrate(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
   await migrate(db, CURRENT_SCHEMA_VERSION);
   return db;
+}
+
+/**
+ * 打开（或创建）数据库并执行 Schema 迁移。
+ * 返回可用于后续操作的 SQLiteDatabase 实例。
+ *
+ * 启动流程：
+ * 1. 崩溃恢复 — 检测数据库完整性，必要时自动修复
+ * 2. 打开数据库并启用 WAL 模式
+ * 3. 执行 Schema 迁移
+ *
+ * @param n1Available    N1 服务是否可达（用于崩溃恢复决策）
+ * @param onRecoveryMsg  可选，恢复完成后的 Toast 回调
+ */
+export async function initDatabase(
+  n1Available: boolean = false,
+  onRecoveryMsg?: (message: string) => void,
+): Promise<SQLite.SQLiteDatabase> {
+  // Phase 5: 崩溃恢复（在打开数据库前执行，避免文件锁冲突）
+  const recoveryResult = await performRecovery(n1Available);
+  if (recoveryResult.recovered && onRecoveryMsg) {
+    onRecoveryMsg(recoveryResult.message);
+  }
+
+  return openAndMigrate();
 }
 
 // ==================== 版本管理 ====================
