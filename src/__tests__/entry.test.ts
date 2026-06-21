@@ -29,10 +29,16 @@ describe('Commit 2: 入口与路由导航', () => {
     expect(content).toContain('initDatabase');
     expect(content).toContain('StoreProvider');
     expect(content).toContain('NavigationContainer');
-    expect(content).toContain('createNativeStackNavigator');
   });
 
   // ==================== 导航模块 ====================
+
+  it('src/navigation/RootNavigator.tsx 存在并包含 createNativeStackNavigator', () => {
+    const f = path.join(PROJECT_ROOT, 'src', 'navigation', 'RootNavigator.tsx');
+    expect(fs.existsSync(f)).toBe(true);
+    const content = fs.readFileSync(f, 'utf8');
+    expect(content).toContain('createNativeStackNavigator');
+  });
 
   it('src/navigation/types.ts 存在并包含 4 个路由', () => {
     const f = path.join(PROJECT_ROOT, 'src', 'navigation', 'types.ts');
