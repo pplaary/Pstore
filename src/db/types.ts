@@ -104,10 +104,10 @@ export interface PushChange {
   id: string;
   name: string;
   price: number;
-  barcode: string | null;
+  barcode?: string;
   category: string;
   unit: string;
-  imageUri: string | null;
+  imageUri?: string;
   isDeleted: number;
   updatedAt: string;
 }

@@ -7,8 +7,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSyncConfigStore } from '../../store/syncConfig';
-import { useNetworkDetection } from '../../hooks/useNetworkDetection';
+import { useSyncConfigStore } from '../store/syncConfig';
+import { useNetworkDetection } from '../hooks/useNetworkDetection';
 
 export function SyncStatusIcon() {
   const serverUrl = useSyncConfigStore((s) => s.serverUrl);

@@ -14,16 +14,18 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import { useNetworkDetection } from '../../hooks/useNetworkDetection';
-import { useSyncConfigStore } from '../../store/syncConfig';
-import { performSync } from '../../services/sync';
-import type { DrawerScreenProps } from '../../navigation/types';
+import { useNetworkDetection } from '../hooks/useNetworkDetection';
+import { useSyncConfigStore } from '../store/syncConfig';
+import { performSync } from '../services/sync';
+import type { RootStackScreenProps } from '../navigation/types';
+import { useStore } from '../context/store';
 
-type Props = DrawerScreenProps<'Config'>;
+type Props = RootStackScreenProps<'Config'>;
 
 export function ConfigScreen(_props: Props) {
   const serverUrl = useSyncConfigStore((s) => s.serverUrl);
   const setServerUrl = useSyncConfigStore((s) => s.setServerUrl);
+  const { db } = useStore();
   const [inputUrl, setInputUrl] = useState(serverUrl ?? '');
   const [checking, setChecking] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -66,15 +68,14 @@ export function ConfigScreen(_props: Props) {
 
     setSyncing(true);
     try {
-      // performSync 需要 db 实例，这里通过 store 间接使用
-      // 实际 db 获取由 App.tsx 的 StoreProvider 提供
-      Alert.alert('提示', '同步功能需要数据库实例（在 App 层调用）');
+      await performSync(db, useSyncConfigStore.getState(), url);
+      Alert.alert('同步完成', '数据同步成功');
     } catch (e) {
       Alert.alert('同步失败', String(e));
     } finally {
       setSyncing(false);
     }
-  }, [inputUrl]);
+  }, [inputUrl, db]);
 
   return (
     <ScrollView style={styles.container}>
