@@ -5,11 +5,10 @@
  * 1. 搜索栏 + 商品列表（复用 ProductListScreen 核心逻辑）
  * 2. 购物车折叠栏（底部固定）
  * 3. 底部输入栏（语音 + 搜索框 + 相机）
- *
- * 管理模式下的 FAB 按钮由 Commit 4 添加
+ * 4. 连击标题进入管理模式（5 次/5 秒）
  */
 
-import React, { useState, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useCallback, useLayoutEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -20,11 +19,12 @@ import {
   Modal,
   ScrollView,
 } from 'react-native';
-import { useDrawerStatus } from '@react-navigation/drawer';
 import { useFocusEffect } from '@react-navigation/native';
 import { useStore } from '../context/store';
 import { useCartStore } from '../store/cart';
+import { useModeStore } from '../store/mode';
 import { searchProducts } from '../db/search';
+import { PinModal } from '../components/PinModal';
 import type { Product } from '../db/types';
 import type { HomeScreenProps } from '../navigation/types';
 
@@ -43,11 +43,15 @@ const STATUS_LABELS: Record<string, string> = {
 export function HomeScreen({ navigation }: HomeScreenProps) {
   const { db, refreshProducts } = useStore();
   const { items, total, addToCart, removeFromCart, removeItem, clearCart } = useCartStore();
+  const { isManagement, enterManagement, exitManagement } = useModeStore();
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [cartExpanded, setCartExpanded] = useState(false);
   const [checkoutVisible, setCheckoutVisible] = useState(false);
+  const [pinVisible, setPinVisible] = useState(false);
+  const tapCountRef = useRef(0);
+  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 搜索
   const doSearch = useCallback(async () => {
@@ -67,12 +71,30 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     doSearch();
   }, [doSearch]);
 
-  // 聚焦时刷新
   useFocusEffect(
     useCallback(() => {
       refreshProducts();
     }, [refreshProducts]),
   );
+
+  // 连击标题进入/退出管理模式
+  const handleTitlePress = useCallback(() => {
+    tapCountRef.current += 1;
+    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+    tapTimerRef.current = setTimeout(() => {
+      tapCountRef.current = 0;
+    }, 5000);
+
+    if (tapCountRef.current >= 5) {
+      tapCountRef.current = 0;
+      if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+      if (isManagement) {
+        exitManagement();
+      } else {
+        setPinVisible(true);
+      }
+    }
+  }, [isManagement, enterManagement, exitManagement]);
 
   // 顶部栏
   useLayoutEffect(() => {
@@ -85,10 +107,15 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
           <Text style={styles.headerMenuText}>☰</Text>
         </TouchableOpacity>
       ),
-      headerTitle: 'PStore',
-      headerRight: undefined,
+      headerTitle: () => (
+        <TouchableOpacity onPress={handleTitlePress} activeOpacity={0.6}>
+          <Text style={styles.headerTitle}>
+            {isManagement ? 'PStore [管理]' : 'PStore'}
+          </Text>
+        </TouchableOpacity>
+      ),
     });
-  }, [navigation]);
+  }, [navigation, isManagement, handleTitlePress]);
 
   const handleAddToCart = useCallback((product: Product) => {
     addToCart(product.id, product.name, product.price);
@@ -120,6 +147,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   const isEmpty = !query.trim() && !selectedCategory
     ? filteredProducts.length === 0
     : filteredProducts.length === 0;
+
+  const totalQty = items.reduce((s, i) => s + i.quantity, 0);
 
   return (
     <View style={styles.container}>
@@ -165,7 +194,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             onPress={() => setCartExpanded(!cartExpanded)}
           >
             <Text style={styles.cartIcon}>🛒</Text>
-            <Text style={styles.cartCount}>×{items.reduce((s, i) => s + i.quantity, 0)}</Text>
+            <Text style={styles.cartCount}>×{totalQty}</Text>
             <Text style={styles.cartTotal}>¥{total.toFixed(2)}</Text>
             <TouchableOpacity
               style={styles.checkoutBtn}
@@ -175,7 +204,6 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             </TouchableOpacity>
           </TouchableOpacity>
 
-          {/* 展开态 */}
           {cartExpanded && (
             <View style={styles.cartExpanded}>
               <ScrollView style={styles.cartList}>
@@ -211,7 +239,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       )}
 
       {/* 结账弹窗 */}
-      <Modal visible={checkoutVisible} animationType="slide" transparent>
+      <Modal visible={checkoutVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>结账清单</Text>
@@ -234,6 +262,13 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
           </View>
         </View>
       </Modal>
+
+      {/* PIN 弹窗 */}
+      <PinModal
+        visible={pinVisible}
+        onClose={() => setPinVisible(false)}
+        onSuccess={() => setPinVisible(false)}
+      />
     </View>
   );
 }
@@ -242,6 +277,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F1F5F9' },
   headerMenuBtn: { paddingHorizontal: 12, paddingVertical: 4 },
   headerMenuText: { fontSize: 22, color: '#2563EB' },
+  headerTitle: { fontSize: 17, fontWeight: '600', color: '#1E293B' },
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#FFFFFF', marginHorizontal: 12, marginTop: 8, marginBottom: 8,
