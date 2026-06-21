@@ -8,8 +8,10 @@ import type { DrawerScreenProps as RNDrawerScreenProps } from '@react-navigation
 export type RootStackParamList = {
   MainDrawer: undefined;
   ProductDetail: { id: string };
-  ProductEdit: { id?: string; barcode?: string };
-  ScanBarcode: undefined;
+  ProductEdit: { id?: string; barcode?: string; name?: string; spec?: string };
+  ScanBarcode: { mode?: 'scan' | 'photo' };
+  PendingItems: undefined;
+  DuplicateList: undefined;
 };
 
 export type DrawerParamList = {

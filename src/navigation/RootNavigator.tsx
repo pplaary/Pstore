@@ -20,6 +20,8 @@ import { ProductListScreen } from '../screens/ProductListScreen';
 import { ProductDetailScreen } from '../screens/ProductDetailScreen';
 import { ProductEditScreen } from '../screens/ProductEditScreen';
 import { ScanScreen } from '../screens/ScanScreen';
+import { PendingItemsScreen } from '../screens/PendingItemsScreen';
+import { DuplicateScreen } from '../screens/DuplicateScreen';
 import DrawerContent from '../components/DrawerContent';
 import type { RootStackParamList } from './types';
 import type { DrawerParamList } from './types';
@@ -69,6 +71,16 @@ export function RootNavigator() {
         name="ScanBarcode"
         component={ScanScreen}
         options={{ presentation: 'card', headerShown: true, title: '扫码' }}
+      />
+      <Stack.Screen
+        name="PendingItems"
+        component={PendingItemsScreen}
+        options={{ presentation: 'card', headerShown: true, title: '待处理条码' }}
+      />
+      <Stack.Screen
+        name="DuplicateList"
+        component={DuplicateScreen}
+        options={{ presentation: 'card', headerShown: true, title: '重复检测' }}
       />
     </Stack.Navigator>
   );

@@ -400,6 +400,16 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         </TouchableOpacity>
       )}
 
+      {/* 扫码按钮（全员可见） */}
+      {!batchMode && (
+        <TouchableOpacity
+          style={[styles.fab, styles.fabScan, isManagement && styles.fabScanWithMgmt]}
+          onPress={() => navigation.navigate('ScanBarcode', { mode: 'scan' })}
+        >
+          <Text style={styles.fabScanText}>📷</Text>
+        </TouchableOpacity>
+      )}
+
       {/* 批量管理工具栏 */}
       {batchMode && (
         <View style={styles.batchToolbar}>
@@ -559,6 +569,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3, shadowRadius: 6, elevation: 4,
   },
   fabText: { fontSize: 28, color: '#FFF', fontWeight: '300' },
+  fabScan: {
+    backgroundColor: '#10B981', bottom: 148, right: 16,
+    shadowColor: '#10B981',
+  },
+  fabScanWithMgmt: { bottom: 216 },
+  fabScanText: { fontSize: 22 },
   batchToolbar: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: '#1E293B', paddingHorizontal: 12, paddingVertical: 8,

@@ -46,12 +46,20 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
   const [saving, setSaving] = useState(false);
 
   // 编辑模式：加载现有商品
-  // 新增模式且从扫码页来：预填 barcode
+  // 新增模式且从扫码/识别页来：预填 barcode / name / spec
   useEffect(() => {
     if (!existingId) {
       const fromBarcode = route.params?.barcode;
+      const fromName = route.params?.name;
+      const fromSpec = route.params?.spec;
       if (fromBarcode) {
         setBarcode(fromBarcode);
+      }
+      if (fromName) {
+        setName(fromName);
+      }
+      if (fromSpec) {
+        setSpec(fromSpec);
       }
       return;
     }
