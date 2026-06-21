@@ -1,7 +1,7 @@
 /**
  * 配置中心页面
  *
- * N1 服务配置 + WebDAV 配置（占位）+ AI 配置（占位）
+ * N1 服务配置 + WebDAV 配置 + AI 配置（占位）
  */
 
 import React, { useState, useCallback } from 'react';
@@ -19,6 +19,7 @@ import { useSyncConfigStore } from '../store/syncConfig';
 import { performSync } from '../services/sync';
 import type { RootStackScreenProps } from '../navigation/types';
 import { useStore } from '../context/store';
+import { WebDAVConfig } from '../components/WebDAVConfig';
 
 type Props = RootStackScreenProps<'Config'>;
 
@@ -111,16 +112,10 @@ export function ConfigScreen(_props: Props) {
         <SyncStatusPreview url={inputUrl.trim() || null} />
       </View>
 
-      {/* WebDAV 配置（占位） */}
+      {/* WebDAV 配置 */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>WebDAV 配置</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="WebDAV URL（Phase 5 实现）"
-          placeholderTextColor="#94A3B8"
-          editable={false}
-        />
-        <Text style={styles.hint}>Phase 5 实现</Text>
+        <WebDAVConfig editable={true} />
       </View>
 
       {/* AI 配置（占位） */}

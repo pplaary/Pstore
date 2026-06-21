@@ -1,37 +1,43 @@
 /**
  * 同步状态图标组件
  *
- * 显示 N1 云服务连接状态。
+ * 显示 N1 云服务或 WebDAV 备份连接状态。
+ * 优先级：N1 可达 > WebDAV 已配置 > 本地模式。
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as SecureStore from 'expo-secure-store';
 import { useSyncConfigStore } from '../store/syncConfig';
 import { useNetworkDetection } from '../hooks/useNetworkDetection';
 
 export function SyncStatusIcon() {
   const serverUrl = useSyncConfigStore((s) => s.serverUrl);
   const isConnected = useNetworkDetection(serverUrl);
+  const [webdavConfigured, setWebdavConfigured] = useState(false);
 
-  // WebDAV 模式
-  const isWebDav =
-    serverUrl !== null && (serverUrl.startsWith('dav://') || serverUrl.startsWith('webdav://'));
+  useEffect(() => {
+    SecureStore.getItemAsync('pstore_webdav_url').then((url) => {
+      setWebdavConfigured(!!url);
+    });
+  }, []);
 
-  const isN1 = serverUrl !== null && !isWebDav;
+  // N1 已配置且可达
+  const isN1Reachable = serverUrl !== null && isConnected;
 
   let iconName: keyof typeof Ionicons.glyphMap = 'cloud-offline';
   let label = '本地模式';
   let color = '#94A3B8';
 
-  if (isWebDav) {
-    iconName = 'cloud';
-    label = 'WebDAV';
-    color = '#2563EB';
-  } else if (isN1 && isConnected) {
+  if (isN1Reachable) {
     iconName = 'cloud-done';
     label = '已连接';
     color = '#16A34A';
+  } else if (webdavConfigured) {
+    iconName = 'cloud';
+    label = 'WebDAV';
+    color = '#2563EB';
   }
 
   return (
