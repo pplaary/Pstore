@@ -9,7 +9,7 @@
  * 使用 useFocusEffect 确保每次屏幕获取焦点时重新检测 WebDAV 凭据状态。
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
@@ -18,13 +18,18 @@ import { useSyncConfigStore } from '../store/syncConfig';
 import { useAIConfigStore } from '../store/aiConfig';
 import { useNetworkDetection } from '../hooks/useNetworkDetection';
 import { NetworkIndicator } from './NetworkIndicator';
+import { useTheme } from '../theme/ThemeContext';
 
 export function SyncStatusIcon() {
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
   const serverUrl = useSyncConfigStore((s) => s.serverUrl);
   const isConnected = useNetworkDetection(serverUrl);
   const [webdavConfigured, setWebdavConfigured] = useState(false);
   const aiMode = useAIConfigStore((s) => s.mode);
   const aiReachable = useAIConfigStore((s) => s.reachable);
+
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
   // 每次屏幕获取焦点时重新读取 WebDAV 凭据状态
   useFocusEffect(
@@ -40,16 +45,16 @@ export function SyncStatusIcon() {
 
   let iconName: keyof typeof Ionicons.glyphMap = 'cloud-offline';
   let label = '本地模式';
-  let color = '#94A3B8';
+  let color = colors.text.hint;
 
   if (isN1Reachable) {
     iconName = 'cloud-done';
     label = '已连接';
-    color = '#16A34A';
+    color = colors.brand.success;
   } else if (webdavConfigured) {
     iconName = 'cloud';
     label = 'WebDAV';
-    color = '#2563EB';
+    color = colors.brand.primary;
   }
 
   return (
@@ -62,15 +67,17 @@ export function SyncStatusIcon() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingRight: 8,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-});
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingRight: 8,
+    },
+    label: {
+      fontSize: 12 * scale,
+      fontWeight: '500',
+    },
+  });
+}

@@ -7,7 +7,7 @@
  * - 验证通过 → mode.enterManagement()
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import { useModeStore } from '../store/mode';
 import { usePinStore } from '../store/pin';
+import { useTheme } from '../theme/ThemeContext';
 
 interface PinModalProps {
   visible: boolean;
@@ -27,6 +28,8 @@ interface PinModalProps {
 }
 
 export function PinModal({ visible, onClose, onSuccess }: PinModalProps) {
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [verifying, setVerifying] = useState(false);
@@ -34,6 +37,8 @@ export function PinModal({ visible, onClose, onSuccess }: PinModalProps) {
 
   const { isPinSet, setPin: storeSetPin, verifyPin } = usePinStore();
   const { enterManagement } = useModeStore();
+
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
   React.useEffect(() => {
     if (visible) {
@@ -99,7 +104,7 @@ export function PinModal({ visible, onClose, onSuccess }: PinModalProps) {
             maxLength={6}
             secureTextEntry
             placeholder="••••"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={colors.text.hint}
             onSubmitEditing={handleConfirm}
           />
 
@@ -123,81 +128,83 @@ export function PinModal({ visible, onClose, onSuccess }: PinModalProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  container: {
-    width: '80%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  input: {
-    width: '100%',
-    height: 48,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    fontSize: 24,
-    textAlign: 'center',
-    letterSpacing: 8,
-    color: '#1E293B',
-  },
-  error: {
-    color: '#DC2626',
-    fontSize: 13,
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    width: '100%',
-    gap: 12,
-    marginTop: 20,
-  },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-  },
-  cancelBtnText: {
-    fontSize: 15,
-    color: '#64748B',
-    fontWeight: '600',
-  },
-  confirmBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: '#2563EB',
-    alignItems: 'center',
-  },
-  confirmBtnDisabled: {
-    opacity: 0.6,
-  },
-  confirmBtnText: {
-    fontSize: 15,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-});
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    container: {
+      width: '80%',
+      backgroundColor: colors.bg.card,
+      borderRadius: 16 * scale,
+      padding: 24 * scale,
+      alignItems: 'center',
+    },
+    title: {
+      fontSize: 20 * scale,
+      fontWeight: '700',
+      color: colors.text.primary,
+      marginBottom: 8 * scale,
+    },
+    subtitle: {
+      fontSize: 14 * scale,
+      color: colors.text.secondary,
+      marginBottom: 20 * scale,
+      textAlign: 'center',
+    },
+    input: {
+      width: '100%',
+      height: 48 * scale,
+      borderWidth: 1,
+      borderColor: colors.border.default,
+      borderRadius: 10 * scale,
+      paddingHorizontal: 16 * scale,
+      fontSize: 24 * scale,
+      textAlign: 'center',
+      letterSpacing: 8 * scale,
+      color: colors.text.primary,
+    },
+    error: {
+      color: colors.brand.danger,
+      fontSize: 13 * scale,
+      marginTop: 8 * scale,
+      marginBottom: 4 * scale,
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      width: '100%',
+      gap: 12 * scale,
+      marginTop: 20 * scale,
+    },
+    cancelBtn: {
+      flex: 1,
+      paddingVertical: 12 * scale,
+      borderRadius: 10 * scale,
+      backgroundColor: colors.bg.primary,
+      alignItems: 'center',
+    },
+    cancelBtnText: {
+      fontSize: 15 * scale,
+      color: colors.text.secondary,
+      fontWeight: '600',
+    },
+    confirmBtn: {
+      flex: 1,
+      paddingVertical: 12 * scale,
+      borderRadius: 10 * scale,
+      backgroundColor: colors.brand.primary,
+      alignItems: 'center',
+    },
+    confirmBtnDisabled: {
+      opacity: 0.6,
+    },
+    confirmBtnText: {
+      fontSize: 15 * scale,
+      color: colors.text.inverse,
+      fontWeight: '600',
+    },
+  });
+}

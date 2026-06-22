@@ -9,8 +9,9 @@
  * spec-v4.5 §3.1 色彩 Token 对齐
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTheme, type ThemeColors } from '../theme/ThemeContext';
 
 // ==================== 类型 ====================
 
@@ -22,16 +23,6 @@ export interface AIChatBubbleProps {
   /** 时间戳（可选） */
   timestamp?: string;
 }
-
-// ==================== 色彩常量 ====================
-
-const COLORS = {
-  userBubble: '#D1FAE5',
-  userBubbleText: '#065F46',
-  aiBubble: '#F1F5F9',
-  aiBubbleText: '#1E293B',
-  textSecondary: '#64748B',
-};
 
 // ==================== 辅助函数 ====================
 
@@ -50,14 +41,81 @@ function formatTime(timestamp?: string): string {
   }
 }
 
+function createStyles(colors: ThemeColors, scale: number) {
+  return StyleSheet.create({
+    container: {
+      marginVertical: 4 * scale,
+      maxWidth: '80%',
+    },
+    // 用户气泡：右对齐
+    userContainer: {
+      alignSelf: 'flex-end',
+      alignItems: 'flex-end',
+    },
+    // AI 气泡：左对齐
+    aiContainer: {
+      alignSelf: 'flex-start',
+      alignItems: 'flex-start',
+    },
+    // 气泡主体
+    bubble: {
+      borderRadius: 12 * scale,
+      paddingHorizontal: 14 * scale,
+      paddingVertical: 10 * scale,
+    },
+    userBubble: {
+      backgroundColor: colors.brand.success + '20',
+    },
+    aiBubble: {
+      backgroundColor: colors.bg.primary,
+    },
+    // 消息文字
+    content: {
+      fontSize: 15 * scale,
+      lineHeight: 20 * scale,
+    },
+    userContent: {
+      color: colors.text.primary,
+    },
+    aiContent: {
+      color: colors.text.primary,
+    },
+    // 元信息行（时间戳 + AI 提示）
+    metaRow: {
+      flexDirection: 'row',
+      marginTop: 4 * scale,
+      paddingHorizontal: 4 * scale,
+      gap: 8 * scale,
+    },
+    userMeta: {
+      justifyContent: 'flex-end',
+    },
+    aiMeta: {
+      justifyContent: 'flex-start',
+    },
+    timestamp: {
+      fontSize: 11 * scale,
+      color: colors.text.hint,
+    },
+    aiHint: {
+      fontSize: 11 * scale,
+      color: colors.text.hint,
+    },
+  });
+}
+
 // ==================== 组件 ====================
 
 /**
  * AI 会话气泡组件。
  */
 export function AIChatBubble({ role, content, timestamp }: AIChatBubbleProps): JSX.Element {
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
   const isUser = role === 'user';
   const timeStr = formatTime(timestamp);
+
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
   return (
     <View
@@ -92,66 +150,3 @@ export function AIChatBubble({ role, content, timestamp }: AIChatBubbleProps): J
     </View>
   );
 }
-
-// ==================== 样式 ====================
-
-const styles = StyleSheet.create({
-  container: {
-    marginVertical: 4,
-    maxWidth: '80%',
-  },
-  // 用户气泡：右对齐
-  userContainer: {
-    alignSelf: 'flex-end',
-    alignItems: 'flex-end',
-  },
-  // AI 气泡：左对齐
-  aiContainer: {
-    alignSelf: 'flex-start',
-    alignItems: 'flex-start',
-  },
-  // 气泡主体
-  bubble: {
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
-  userBubble: {
-    backgroundColor: COLORS.userBubble,
-  },
-  aiBubble: {
-    backgroundColor: COLORS.aiBubble,
-  },
-  // 消息文字
-  content: {
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  userContent: {
-    color: COLORS.userBubbleText,
-  },
-  aiContent: {
-    color: COLORS.aiBubbleText,
-  },
-  // 元信息行（时间戳 + AI 提示）
-  metaRow: {
-    flexDirection: 'row',
-    marginTop: 4,
-    paddingHorizontal: 4,
-    gap: 8,
-  },
-  userMeta: {
-    justifyContent: 'flex-end',
-  },
-  aiMeta: {
-    justifyContent: 'flex-start',
-  },
-  timestamp: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-  },
-  aiHint: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-  },
-});

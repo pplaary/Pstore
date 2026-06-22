@@ -17,7 +17,7 @@
  * plan-phase7.md Commit 2
  */
 
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -35,6 +35,7 @@ import {
 } from '../services/stt';
 import { showToast } from '../utils/toast';
 import * as SecureStore from 'expo-secure-store';
+import { useTheme, type ThemeColors } from '../theme/ThemeContext';
 
 // ==================== 常量 ====================
 
@@ -68,15 +69,116 @@ interface VoiceButtonProps {
 
 type UIState = 'idle' | 'recording' | 'processing';
 
-// ==================== 辅助 hook ====================
+// 样式对象类型（由 createStyles 返回）
+type Styles = ReturnType<typeof createStyles>;
 
-/**
- * 保持回调引用的最新值，避免 PanResponder 闭包捕获 stale 的 onResult。
- */
-function useFnRef<T extends (...args: any[]) => any>(fn: T): React.MutableRefObject<T> {
-  const ref = useRef(fn);
-  ref.current = fn;
-  return ref as React.MutableRefObject<T>;
+// ==================== 样式工厂 ====================
+
+function createStyles(colors: ThemeColors, scale: number) {
+  return StyleSheet.create({
+    container: {
+      position: 'relative',
+      width: 44 * scale,
+      height: 44 * scale,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+
+    // 隐藏占位（非聊天模式）
+    hidden: {
+      width: 0,
+      height: 0,
+    },
+
+    // 取消区域（Animated.View 作为 opacity 载体）
+    cancelZoneAnimated: {
+      position: 'absolute',
+      top: -CANCEL_THRESHOLD_DP - CANCEL_ZONE_HEIGHT,
+      left: -28 * scale,
+      right: -28 * scale,
+      height: CANCEL_ZONE_HEIGHT,
+      borderRadius: 8 * scale,
+      overflow: 'hidden',
+      pointerEvents: 'none',
+      zIndex: 10,
+    },
+
+    cancelZoneInner: {
+      flex: 1,
+      backgroundColor: 'rgba(220, 38, 38, 0.85)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: 8 * scale,
+    },
+
+    cancelZoneText: {
+      color: colors.text.inverse,
+      fontSize: 13 * scale,
+      fontWeight: '600',
+      letterSpacing: 0.5,
+    },
+
+    // 按钮外层（opacity + scale 动画载体）
+    button: {
+      width: 44 * scale,
+      height: 44 * scale,
+      borderRadius: 22 * scale,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.bg.primary,
+      overflow: 'hidden',
+    },
+
+    // 录音/处理中按钮样式
+    buttonActive: {
+      backgroundColor: colors.brand.primary,
+      shadowColor: colors.brand.primary,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.4,
+      shadowRadius: 8 * scale,
+      elevation: 6,
+    },
+
+    // 按钮可点击区域（PanResponder 绑定层）
+    touchTarget: {
+      width: 44 * scale,
+      height: 44 * scale,
+      borderRadius: 22 * scale,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+
+    // 麦克风图标（idle 态）
+    micIcon: {
+      fontSize: 20 * scale,
+      lineHeight: 22 * scale,
+    },
+
+    // ===== 声波动画 =====
+    waveContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 3 * scale,
+      height: 20 * scale,
+    },
+
+    waveBar: {
+      width: 3 * scale,
+      height: 16 * scale,
+      borderRadius: 1.5 * scale,
+      backgroundColor: colors.text.inverse,
+    },
+
+    // ===== 处理指示器 =====
+    processingText: {
+      fontSize: 20 * scale,
+      color: colors.text.inverse,
+      fontWeight: '600',
+      letterSpacing: 2 * scale,
+      lineHeight: 22 * scale,
+    },
+  });
 }
 
 // ==================== 子组件 ====================
@@ -84,7 +186,7 @@ function useFnRef<T extends (...args: any[]) => any>(fn: T): React.MutableRefObj
 /**
  * 录音指示器：3 条竖线交替伸缩动画，白色（Primary 背景上的白色条）。
  */
-function RecordingIndicator(): JSX.Element {
+function RecordingIndicator({ styles }: { styles: Styles }): JSX.Element {
   // 每条竖线的动画错开相位，形成波浪效果
   const bars = useRef(
     Array.from({ length: WAVE_BAR_COUNT }, (_, i) => ({
@@ -146,8 +248,10 @@ function RecordingIndicator(): JSX.Element {
  */
 function CancelZone({
   opacity,
+  styles,
 }: {
   opacity: Animated.AnimatedInterpolation<number> | Animated.Value;
+  styles: Styles;
 }): JSX.Element {
   return (
     <Animated.View style={[styles.cancelZoneAnimated, { opacity }]}>
@@ -161,7 +265,7 @@ function CancelZone({
 /**
  * 转录中处理指示器：简单 "..." 文字循环闪烁。
  */
-function ProcessingOverlay(): JSX.Element {
+function ProcessingOverlay({ styles }: { styles: Styles }): JSX.Element {
   const dotAnim = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -190,6 +294,17 @@ function ProcessingOverlay(): JSX.Element {
   );
 }
 
+// ==================== 辅助 hook ====================
+
+/**
+ * 保持回调引用的最新值，避免 PanResponder 闭包捕获 stale 的 onResult。
+ */
+function useFnRef<T extends (...args: any[]) => any>(fn: T): React.MutableRefObject<T> {
+  const ref = useRef(fn);
+  ref.current = fn;
+  return ref as React.MutableRefObject<T>;
+}
+
 // ==================== 主组件 ====================
 
 /**
@@ -202,6 +317,10 @@ function ProcessingOverlay(): JSX.Element {
  *   → (松手未超阈值) → PROCESSING → DONE → IDLE
  */
 export function VoiceButton({ onResult, available = true, onStatusChange }: VoiceButtonProps): JSX.Element {
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
+
   // ----- 状态 -----
   const [uiState, setUiState] = useState<UIState>('idle');
   const aiMode = useAIConfigStore((s) => s.mode);
@@ -427,9 +546,9 @@ export function VoiceButton({ onResult, available = true, onStatusChange }: Voic
   const renderContent = () => {
     switch (uiState) {
       case 'recording':
-        return <RecordingIndicator />;
+        return <RecordingIndicator styles={styles} />;
       case 'processing':
-        return <ProcessingOverlay />;
+        return <ProcessingOverlay styles={styles} />;
       default:
         return <Text style={styles.micIcon}>🎤</Text>;
     }
@@ -440,7 +559,7 @@ export function VoiceButton({ onResult, available = true, onStatusChange }: Voic
   return (
     <View style={styles.container}>
       {/* 取消区域（Animated opacity 驱动，始终渲染但 pointerEvents='none'） */}
-      <CancelZone opacity={cancelOpacity} />
+      <CancelZone opacity={cancelOpacity} styles={styles} />
 
       {/* 按钮主体 */}
       <Animated.View
@@ -463,110 +582,3 @@ export function VoiceButton({ onResult, available = true, onStatusChange }: Voic
     </View>
   );
 }
-
-// ==================== 样式 ====================
-
-const styles = StyleSheet.create({
-  container: {
-    position: 'relative',
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  // 隐藏占位（非聊天模式）
-  hidden: {
-    width: 0,
-    height: 0,
-  },
-
-  // 取消区域（Animated.View 作为 opacity 载体）
-  cancelZoneAnimated: {
-    position: 'absolute',
-    top: -CANCEL_THRESHOLD_DP - CANCEL_ZONE_HEIGHT,
-    left: -28,
-    right: -28,
-    height: CANCEL_ZONE_HEIGHT,
-    borderRadius: 8,
-    overflow: 'hidden',
-    pointerEvents: 'none',
-    zIndex: 10,
-  },
-
-  cancelZoneInner: {
-    flex: 1,
-    backgroundColor: 'rgba(220, 38, 38, 0.85)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-
-  cancelZoneText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-
-  // 按钮外层（opacity + scale 动画载体）
-  button: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    overflow: 'hidden',
-  },
-
-  // 录音/处理中按钮样式
-  buttonActive: {
-    backgroundColor: '#2563EB',
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-
-  // 按钮可点击区域（PanResponder 绑定层）
-  touchTarget: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  // 麦克风图标（idle 态）
-  micIcon: {
-    fontSize: 20,
-    lineHeight: 22,
-  },
-
-  // ===== 声波动画 =====
-  waveContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 3,
-    height: 20,
-  },
-
-  waveBar: {
-    width: 3,
-    height: 16,
-    borderRadius: 1.5,
-    backgroundColor: '#FFFFFF',
-  },
-
-  // ===== 处理指示器 =====
-  processingText: {
-    fontSize: 20,
-    color: '#FFFFFF',
-    fontWeight: '600',
-    letterSpacing: 2,
-    lineHeight: 22,
-  },
-});

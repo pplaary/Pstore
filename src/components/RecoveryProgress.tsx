@@ -4,9 +4,10 @@
  * 崩溃自动恢复时的启动加载遮罩。App 正常启动时 visible=false 不展示。
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Modal, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../theme/ThemeContext';
 
 interface RecoveryProgressProps {
   visible: boolean;
@@ -24,7 +25,10 @@ const SOURCE_META: Record<
 };
 
 export function RecoveryProgress({ visible, source, message }: RecoveryProgressProps) {
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
   const meta = SOURCE_META[source] ?? SOURCE_META.empty;
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -39,28 +43,30 @@ export function RecoveryProgress({ visible, source, message }: RecoveryProgressP
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 32,
-    alignItems: 'center',
-    marginHorizontal: 32,
-    minWidth: 240,
-  },
-  message: {
-    fontSize: 16,
-    color: '#1E293B',
-    marginTop: 16,
-    textAlign: 'center',
-  },
-  spinner: {
-    marginTop: 20,
-  },
-});
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    card: {
+      backgroundColor: colors.bg.card,
+      borderRadius: 16 * scale,
+      padding: 32 * scale,
+      alignItems: 'center',
+      marginHorizontal: 32 * scale,
+      minWidth: 240,
+    },
+    message: {
+      fontSize: 16 * scale,
+      color: colors.text.primary,
+      marginTop: 16 * scale,
+      textAlign: 'center',
+    },
+    spinner: {
+      marginTop: 20 * scale,
+    },
+  });
+}

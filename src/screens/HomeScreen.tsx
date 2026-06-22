@@ -1,18 +1,4 @@
-/**
- * 主界面 (HomeScreen)
- *
- * 双模式：
- * - 搜索模式：搜索栏 + 商品列表（FTS5）
- * - 聊天模式：AI 对话气泡 + 商品确认卡片
- *
- * 包含：
- * 1. 搜索栏 + 商品列表（搜索模式）
- * 2. AI 聊天区域（聊天模式）
- * 3. 购物车折叠栏（底部固定）
- * 4. 连击标题进入管理模式（5 次/5 秒）
- */
-
-import React, { useState, useCallback, useLayoutEffect, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useLayoutEffect, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -32,6 +18,7 @@ import { useModeStore } from '../store/mode';
 import { useAIConfigStore } from '../store/aiConfig';
 import { searchProducts } from '../db/search';
 import { updateProduct, softDeleteProduct } from '../db/product';
+import { useTheme } from '../theme/ThemeContext';
 import { PinModal } from '../components/PinModal';
 import { SyncStatusIcon } from '../components/SyncStatusIcon';
 import { AIChatBubble } from '../components/AIChatBubble';
@@ -53,18 +40,6 @@ import type { HomeScreenProps } from '../navigation/types';
 
 // ==================== 常量 ====================
 
-const STATUS_COLORS: Record<string, string> = {
-  IN_SHOP: '#16A34A',
-  OUT_OF_STOCK: '#DC2626',
-  TO_BE_PURCHASED: '#EA580C',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  IN_SHOP: '在售',
-  OUT_OF_STOCK: '缺货',
-  TO_BE_PURCHASED: '待采',
-};
-
 /** 聊天输入栏高度 */
 const CHAT_INPUT_HEIGHT = 52;
 /** 购物车栏折叠态高度 */
@@ -75,6 +50,10 @@ const CART_BAR_HEIGHT = 52;
 export function HomeScreen({ navigation }: HomeScreenProps) {
   // ========== 全局 Store ==========
   const { db, refreshProducts } = useStore();
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
+
   const { items, total, addToCart, removeFromCart, removeItem, clearCart } = useCartStore();
   const { isManagement, exitManagement } = useModeStore();
   const aiMode = useAIConfigStore((s) => s.mode);
@@ -593,7 +572,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
           <TextInput
             style={styles.searchInput}
             placeholder="搜索商品名称、拼音或条码"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={colors.text.hint}
             value={query}
             onChangeText={setQuery}
             returnKeyType="search"
@@ -696,7 +675,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
           <TextInput
             style={styles.chatInput}
             placeholder={isVoiceRecording ? '正在聆听...' : '说"可乐多少钱"'}
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={colors.text.hint}
             value={chatInput}
             onChangeText={setChatInput}
             onSubmitEditing={handleAiSend}
@@ -857,270 +836,272 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
 
 // ==================== 样式 ====================
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F1F5F9' },
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bg.primary },
 
-  // -- 顶部栏 --
-  headerMenuBtn: { paddingHorizontal: 12, paddingVertical: 4 },
-  headerMenuText: { fontSize: 22, color: '#2563EB' },
-  headerTitle: { fontSize: 17, fontWeight: '600', color: '#1E293B' },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingRight: 4,
-  },
+    // -- 顶部栏 --
+    headerMenuBtn: { paddingHorizontal: 12, paddingVertical: 4 },
+    headerMenuText: { fontSize: 22 * scale, color: colors.brand.primary },
+    headerTitle: { fontSize: 17 * scale, fontWeight: '600', color: colors.text.primary },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingRight: 4,
+    },
 
-  // -- 搜索栏 --
-  searchBar: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#FFFFFF', marginHorizontal: 12, marginTop: 8, marginBottom: 8,
-    borderRadius: 10, paddingHorizontal: 12, height: 44,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
-  },
-  searchIcon: { fontSize: 16, marginRight: 8 },
-  searchInput: { flex: 1, fontSize: 15, color: '#1E293B', padding: 0 },
-  clearBtn: { padding: 4, marginLeft: 4 },
-  clearBtnText: { fontSize: 14, color: '#94A3B8' },
+    // -- 搜索栏 --
+    searchBar: {
+      flexDirection: 'row', alignItems: 'center',
+      backgroundColor: colors.bg.card, marginHorizontal: 12, marginTop: 8, marginBottom: 8,
+      borderRadius: 10, paddingHorizontal: 12, height: 44,
+      shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
+    },
+    searchIcon: { fontSize: 16 * scale, marginRight: 8 },
+    searchInput: { flex: 1, fontSize: 15 * scale, color: colors.text.primary, padding: 0 },
+    clearBtn: { padding: 4, marginLeft: 4 },
+    clearBtnText: { fontSize: 14 * scale, color: colors.text.hint },
 
-  // -- 搜索模式内容 --
-  searchArea: { flex: 1 },
-  listContent: { paddingHorizontal: 12, paddingBottom: 100 },
-  productItem: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 14,
-    marginBottom: 8,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04, shadowRadius: 2, elevation: 1,
-  },
-  productLeft: { flex: 1, marginRight: 12 },
-  productName: { fontSize: 15, fontWeight: '600', color: '#1E293B' },
-  productSpec: { fontSize: 13, color: '#64748B', marginTop: 2 },
-  productRight: { alignItems: 'flex-end' },
-  productPrice: { fontSize: 15, fontWeight: '700', color: '#DC2626', marginBottom: 4 },
-  addCartBtn: {
-    width: 28, height: 28, borderRadius: 14,
-    backgroundColor: '#2563EB', alignItems: 'center', justifyContent: 'center',
-  },
-  addCartBtnText: { fontSize: 16, color: '#FFF', fontWeight: '700' },
+    // -- 搜索模式内容 --
+    searchArea: { flex: 1 },
+    listContent: { paddingHorizontal: 12, paddingBottom: 100 },
+    productItem: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      backgroundColor: colors.bg.card, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 14,
+      marginBottom: 8,
+      shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04, shadowRadius: 2, elevation: 1,
+    },
+    productLeft: { flex: 1, marginRight: 12 },
+    productName: { fontSize: 15 * scale, fontWeight: '600', color: colors.text.primary },
+    productSpec: { fontSize: 13 * scale, color: colors.text.secondary, marginTop: 2 },
+    productRight: { alignItems: 'flex-end' },
+    productPrice: { fontSize: 15 * scale, fontWeight: '700', color: colors.brand.danger, marginBottom: 4 },
+    addCartBtn: {
+      width: 28, height: 28, borderRadius: 14,
+      backgroundColor: colors.brand.primary, alignItems: 'center', justifyContent: 'center',
+    },
+    addCartBtnText: { fontSize: 16 * scale, color: colors.text.inverse, fontWeight: '700' },
 
-  // -- 聊天模式 --
-  chatArea: { flex: 1 },
-  chatScroll: { flex: 1 },
-  chatContent: { paddingHorizontal: 12, paddingTop: 8 },
-  loadingBubble: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginVertical: 4,
-  },
-  loadingText: { fontSize: 14, color: '#64748B', fontStyle: 'italic' },
+    // -- 聊天模式 --
+    chatArea: { flex: 1 },
+    chatScroll: { flex: 1 },
+    chatContent: { paddingHorizontal: 12, paddingTop: 8 },
+    loadingBubble: {
+      alignSelf: 'flex-start',
+      backgroundColor: colors.bg.primary,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      marginVertical: 4,
+    },
+    loadingText: { fontSize: 14 * scale, color: colors.text.secondary, fontStyle: 'italic' },
 
-  // -- 降级搜索结果 --
-  fallbackSection: {
-    marginTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    paddingTop: 8,
-  },
-  fallbackTitle: {
-    fontSize: 13,
-    color: '#64748B',
-    marginBottom: 8,
-    fontWeight: '500',
-  },
-  fallbackItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 6,
-  },
-  fallbackLeft: { flex: 1, marginRight: 8 },
-  fallbackName: { fontSize: 14, fontWeight: '500', color: '#1E293B' },
-  fallbackSpec: { fontSize: 12, color: '#64748B', marginTop: 2 },
-  fallbackPrice: { fontSize: 14, fontWeight: '700', color: '#DC2626' },
-  fallbackEmpty: {
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  fallbackEmptyText: {
-    fontSize: 14,
-    color: '#94A3B8',
-  },
+    // -- 降级搜索结果 --
+    fallbackSection: {
+      marginTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: colors.border.default,
+      paddingTop: 8,
+    },
+    fallbackTitle: {
+      fontSize: 13 * scale,
+      color: colors.text.secondary,
+      marginBottom: 8,
+      fontWeight: '500',
+    },
+    fallbackItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.bg.card,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      marginBottom: 6,
+    },
+    fallbackLeft: { flex: 1, marginRight: 8 },
+    fallbackName: { fontSize: 14 * scale, fontWeight: '500', color: colors.text.primary },
+    fallbackSpec: { fontSize: 12 * scale, color: colors.text.secondary, marginTop: 2 },
+    fallbackPrice: { fontSize: 14 * scale, fontWeight: '700', color: colors.brand.danger },
+    fallbackEmpty: {
+      alignItems: 'center',
+      paddingVertical: 16,
+    },
+    fallbackEmptyText: {
+      fontSize: 14 * scale,
+      color: colors.text.hint,
+    },
 
-  // -- 聊天输入栏 --
-  chatInputBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 12,
-    marginBottom: 4,
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    height: 44,
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-  },
-  voiceBtn: {
-    padding: 6,
-    marginRight: 4,
-  },
-  voiceBtnText: {
-    fontSize: 20,
-  },
-  chatInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#1E293B',
-    padding: 0,
-    maxHeight: 100,
-  },
-  cameraBtn: {
-    padding: 6,
-    marginLeft: 4,
-  },
-  cameraBtnText: {
-    fontSize: 20,
-  },
+    // -- 聊天输入栏 --
+    chatInputBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.bg.card,
+      marginHorizontal: 12,
+      marginBottom: 4,
+      borderRadius: 10,
+      paddingHorizontal: 8,
+      height: 44,
+      borderTopWidth: 1,
+      borderTopColor: colors.border.default,
+    },
+    voiceBtn: {
+      padding: 6,
+      marginRight: 4,
+    },
+    voiceBtnText: {
+      fontSize: 20 * scale,
+    },
+    chatInput: {
+      flex: 1,
+      fontSize: 15 * scale,
+      color: colors.text.primary,
+      padding: 0,
+      maxHeight: 100,
+    },
+    cameraBtn: {
+      padding: 6,
+      marginLeft: 4,
+    },
+    cameraBtnText: {
+      fontSize: 20 * scale,
+    },
 
-  // -- 购物车栏 --
-  cartBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-  },
-  cartBarInChat: {
-    bottom: CHAT_INPUT_HEIGHT,
-  },
-  cartCollapsed: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 12,
-  },
-  cartIcon: { fontSize: 20, marginRight: 8 },
-  cartCount: { fontSize: 14, fontWeight: '600', color: '#1E293B', marginRight: 12 },
-  cartTotal: { flex: 1, fontSize: 16, fontWeight: '700', color: '#DC2626' },
-  checkoutBtn: {
-    backgroundColor: '#2563EB', borderRadius: 8,
-    paddingHorizontal: 16, paddingVertical: 6,
-  },
-  checkoutBtnText: { fontSize: 14, fontWeight: '600', color: '#FFF' },
-  cartExpanded: { borderTopWidth: 1, borderTopColor: '#E2E8F0', paddingBottom: 8 },
-  cartList: { maxHeight: 200, paddingHorizontal: 16 },
-  cartItem: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 8,
-    borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
-  },
-  cartItemName: { flex: 1, fontSize: 14, color: '#1E293B' },
-  cartItemPrice: { fontSize: 13, color: '#64748B', marginRight: 8 },
-  cartQtyBtn: { fontSize: 18, color: '#2563EB', marginHorizontal: 6 },
-  cartQty: { fontSize: 14, fontWeight: '600', color: '#1E293B', minWidth: 20, textAlign: 'center' },
-  cartSubtotal: { fontSize: 14, fontWeight: '700', color: '#DC2626', marginRight: 8 },
-  cartRemove: { fontSize: 12, color: '#94A3B8' },
-  cartActions: { flexDirection: 'row', paddingHorizontal: 16, paddingTop: 8, gap: 8 },
-  clearBtnLarge: {
-    flex: 1, paddingVertical: 10, borderRadius: 8,
-    backgroundColor: '#FEF2F2', alignItems: 'center',
-  },
-  clearBtnLargeText: { fontSize: 14, color: '#DC2626', fontWeight: '600' },
-  checkoutBtnLarge: {
-    flex: 1, paddingVertical: 10, borderRadius: 8,
-    backgroundColor: '#2563EB', alignItems: 'center',
-  },
-  checkoutBtnLargeText: { fontSize: 14, color: '#FFF', fontWeight: '600' },
+    // -- 购物车栏 --
+    cartBar: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: colors.bg.card,
+      borderTopWidth: 1,
+      borderTopColor: colors.border.default,
+    },
+    cartBarInChat: {
+      bottom: CHAT_INPUT_HEIGHT,
+    },
+    cartCollapsed: {
+      flexDirection: 'row', alignItems: 'center',
+      paddingHorizontal: 16, paddingVertical: 12,
+    },
+    cartIcon: { fontSize: 20 * scale, marginRight: 8 },
+    cartCount: { fontSize: 14 * scale, fontWeight: '600', color: colors.text.primary, marginRight: 12 },
+    cartTotal: { flex: 1, fontSize: 16 * scale, fontWeight: '700', color: colors.brand.danger },
+    checkoutBtn: {
+      backgroundColor: colors.brand.primary, borderRadius: 8,
+      paddingHorizontal: 16, paddingVertical: 6,
+    },
+    checkoutBtnText: { fontSize: 14 * scale, fontWeight: '600', color: colors.text.inverse },
+    cartExpanded: { borderTopWidth: 1, borderTopColor: colors.border.default, paddingBottom: 8 },
+    cartList: { maxHeight: 200, paddingHorizontal: 16 },
+    cartItem: {
+      flexDirection: 'row', alignItems: 'center', paddingVertical: 8,
+      borderBottomWidth: 1, borderBottomColor: colors.bg.primary,
+    },
+    cartItemName: { flex: 1, fontSize: 14 * scale, color: colors.text.primary },
+    cartItemPrice: { fontSize: 13 * scale, color: colors.text.secondary, marginRight: 8 },
+    cartQtyBtn: { fontSize: 18 * scale, color: colors.brand.primary, marginHorizontal: 6 },
+    cartQty: { fontSize: 14 * scale, fontWeight: '600', color: colors.text.primary, minWidth: 20, textAlign: 'center' },
+    cartSubtotal: { fontSize: 14 * scale, fontWeight: '700', color: colors.brand.danger, marginRight: 8 },
+    cartRemove: { fontSize: 12 * scale, color: colors.text.hint },
+    cartActions: { flexDirection: 'row', paddingHorizontal: 16, paddingTop: 8, gap: 8 },
+    clearBtnLarge: {
+      flex: 1, paddingVertical: 10, borderRadius: 8,
+      backgroundColor: colors.brand.danger + '20', alignItems: 'center',
+    },
+    clearBtnLargeText: { fontSize: 14 * scale, color: colors.brand.danger, fontWeight: '600' },
+    checkoutBtnLarge: {
+      flex: 1, paddingVertical: 10, borderRadius: 8,
+      backgroundColor: colors.brand.primary, alignItems: 'center',
+    },
+    checkoutBtnLargeText: { fontSize: 14 * scale, color: colors.text.inverse, fontWeight: '600' },
 
-  // -- 弹窗 --
-  modalOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center', alignItems: 'center',
-  },
-  modalContent: {
-    width: '85%', maxHeight: '70%',
-    backgroundColor: '#FFF', borderRadius: 12, padding: 20,
-  },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#1E293B', marginBottom: 16 },
-  modalItem: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 8,
-    borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
-  },
-  modalItemName: { flex: 1, fontSize: 14, color: '#1E293B' },
-  modalItemQty: { fontSize: 13, color: '#64748B', marginRight: 12 },
-  modalItemTotal: { fontSize: 14, fontWeight: '600', color: '#DC2626' },
-  modalGrandTotal: {
-    fontSize: 18, fontWeight: '700', color: '#DC2626',
-    textAlign: 'right', marginTop: 16, marginBottom: 16,
-  },
-  modalCloseBtn: {
-    backgroundColor: '#2563EB', borderRadius: 10,
-    paddingVertical: 12, alignItems: 'center',
-  },
-  modalCloseBtnText: { fontSize: 16, fontWeight: '600', color: '#FFF' },
+    // -- 弹窗 --
+    modalOverlay: {
+      flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center', alignItems: 'center',
+    },
+    modalContent: {
+      width: '85%', maxHeight: '70%',
+      backgroundColor: colors.bg.card, borderRadius: 12, padding: 20,
+    },
+    modalTitle: { fontSize: 18 * scale, fontWeight: '700', color: colors.text.primary, marginBottom: 16 },
+    modalItem: {
+      flexDirection: 'row', alignItems: 'center', paddingVertical: 8,
+      borderBottomWidth: 1, borderBottomColor: colors.bg.primary,
+    },
+    modalItemName: { flex: 1, fontSize: 14 * scale, color: colors.text.primary },
+    modalItemQty: { fontSize: 13 * scale, color: colors.text.secondary, marginRight: 12 },
+    modalItemTotal: { fontSize: 14 * scale, fontWeight: '600', color: colors.brand.danger },
+    modalGrandTotal: {
+      fontSize: 18 * scale, fontWeight: '700', color: colors.brand.danger,
+      textAlign: 'right', marginTop: 16, marginBottom: 16,
+    },
+    modalCloseBtn: {
+      backgroundColor: colors.brand.primary, borderRadius: 10,
+      paddingVertical: 12, alignItems: 'center',
+    },
+    modalCloseBtnText: { fontSize: 16 * scale, fontWeight: '600', color: colors.text.inverse },
 
-  // -- 复选框 --
-  checkbox: {
-    width: 22, height: 22, borderRadius: 11,
-    borderWidth: 2, borderColor: '#CBD5E1',
-    marginRight: 8, alignItems: 'center', justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: '#2563EB', borderColor: '#2563EB',
-  },
-  checkboxMark: { color: '#FFF', fontSize: 14, fontWeight: '700' },
-  productItemSelected: {
-    backgroundColor: '#EFF6FF',
-  },
+    // -- 复选框 --
+    checkbox: {
+      width: 22, height: 22, borderRadius: 11,
+      borderWidth: 2, borderColor: colors.border.default,
+      marginRight: 8, alignItems: 'center', justifyContent: 'center',
+    },
+    checkboxChecked: {
+      backgroundColor: colors.brand.primary, borderColor: colors.brand.primary,
+    },
+    checkboxMark: { color: colors.text.inverse, fontSize: 14 * scale, fontWeight: '700' },
+    productItemSelected: {
+      backgroundColor: colors.brand.primary + '20',
+    },
 
-  // -- FAB --
-  fab: {
-    position: 'absolute',
-    bottom: 80, right: 16,
-    width: 56, height: 56, borderRadius: 28,
-    backgroundColor: '#2563EB',
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#2563EB', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3, shadowRadius: 6, elevation: 4,
-  },
-  fabText: { fontSize: 28, color: '#FFF', fontWeight: '300' },
-  fabScan: {
-    backgroundColor: '#10B981', bottom: 148, right: 16,
-    shadowColor: '#10B981',
-  },
-  fabScanWithMgmt: { bottom: 216 },
-  fabScanText: { fontSize: 22 },
+    // -- FAB --
+    fab: {
+      position: 'absolute',
+      bottom: 80, right: 16,
+      width: 56, height: 56, borderRadius: 28,
+      backgroundColor: colors.brand.primary,
+      alignItems: 'center', justifyContent: 'center',
+      shadowColor: colors.brand.primary, shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3, shadowRadius: 6, elevation: 4,
+    },
+    fabText: { fontSize: 28 * scale, color: colors.text.inverse, fontWeight: '300' },
+    fabScan: {
+      backgroundColor: colors.brand.success, bottom: 148, right: 16,
+      shadowColor: colors.brand.success,
+    },
+    fabScanWithMgmt: { bottom: 216 },
+    fabScanText: { fontSize: 22 * scale },
 
-  // -- 空状态 --
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 80 },
-  emptyText: { fontSize: 16, color: '#94A3B8' },
-  emptyHint: { fontSize: 13, color: '#94A3B8', marginTop: 6 },
+    // -- 空状态 --
+    emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 80 },
+    emptyText: { fontSize: 16 * scale, color: colors.text.hint },
+    emptyHint: { fontSize: 13 * scale, color: colors.text.hint, marginTop: 6 },
 
-  // -- 批量管理工具栏 --
-  batchToolbar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: '#1E293B', paddingHorizontal: 12, paddingVertical: 8,
-  },
-  batchToolbarText: {
-    fontSize: 12, color: '#94A3B8', marginBottom: 6,
-  },
-  batchToolbarRow: {
-    flexDirection: 'row', gap: 6,
-  },
-  batchBtn: {
-    flex: 1, paddingVertical: 8, borderRadius: 6,
-    backgroundColor: '#334155', alignItems: 'center',
-  },
-  batchBtnText: { fontSize: 12, color: '#FFF', fontWeight: '600' },
-  batchBtnDanger: { backgroundColor: '#DC2626' },
-  batchBtnDangerText: { color: '#FFF' },
-  batchBtnExit: { backgroundColor: '#475569' },
-  batchBtnExitText: { color: '#FFF' },
-});
+    // -- 批量管理工具栏（固定深色，不受主题影响） --
+    batchToolbar: {
+      position: 'absolute', bottom: 0, left: 0, right: 0,
+      backgroundColor: '#1E293B', paddingHorizontal: 12, paddingVertical: 8,
+    },
+    batchToolbarText: {
+      fontSize: 12 * scale, color: '#94A3B8', marginBottom: 6,
+    },
+    batchToolbarRow: {
+      flexDirection: 'row', gap: 6,
+    },
+    batchBtn: {
+      flex: 1, paddingVertical: 8, borderRadius: 6,
+      backgroundColor: '#334155', alignItems: 'center',
+    },
+    batchBtnText: { fontSize: 12 * scale, color: '#FFFFFF', fontWeight: '600' },
+    batchBtnDanger: { backgroundColor: colors.brand.danger },
+    batchBtnDangerText: { color: '#FFFFFF' },
+    batchBtnExit: { backgroundColor: '#475569' },
+    batchBtnExitText: { color: '#FFFFFF' },
+  });
+}

@@ -7,7 +7,7 @@
  * - 全员：同步配置、深色模式、关怀模式、设置
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -21,13 +21,18 @@ import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { useModeStore } from '../store/mode';
 import { useCartStore } from '../store/cart';
 import { usePinStore } from '../store/pin';
+import { useTheme } from '../theme/ThemeContext';
 
 export default function DrawerContent(props: any) {
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
   const { isManagement, enterManagement, exitManagement } = useModeStore();
   const { items, total, clearCart } = useCartStore();
   const { pinHash, isPinSet, verifyPin, setPin } = usePinStore();
   const [pinInput, setPinInput] = useState('');
   const [pinModalVisible, setPinModalVisible] = useState(false);
+
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
   const totalQty = items.reduce((s, i) => s + i.quantity, 0);
 
@@ -179,7 +184,7 @@ export default function DrawerContent(props: any) {
             <TextInput
               style={styles.pinInput}
               placeholder={isPinSet ? '输入 PIN' : '设置 PIN'}
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={colors.text.hint}
               value={pinInput}
               onChangeText={setPinInput}
               secureTextEntry
@@ -211,95 +216,97 @@ export default function DrawerContent(props: any) {
   );
 }
 
-const styles = StyleSheet.create({
-  cartSummary: {
-    margin: 16,
-    padding: 12,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 8,
-  },
-  cartSummaryTitle: { fontSize: 14, fontWeight: '600', color: '#1E293B' },
-  cartSummaryText: { fontSize: 12, color: '#64748B', marginTop: 2 },
-  cartSummaryTotal: {
-    fontSize: 18, fontWeight: '700', color: '#DC2626', marginTop: 4,
-  },
-  section: { marginTop: 8 },
-  sectionTitle: {
-    fontSize: 12, fontWeight: '600', color: '#94A3B8',
-    marginHorizontal: 16, marginBottom: 4, textTransform: 'uppercase',
-  },
-  menuItem: { paddingVertical: 12, paddingHorizontal: 16 },
-  menuItemText: { fontSize: 15, color: '#1E293B' },
-  settingRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 10,
-  },
-  settingLabel: { fontSize: 15, color: '#1E293B' },
-  modeButton: {
-    margin: 16,
-    padding: 12,
-    backgroundColor: '#2563EB',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  modeButtonActive: { backgroundColor: '#10B981' },
-  modeButtonText: { fontSize: 14, color: '#FFFFFF', fontWeight: '600' },
-  clearCartBtn: {
-    margin: 16,
-    padding: 12,
-    backgroundColor: '#FEF2F2',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  clearCartText: { fontSize: 14, color: '#DC2626', fontWeight: '600' },
-  // PIN 弹窗
-  pinOverlay: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pinModal: {
-    width: '80%',
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 24,
-  },
-  pinTitle: {
-    fontSize: 18, fontWeight: '700', color: '#1E293B',
-    textAlign: 'center', marginBottom: 8,
-  },
-  pinHint: {
-    fontSize: 14, color: '#64748B',
-    textAlign: 'center', marginBottom: 20,
-  },
-  pinInput: {
-    backgroundColor: '#F1F5F9',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 18,
-    textAlign: 'center',
-    letterSpacing: 8,
-    color: '#1E293B',
-    marginBottom: 20,
-  },
-  pinActions: { flexDirection: 'row', gap: 12 },
-  pinCancelBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-  },
-  pinCancelBtnText: { fontSize: 14, color: '#64748B', fontWeight: '600' },
-  pinConfirmBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: '#2563EB',
-    alignItems: 'center',
-  },
-  pinConfirmBtnText: { color: '#FFF', fontSize: 14, fontWeight: '600' },
-});
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+  return StyleSheet.create({
+    cartSummary: {
+      margin: 16 * scale,
+      padding: 12 * scale,
+      backgroundColor: colors.bg.primary,
+      borderRadius: 8 * scale,
+    },
+    cartSummaryTitle: { fontSize: 14 * scale, fontWeight: '600', color: colors.text.primary },
+    cartSummaryText: { fontSize: 12 * scale, color: colors.text.secondary, marginTop: 2 * scale },
+    cartSummaryTotal: {
+      fontSize: 18 * scale, fontWeight: '700', color: colors.brand.danger, marginTop: 4 * scale,
+    },
+    section: { marginTop: 8 * scale },
+    sectionTitle: {
+      fontSize: 12 * scale, fontWeight: '600', color: colors.text.hint,
+      marginHorizontal: 16 * scale, marginBottom: 4 * scale, textTransform: 'uppercase',
+    },
+    menuItem: { paddingVertical: 12 * scale, paddingHorizontal: 16 * scale },
+    menuItemText: { fontSize: 15 * scale, color: colors.text.primary },
+    settingRow: {
+      flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+      paddingHorizontal: 16 * scale, paddingVertical: 10 * scale,
+    },
+    settingLabel: { fontSize: 15 * scale, color: colors.text.primary },
+    modeButton: {
+      margin: 16 * scale,
+      padding: 12 * scale,
+      backgroundColor: colors.brand.primary,
+      borderRadius: 8 * scale,
+      alignItems: 'center',
+    },
+    modeButtonActive: { backgroundColor: colors.brand.success },
+    modeButtonText: { fontSize: 14 * scale, color: colors.text.inverse, fontWeight: '600' },
+    clearCartBtn: {
+      margin: 16 * scale,
+      padding: 12 * scale,
+      backgroundColor: colors.bg.primary,
+      borderRadius: 8 * scale,
+      alignItems: 'center',
+    },
+    clearCartText: { fontSize: 14 * scale, color: colors.brand.danger, fontWeight: '600' },
+    // PIN 弹窗
+    pinOverlay: {
+      position: 'absolute',
+      top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    pinModal: {
+      width: '80%',
+      backgroundColor: colors.bg.card,
+      borderRadius: 12 * scale,
+      padding: 24 * scale,
+    },
+    pinTitle: {
+      fontSize: 18 * scale, fontWeight: '700', color: colors.text.primary,
+      textAlign: 'center', marginBottom: 8 * scale,
+    },
+    pinHint: {
+      fontSize: 14 * scale, color: colors.text.secondary,
+      textAlign: 'center', marginBottom: 20 * scale,
+    },
+    pinInput: {
+      backgroundColor: colors.bg.primary,
+      borderRadius: 8 * scale,
+      paddingHorizontal: 16 * scale,
+      paddingVertical: 12 * scale,
+      fontSize: 18 * scale,
+      textAlign: 'center',
+      letterSpacing: 8 * scale,
+      color: colors.text.primary,
+      marginBottom: 20 * scale,
+    },
+    pinActions: { flexDirection: 'row', gap: 12 * scale },
+    pinCancelBtn: {
+      flex: 1,
+      paddingVertical: 10 * scale,
+      borderRadius: 8 * scale,
+      backgroundColor: colors.bg.primary,
+      alignItems: 'center',
+    },
+    pinCancelBtnText: { fontSize: 14 * scale, color: colors.text.secondary, fontWeight: '600' },
+    pinConfirmBtn: {
+      flex: 1,
+      paddingVertical: 10 * scale,
+      borderRadius: 8 * scale,
+      backgroundColor: colors.brand.primary,
+      alignItems: 'center',
+    },
+    pinConfirmBtnText: { color: colors.text.inverse, fontSize: 14 * scale, fontWeight: '600' },
+  });
+}

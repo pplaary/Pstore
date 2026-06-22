@@ -5,7 +5,7 @@
  * 仅在管理模式（editable=true）下可编辑和操作。
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,7 @@ import {
 } from '../services/credential';
 import { useStore } from '../context/store';
 import { showToast } from '../utils/toast';
+import { useTheme } from '../theme/ThemeContext';
 
 interface WebDAVConfigProps {
   editable: boolean;
@@ -32,6 +33,8 @@ interface WebDAVConfigProps {
 type ConnState = 'untested' | 'connected' | 'failed';
 
 export function WebDAVConfig({ editable }: WebDAVConfigProps) {
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
   const { db } = useStore();
   const [url, setUrl] = useState('');
   const [username, setUsername] = useState('');
@@ -40,6 +43,8 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
   const [testing, setTesting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [restoring, setRestoring] = useState(false);
+
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
   // 加载已保存的凭据
   useEffect(() => {
@@ -178,17 +183,17 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
         : '○ 未配置';
   const statusColor =
     connState === 'connected'
-      ? '#16A34A'
+      ? colors.brand.success
       : connState === 'failed'
-        ? '#DC2626'
-        : '#94A3B8';
+        ? colors.brand.danger
+        : colors.text.hint;
 
   return (
     <View>
       <TextInput
         style={styles.input}
         placeholder="https://example.com/webdav"
-        placeholderTextColor="#94A3B8"
+        placeholderTextColor={colors.text.hint}
         value={url}
         onChangeText={setUrl}
         editable={editable}
@@ -199,7 +204,7 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
       <TextInput
         style={styles.input}
         placeholder="账号"
-        placeholderTextColor="#94A3B8"
+        placeholderTextColor={colors.text.hint}
         value={username}
         onChangeText={setUsername}
         editable={editable}
@@ -209,7 +214,7 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
       <TextInput
         style={styles.input}
         placeholder="密码"
-        placeholderTextColor="#94A3B8"
+        placeholderTextColor={colors.text.hint}
         value={password}
         onChangeText={setPassword}
         editable={editable}
@@ -264,54 +269,56 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  input: {
-    backgroundColor: '#F1F5F9',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: '#1E293B',
-    marginBottom: 8,
-  },
-  statusRow: {
-    marginTop: 4,
-    marginBottom: 8,
-  },
-  statusText: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  buttonGroup: {
-    marginBottom: 8,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 40,
-  },
-  testButton: {
-    backgroundColor: '#2563EB',
-  },
-  exportButton: {
-    backgroundColor: '#16A34A',
-  },
-  restoreButton: {
-    backgroundColor: '#F59E0B',
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+  return StyleSheet.create({
+    input: {
+      backgroundColor: colors.bg.primary,
+      borderRadius: 8 * scale,
+      paddingHorizontal: 12 * scale,
+      paddingVertical: 10 * scale,
+      fontSize: 14 * scale,
+      color: colors.text.primary,
+      marginBottom: 8 * scale,
+    },
+    statusRow: {
+      marginTop: 4 * scale,
+      marginBottom: 8 * scale,
+    },
+    statusText: {
+      fontSize: 13 * scale,
+      fontWeight: '500',
+    },
+    buttonGroup: {
+      marginBottom: 8 * scale,
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: 8 * scale,
+    },
+    button: {
+      flex: 1,
+      paddingVertical: 10 * scale,
+      borderRadius: 8 * scale,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 40 * scale,
+    },
+    testButton: {
+      backgroundColor: colors.brand.primary,
+    },
+    exportButton: {
+      backgroundColor: colors.brand.success,
+    },
+    restoreButton: {
+      backgroundColor: '#F59E0B', // amber — 语义不同于 brand.warning(#EA580C=orange)
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonText: {
+      color: colors.text.inverse,
+      fontSize: 14 * scale,
+      fontWeight: '600',
+    },
+  });
+}

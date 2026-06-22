@@ -1,13 +1,4 @@
-/**
- * PendingItemsScreen — 待处理条码列表（管理模式）
- *
- * spec §5.3 / §8.1
- * - 展示所有未处理的 PendingItem
- * - [转为商品] 按钮 → 跳转 ProductEdit 预填条码
- * - 左滑删除
- */
-
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -19,10 +10,14 @@ import {
 import { useStore } from '../context/store';
 import { useModeStore } from '../store/mode';
 import { getAll, deleteById, convertToProduct } from '../db/pending';
+import { useTheme } from '../theme/ThemeContext';
 import type { PendingItem } from '../db/types';
 
 export function PendingItemsScreen({ navigation }: any) {
   const { db } = useStore();
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
   const { isManagement } = useModeStore();
   const [items, setItems] = useState<PendingItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -123,32 +118,36 @@ export function PendingItemsScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F1F5F9' },
-  listContent: { padding: 12 },
-  itemRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF', borderRadius: 10, padding: 16, marginBottom: 8,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04, shadowRadius: 2, elevation: 1,
-  },
-  itemInfo: { flex: 1, marginRight: 12 },
-  barcodeText: { fontSize: 15, fontWeight: '600', color: '#1E293B' },
-  timeText: { fontSize: 12, color: '#64748B', marginTop: 4 },
-  itemActions: { flexDirection: 'row', gap: 8 },
-  convertBtn: {
-    backgroundColor: '#2563EB', borderRadius: 6,
-    paddingHorizontal: 12, paddingVertical: 6,
-  },
-  convertBtnText: { color: '#FFF', fontSize: 13, fontWeight: '600' },
-  deleteBtn: {
-    backgroundColor: '#F1F5F9', borderRadius: 6,
-    paddingHorizontal: 12, paddingVertical: 6,
-  },
-  deleteBtnText: { color: '#DC2626', fontSize: 13, fontWeight: '600' },
-  emptyContainer: {
-    flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32,
-  },
-  emptyText: { fontSize: 16, color: '#94A3B8', marginBottom: 8 },
-  emptyHint: { fontSize: 14, color: '#64748B', textAlign: 'center' },
-});
+// ==================== 样式 ====================
+
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bg.primary },
+    listContent: { padding: 12 },
+    itemRow: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      backgroundColor: colors.bg.card, borderRadius: 10, padding: 16, marginBottom: 8,
+      shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04, shadowRadius: 2, elevation: 1,
+    },
+    itemInfo: { flex: 1, marginRight: 12 },
+    barcodeText: { fontSize: 15 * scale, fontWeight: '600', color: colors.text.primary },
+    timeText: { fontSize: 12 * scale, color: colors.text.secondary, marginTop: 4 },
+    itemActions: { flexDirection: 'row', gap: 8 },
+    convertBtn: {
+      backgroundColor: colors.brand.primary, borderRadius: 6,
+      paddingHorizontal: 12, paddingVertical: 6,
+    },
+    convertBtnText: { color: colors.text.inverse, fontSize: 13 * scale, fontWeight: '600' },
+    deleteBtn: {
+      backgroundColor: colors.bg.primary, borderRadius: 6,
+      paddingHorizontal: 12, paddingVertical: 6,
+    },
+    deleteBtnText: { color: colors.brand.danger, fontSize: 13 * scale, fontWeight: '600' },
+    emptyContainer: {
+      flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32,
+    },
+    emptyText: { fontSize: 16 * scale, color: colors.text.hint, marginBottom: 8 },
+    emptyHint: { fontSize: 14 * scale, color: colors.text.secondary, textAlign: 'center' },
+  });
+}

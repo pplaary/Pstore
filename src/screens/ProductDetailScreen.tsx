@@ -1,28 +1,21 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useStore } from '../context/store';
 import { getProductById } from '../db/product';
 import { getPriceHistory } from '../db/product';
 import { softDeleteProduct } from '../db/product';
-import type { Product } from '../db/types';
+import { useTheme } from '../theme/ThemeContext';
+import type { Product, ProductStatus } from '../db/types';
 import type { ProductDetailScreenProps } from '../navigation/types';
-
-const STATUS_COLORS: Record<string, string> = {
-  IN_SHOP: '#16A34A',
-  OUT_OF_STOCK: '#DC2626',
-  TO_BE_PURCHASED: '#EA580C',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  IN_SHOP: '在售',
-  OUT_OF_STOCK: '缺货',
-  TO_BE_PURCHASED: '待采',
-};
 
 export function ProductDetailScreen({ navigation, route }: ProductDetailScreenProps) {
   const { db } = useStore();
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
   const productId = route.params?.id;
+
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
   const handleEdit = useCallback(() => {
     if (productId) {
@@ -69,6 +62,10 @@ export function ProductDetailScreen({ navigation, route }: ProductDetailScreenPr
 // ==================== 子组件 ====================
 
 function DetailContent({ db, productId }: { db: ReturnType<typeof useStore>['db']; productId: string }) {
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
+
   const [product, setProduct] = useState<Product | null>(null);
   const [history, setHistory] = useState<{ id: string; oldPrice: number; newPrice: number; changedAt: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,6 +105,14 @@ function DetailContent({ db, productId }: { db: ReturnType<typeof useStore>['db'
     );
   }
 
+  const statusColors: Record<string, string> = {
+    IN_SHOP: colors.brand.success,
+    OUT_OF_STOCK: colors.brand.danger,
+    TO_BE_PURCHASED: colors.brand.warning,
+  };
+
+  const statusLabels = { IN_SHOP: '在售', OUT_OF_STOCK: '缺货', TO_BE_PURCHASED: '待采' };
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
       {/* 商品信息 */}
@@ -121,8 +126,8 @@ function DetailContent({ db, productId }: { db: ReturnType<typeof useStore>['db'
           {product.category && <InfoRow label="分类" value={product.category} />}
           <View style={styles.statusRow}>
             <Text style={styles.infoLabel}>状态</Text>
-            <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[product.status] || '#94A3B8' }]}>
-              <Text style={styles.statusText}>{STATUS_LABELS[product.status] || product.status}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: statusColors[product.status] || colors.text.hint }]}>
+              <Text style={styles.statusText}>{statusLabels[product.status] || product.status}</Text>
             </View>
           </View>
           <InfoRow label="更新时间" value={product.updatedAt} sub />
@@ -153,6 +158,10 @@ function DetailContent({ db, productId }: { db: ReturnType<typeof useStore>['db'
 }
 
 function InfoRow({ label, value, highlight, sub }: { label: string; value: string; highlight?: boolean; sub?: boolean }) {
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
+
   return (
     <View style={styles.infoRow}>
       <Text style={[styles.infoLabel, sub && styles.infoLabelSub]}>{label}</Text>
@@ -163,160 +172,162 @@ function InfoRow({ label, value, highlight, sub }: { label: string; value: strin
 
 // ==================== 样式 ====================
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F1F5F9',
-  },
-  scrollContent: {
-    padding: 12,
-    paddingBottom: 80,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  productName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginBottom: 12,
-  },
-  infoContent: {
-    gap: 8,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  infoLabelSub: {
-    fontSize: 12,
-    color: '#94A3B8',
-  },
-  infoValue: {
-    fontSize: 14,
-    color: '#1E293B',
-    fontWeight: '600',
-  },
-  infoValueHighlight: {
-    fontSize: 18,
-    color: '#DC2626',
-    fontWeight: '700',
-  },
-  statusRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  statusText: {
-    fontSize: 12,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 14,
-    color: '#94A3B8',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#94A3B8',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1E293B',
-    marginBottom: 12,
-  },
-  historyItem: {
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  historyPriceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  historyOldPrice: {
-    fontSize: 14,
-    color: '#94A3B8',
-    textDecorationLine: 'line-through',
-  },
-  historyArrow: {
-    fontSize: 14,
-    color: '#CBD5E1',
-  },
-  historyNewPrice: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#DC2626',
-  },
-  historyDate: {
-    fontSize: 12,
-    color: '#94A3B8',
-    marginTop: 4,
-  },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    paddingHorizontal: 12,
-    paddingBottom: 24,
-    paddingTop: 10,
-    backgroundColor: '#F1F5F9',
-    gap: 10,
-  },
-  actionButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  editButton: {
-    backgroundColor: '#2563EB',
-  },
-  deleteButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#DC2626',
-  },
-  actionButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  deleteButtonText: {
-    color: '#DC2626',
-  },
-});
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg.primary,
+    },
+    scrollContent: {
+      padding: 12,
+      paddingBottom: 80,
+    },
+    card: {
+      backgroundColor: colors.bg.card,
+      borderRadius: 10,
+      padding: 16,
+      marginBottom: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    productName: {
+      fontSize: 18 * scale,
+      fontWeight: '700',
+      color: colors.text.primary,
+      marginBottom: 12,
+    },
+    infoContent: {
+      gap: 8,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    infoLabel: {
+      fontSize: 14 * scale,
+      color: colors.text.secondary,
+      fontWeight: '500',
+    },
+    infoLabelSub: {
+      fontSize: 12 * scale,
+      color: colors.text.hint,
+    },
+    infoValue: {
+      fontSize: 14 * scale,
+      color: colors.text.primary,
+      fontWeight: '600',
+    },
+    infoValueHighlight: {
+      fontSize: 18 * scale,
+      color: colors.brand.danger,
+      fontWeight: '700',
+    },
+    statusRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    statusBadge: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 4,
+    },
+    statusText: {
+      fontSize: 12 * scale,
+      color: colors.text.inverse,
+      fontWeight: '600',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      fontSize: 14 * scale,
+      color: colors.text.hint,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    emptyText: {
+      fontSize: 14 * scale,
+      color: colors.text.hint,
+    },
+    sectionTitle: {
+      fontSize: 16 * scale,
+      fontWeight: '600',
+      color: colors.text.primary,
+      marginBottom: 12,
+    },
+    historyItem: {
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.bg.primary,
+    },
+    historyPriceRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    historyOldPrice: {
+      fontSize: 14 * scale,
+      color: colors.text.hint,
+      textDecorationLine: 'line-through',
+    },
+    historyArrow: {
+      fontSize: 14 * scale,
+      color: colors.border.default,
+    },
+    historyNewPrice: {
+      fontSize: 16 * scale,
+      fontWeight: '700',
+      color: colors.brand.danger,
+    },
+    historyDate: {
+      fontSize: 12 * scale,
+      color: colors.text.hint,
+      marginTop: 4,
+    },
+    bottomBar: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      paddingHorizontal: 12,
+      paddingBottom: 24,
+      paddingTop: 10,
+      backgroundColor: colors.bg.primary,
+      gap: 10,
+    },
+    actionButton: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    editButton: {
+      backgroundColor: colors.brand.primary,
+    },
+    deleteButton: {
+      backgroundColor: colors.bg.card,
+      borderWidth: 1,
+      borderColor: colors.brand.danger,
+    },
+    actionButtonText: {
+      fontSize: 16 * scale,
+      fontWeight: '600',
+      color: colors.text.inverse,
+    },
+    deleteButtonText: {
+      color: colors.brand.danger,
+    },
+  });
+}

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { addProduct, updateProduct } from '../db/product';
 import type { ProductEditScreenProps } from '../navigation/types';
 import { CATEGORIES, IN_SHOP, OUT_OF_STOCK, TO_BE_PURCHASED } from '../db/types';
 import type { ProductStatus } from '../db/types';
+import { useTheme } from '../theme/ThemeContext';
 
 // 状态选项
 const STATUS_OPTIONS: { value: ProductStatus; label: string }[] = [
@@ -23,17 +24,24 @@ const STATUS_OPTIONS: { value: ProductStatus; label: string }[] = [
 ];
 
 // 状态色标（用于选中态）
-const STATUS_COLORS: Record<string, string> = {
-  IN_SHOP: '#16A34A',
-  OUT_OF_STOCK: '#DC2626',
-  TO_BE_PURCHASED: '#EA580C',
-};
+function getStatusColors(colors: ReturnType<typeof useTheme>['theme']['colors']): Record<string, string> {
+  return {
+    IN_SHOP: colors.brand.success,
+    OUT_OF_STOCK: colors.brand.danger,
+    TO_BE_PURCHASED: colors.brand.warning,
+  };
+}
 
 export function ProductEditScreen({ navigation, route }: ProductEditScreenProps) {
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
+  const statusColors = getStatusColors(colors);
   const { db } = useStore();
   const existingId = route.params?.id;
   const nameRef = useRef<TextInput>(null);
   const priceRef = useRef<TextInput>(null);
+
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
   // 表单状态
   const [name, setName] = useState('');
@@ -136,7 +144,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
           ref={nameRef}
           style={styles.input}
           placeholder="例如：百事可乐"
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={colors.text.hint}
           value={name}
           onChangeText={setName}
           autoFocus={!isEdit}
@@ -153,7 +161,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         <TextInput
           style={styles.input}
           placeholder="逗号分隔多个别名，如：百事,可乐"
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={colors.text.hint}
           value={aliases}
           onChangeText={setAliases}
           returnKeyType="next"
@@ -169,7 +177,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
           ref={priceRef}
           style={styles.input}
           placeholder="0.00"
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={colors.text.hint}
           value={price}
           onChangeText={setPrice}
           keyboardType="decimal-pad"
@@ -183,7 +191,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         <TextInput
           style={styles.input}
           placeholder="例如：500ml"
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={colors.text.hint}
           value={spec}
           onChangeText={setSpec}
           returnKeyType="next"
@@ -196,7 +204,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         <TextInput
           style={styles.input}
           placeholder="扫描或手动输入"
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={colors.text.hint}
           value={barcode}
           onChangeText={setBarcode}
           returnKeyType="next"
@@ -242,8 +250,8 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
                 style={[
                   styles.statusChip,
                   active && {
-                    backgroundColor: STATUS_COLORS[opt.value],
-                    borderColor: STATUS_COLORS[opt.value],
+                    backgroundColor: statusColors[opt.value],
+                    borderColor: statusColors[opt.value],
                   },
                 ]}
                 onPress={() => setStatus(opt.value)}
@@ -274,96 +282,98 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F1F5F9',
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  field: {
-    marginBottom: 16,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#475569',
-    marginBottom: 6,
-  },
-  required: {
-    color: '#DC2626',
-  },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: '#1E293B',
-  },
-  categoryRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  categoryChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  categoryChipActive: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
-  },
-  categoryChipText: {
-    fontSize: 12,
-    color: '#475569',
-    fontWeight: '500',
-  },
-  categoryChipTextActive: {
-    color: '#FFFFFF',
-  },
-  statusRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  statusChip: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-  },
-  statusChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#475569',
-  },
-  statusChipTextActive: {
-    color: '#FFFFFF',
-  },
-  saveButton: {
-    backgroundColor: '#2563EB',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-});
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg.primary,
+    },
+    content: {
+      padding: 16 * scale,
+      paddingBottom: 32 * scale,
+    },
+    field: {
+      marginBottom: 16 * scale,
+    },
+    fieldLabel: {
+      fontSize: 14 * scale,
+      fontWeight: '600',
+      color: colors.text.secondary,
+      marginBottom: 6 * scale,
+    },
+    required: {
+      color: colors.brand.danger,
+    },
+    input: {
+      backgroundColor: colors.bg.card,
+      borderWidth: 1,
+      borderColor: colors.border.default,
+      borderRadius: 8 * scale,
+      paddingHorizontal: 12 * scale,
+      paddingVertical: 10 * scale,
+      fontSize: 15 * scale,
+      color: colors.text.primary,
+    },
+    categoryRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6 * scale,
+    },
+    categoryChip: {
+      paddingHorizontal: 10 * scale,
+      paddingVertical: 5 * scale,
+      borderRadius: 14 * scale,
+      backgroundColor: colors.bg.card,
+      borderWidth: 1,
+      borderColor: colors.border.default,
+    },
+    categoryChipActive: {
+      backgroundColor: colors.brand.primary,
+      borderColor: colors.brand.primary,
+    },
+    categoryChipText: {
+      fontSize: 12 * scale,
+      color: colors.text.secondary,
+      fontWeight: '500',
+    },
+    categoryChipTextActive: {
+      color: colors.text.inverse,
+    },
+    statusRow: {
+      flexDirection: 'row',
+      gap: 8 * scale,
+    },
+    statusChip: {
+      flex: 1,
+      paddingVertical: 10 * scale,
+      borderRadius: 8 * scale,
+      backgroundColor: colors.bg.card,
+      borderWidth: 1,
+      borderColor: colors.border.default,
+      alignItems: 'center',
+    },
+    statusChipText: {
+      fontSize: 13 * scale,
+      fontWeight: '600',
+      color: colors.text.secondary,
+    },
+    statusChipTextActive: {
+      color: colors.text.inverse,
+    },
+    saveButton: {
+      backgroundColor: colors.brand.primary,
+      borderRadius: 10 * scale,
+      paddingVertical: 14 * scale,
+      alignItems: 'center',
+      marginTop: 8 * scale,
+    },
+    saveButtonDisabled: {
+      opacity: 0.6,
+    },
+    saveButtonText: {
+      fontSize: 16 * scale,
+      fontWeight: '600',
+      color: colors.text.inverse,
+    },
+  });
+}

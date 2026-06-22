@@ -1,12 +1,4 @@
-/**
- * DuplicateScreen — 重复检测列表（管理模式）
- *
- * spec §5.7 / §12.4
- * - 条码一致：自动合并（静默）
- * - 名称相似 ≥90%：需人工确认
- */
-
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -19,6 +11,7 @@ import {
 import { useStore } from '../context/store';
 import { useModeStore } from '../store/mode';
 import { getAllMergeCandidates, mergeProducts } from '../db/duplicate';
+import { useTheme } from '../theme/ThemeContext';
 import type { MergeCandidate } from '../db/types';
 
 type ConfirmState = {
@@ -28,6 +21,9 @@ type ConfirmState = {
 
 export function DuplicateScreen({ navigation }: any) {
   const { db } = useStore();
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
   const [candidates, setCandidates] = useState<MergeCandidate[]>([]);
   const [loading, setLoading] = useState(false);
   const [confirmState, setConfirmState] = useState<ConfirmState>(null);
@@ -263,80 +259,82 @@ export function DuplicateScreen({ navigation }: any) {
 
 // ==================== Styles ====================
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F1F5F9' },
-  listContent: { padding: 12 },
-  centerContainer: {
-    flex: 1, justifyContent: 'center', alignItems: 'center',
-  },
-  loadingText: { fontSize: 16, color: '#64748B' },
-  sectionTitle: {
-    fontSize: 13, fontWeight: '600', color: '#64748B',
-    marginHorizontal: 4, marginTop: 8, marginBottom: 4,
-    textTransform: 'uppercase',
-  },
-  itemRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF', borderRadius: 10, padding: 14, marginBottom: 8,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04, shadowRadius: 2, elevation: 1,
-  },
-  itemInfo: { flex: 1, marginRight: 12 },
-  itemTitle: { fontSize: 14, fontWeight: '600', color: '#1E293B' },
-  itemSubtitle: { fontSize: 13, color: '#64748B', marginTop: 2 },
-  actionRow: { flexDirection: 'row', gap: 8 },
-  autoMergeBtn: {
-    backgroundColor: '#10B981', borderRadius: 6,
-    paddingHorizontal: 12, paddingVertical: 6,
-  },
-  autoMergeBtnText: { color: '#FFF', fontSize: 13, fontWeight: '600' },
-  mergeBtn: {
-    backgroundColor: '#2563EB', borderRadius: 6,
-    paddingHorizontal: 12, paddingVertical: 6,
-  },
-  mergeBtnText: { color: '#FFF', fontSize: 13, fontWeight: '600' },
-  notDupBtn: {
-    backgroundColor: '#F1F5F9', borderRadius: 6,
-    paddingHorizontal: 12, paddingVertical: 6,
-  },
-  notDupBtnText: { color: '#64748B', fontSize: 13, fontWeight: '600' },
-  emptyContainer: {
-    flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32,
-  },
-  emptyText: { fontSize: 16, color: '#94A3B8' },
-  // 确认弹窗
-  modalOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center', alignItems: 'center',
-  },
-  confirmSheet: {
-    width: '85%', backgroundColor: '#FFF', borderRadius: 12, padding: 20,
-  },
-  confirmTitle: {
-    fontSize: 17, fontWeight: '700', color: '#1E293B', marginBottom: 8,
-  },
-  confirmText: {
-    fontSize: 14, color: '#64748B', marginBottom: 16,
-  },
-  choiceRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
-  choiceBtn: {
-    flex: 1, padding: 12, borderRadius: 8,
-    backgroundColor: '#F1F5F9', alignItems: 'center',
-    borderWidth: 2, borderColor: 'transparent',
-  },
-  choiceBtnActive: {
-    borderColor: '#2563EB', backgroundColor: '#EFF6FF',
-  },
-  choiceName: { fontSize: 14, fontWeight: '600', color: '#1E293B' },
-  confirmActions: { flexDirection: 'row', gap: 12 },
-  cancelBtn: {
-    flex: 1, paddingVertical: 10, borderRadius: 8,
-    backgroundColor: '#F1F5F9', alignItems: 'center',
-  },
-  cancelBtnText: { fontSize: 14, color: '#64748B', fontWeight: '600' },
-  confirmMergeBtn: {
-    flex: 1, paddingVertical: 10, borderRadius: 8,
-    backgroundColor: '#2563EB', alignItems: 'center',
-  },
-  confirmMergeBtnText: { color: '#FFF', fontSize: 14, fontWeight: '600' },
-});
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bg.primary },
+    listContent: { padding: 12 },
+    centerContainer: {
+      flex: 1, justifyContent: 'center', alignItems: 'center',
+    },
+    loadingText: { fontSize: 16 * scale, color: colors.text.secondary },
+    sectionTitle: {
+      fontSize: 13 * scale, fontWeight: '600', color: colors.text.secondary,
+      marginHorizontal: 4, marginTop: 8, marginBottom: 4,
+      textTransform: 'uppercase',
+    },
+    itemRow: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      backgroundColor: colors.bg.card, borderRadius: 10, padding: 14, marginBottom: 8,
+      shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04, shadowRadius: 2, elevation: 1,
+    },
+    itemInfo: { flex: 1, marginRight: 12 },
+    itemTitle: { fontSize: 14 * scale, fontWeight: '600', color: colors.text.primary },
+    itemSubtitle: { fontSize: 13 * scale, color: colors.text.secondary, marginTop: 2 },
+    actionRow: { flexDirection: 'row', gap: 8 },
+    autoMergeBtn: {
+      backgroundColor: colors.brand.success, borderRadius: 6,
+      paddingHorizontal: 12, paddingVertical: 6,
+    },
+    autoMergeBtnText: { color: colors.text.inverse, fontSize: 13 * scale, fontWeight: '600' },
+    mergeBtn: {
+      backgroundColor: colors.brand.primary, borderRadius: 6,
+      paddingHorizontal: 12, paddingVertical: 6,
+    },
+    mergeBtnText: { color: colors.text.inverse, fontSize: 13 * scale, fontWeight: '600' },
+    notDupBtn: {
+      backgroundColor: colors.bg.primary, borderRadius: 6,
+      paddingHorizontal: 12, paddingVertical: 6,
+    },
+    notDupBtnText: { color: colors.text.secondary, fontSize: 13 * scale, fontWeight: '600' },
+    emptyContainer: {
+      flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32,
+    },
+    emptyText: { fontSize: 16 * scale, color: colors.text.hint },
+    // 确认弹窗
+    modalOverlay: {
+      flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center', alignItems: 'center',
+    },
+    confirmSheet: {
+      width: '85%', backgroundColor: colors.bg.card, borderRadius: 12, padding: 20,
+    },
+    confirmTitle: {
+      fontSize: 17 * scale, fontWeight: '700', color: colors.text.primary, marginBottom: 8,
+    },
+    confirmText: {
+      fontSize: 14 * scale, color: colors.text.secondary, marginBottom: 16,
+    },
+    choiceRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
+    choiceBtn: {
+      flex: 1, padding: 12, borderRadius: 8,
+      backgroundColor: colors.bg.primary, alignItems: 'center',
+      borderWidth: 2, borderColor: 'transparent',
+    },
+    choiceBtnActive: {
+      borderColor: colors.brand.primary, backgroundColor: colors.brand.primary + '20',
+    },
+    choiceName: { fontSize: 14 * scale, fontWeight: '600', color: colors.text.primary },
+    confirmActions: { flexDirection: 'row', gap: 12 },
+    cancelBtn: {
+      flex: 1, paddingVertical: 10, borderRadius: 8,
+      backgroundColor: colors.bg.primary, alignItems: 'center',
+    },
+    cancelBtnText: { fontSize: 14 * scale, color: colors.text.secondary, fontWeight: '600' },
+    confirmMergeBtn: {
+      flex: 1, paddingVertical: 10, borderRadius: 8,
+      backgroundColor: colors.brand.primary, alignItems: 'center',
+    },
+    confirmMergeBtnText: { color: colors.text.inverse, fontSize: 14 * scale, fontWeight: '600' },
+  });
+}

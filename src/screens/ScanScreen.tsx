@@ -1,21 +1,3 @@
-/**
- * ScanScreen — 扫码 + 拍照识别双模式
- *
- * spec §8.1 (扫码) / §8.2 (拍照识别) / §5.3 (PendingItem) / §14.2 (超时)
- *
- * 布局：
- * ┌──────────────────────────┐
- * │  [扫码] [拍照]           │  顶部模式切换 Tab（拍照仅 AI 配置时可见）
- * ├──────────────────────────┤
- * │                          │
- * │     Camera Preview       │  扫码: 扫码框覆盖
- * │                          │  拍照: 全屏预览 + 拍照按钮
- * │                          │
- * ├──────────────────────────┤
- * │ 手动输入条码框 + [确认]   │  兜底输入（两种模式都显示，spec §8.1）
- * └──────────────────────────┘
- */
-
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View,
@@ -37,6 +19,7 @@ import { useAIConfigStore } from '../store/aiConfig';
 import { findByBarcode, createOrUpdate } from '../db/pending';
 import { searchProducts } from '../db/search';
 import { recognizeProduct } from '../services/vision';
+import { useTheme } from '../theme/ThemeContext';
 import type { Product } from '../db/types';
 import type { ScanScreenProps } from '../navigation/types';
 
@@ -44,10 +27,14 @@ type ScanMode = 'scan' | 'photo';
 
 export function ScanScreen({ navigation }: ScanScreenProps) {
   const { db } = useStore();
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
   const { addToCart } = useCartStore();
   const { isManagement } = useModeStore();
   const aiConfig = useAIConfigStore((s) => s.config);
   const hasAiConfig = useAIConfigStore((s) => s.hasConfig());
+
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
   const [mode, setMode] = useState<ScanMode>('scan');
   const [barcodeInput, setBarcodeInput] = useState('');
@@ -73,7 +60,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
   if (!permission) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" color={colors.brand.primary} />
       </View>
     );
   }
@@ -333,7 +320,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
           {/* 加载指示器 */}
           {isLoading && (
             <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="large" color="#2563EB" />
+              <ActivityIndicator size="large" color={colors.brand.primary} />
             </View>
           )}
         </CameraView>
@@ -366,12 +353,12 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
         </View>
       )}
 
-      {/* 手动输入条码（兜底，spec §8.1 始终显示） */}
+      {/* 手动输入条码（兜底） */}
       <View style={styles.inputBar}>
         <TextInput
           style={styles.input}
           placeholder="手动输入条码（兜底）"
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={colors.text.hint}
           value={barcodeInput}
           onChangeText={setBarcodeInput}
           autoCapitalize="none"
@@ -389,7 +376,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
         </TouchableOpacity>
       </View>
 
-      {/* 候选列表 Bottom Sheet（拍照识别结果） */}
+      {/* 候选列表 Bottom Sheet */}
       <Modal
         visible={showCandidates}
         animationType="slide"
@@ -445,119 +432,121 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
 
 // ==================== Styles ====================
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F1F5F9' },
-  centerContainer: {
-    flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F1F5F9',
-  },
-  permissionText: { fontSize: 16, color: '#475569', marginBottom: 16 },
-  permissionBtn: {
-    backgroundColor: '#2563EB', borderRadius: 8, paddingHorizontal: 24, paddingVertical: 12,
-  },
-  permissionBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
-  tabBar: {
-    flexDirection: 'row', backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1, borderBottomColor: '#E2E8F0',
-  },
-  tab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: '#2563EB' },
-  tabText: { fontSize: 15, color: '#64748B', fontWeight: '500' },
-  tabTextActive: { color: '#2563EB', fontWeight: '600' },
-  cameraContainer: { flex: 1, position: 'relative' },
-  camera: { flex: 1 },
-  scanOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scanFrame: {
-    width: 240, height: 240, borderWidth: 2, borderColor: '#FFFFFF',
-    borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  scanHint: {
-    color: '#FFFFFF', fontSize: 14, marginTop: 16,
-    textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  photoOverlay: {
-    flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 60,
-  },
-  captureButton: {
-    width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.3)',
-    justifyContent: 'center', alignItems: 'center', marginBottom: 20,
-  },
-  captureInner: {
-    width: 56, height: 56, borderRadius: 28, backgroundColor: '#FFFFFF',
-    borderWidth: 4, borderColor: '#2563EB',
-  },
-  flipButton: { padding: 12, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 8 },
-  flipButtonText: { color: '#FFFFFF', fontSize: 14 },
-  loadingOverlay: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)',
-  },
-  resultCard: {
-    backgroundColor: '#FFFFFF', marginHorizontal: 16, marginBottom: 12,
-    borderRadius: 12, padding: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
-  },
-  resultName: { fontSize: 17, fontWeight: '600', color: '#1E293B' },
-  resultSpec: { fontSize: 14, color: '#64748B', marginTop: 2 },
-  resultPrice: { fontSize: 18, fontWeight: '700', color: '#DC2626', marginTop: 8 },
-  resultActions: { flexDirection: 'row', gap: 12, marginTop: 12 },
-  addCartBtn: {
-    flex: 1, backgroundColor: '#2563EB', borderRadius: 8,
-    paddingVertical: 10, alignItems: 'center',
-  },
-  addCartBtnText: { color: '#FFF', fontSize: 15, fontWeight: '600' },
-  ignoreBtn: {
-    flex: 1, backgroundColor: '#F1F5F9', borderRadius: 8,
-    paddingVertical: 10, alignItems: 'center',
-  },
-  ignoreBtnText: { color: '#64748B', fontSize: 15, fontWeight: '600' },
-  inputBar: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF',
-    marginHorizontal: 12, marginBottom: 12, borderRadius: 10,
-    paddingHorizontal: 12, borderWidth: 1, borderColor: '#E2E8F0',
-  },
-  input: { flex: 1, fontSize: 15, color: '#1E293B', paddingVertical: 10 },
-  submitBtn: {
-    backgroundColor: '#2563EB', borderRadius: 8,
-    paddingHorizontal: 16, paddingVertical: 8, marginLeft: 8,
-  },
-  submitBtnDisabled: { opacity: 0.5 },
-  submitBtnText: { color: '#FFF', fontSize: 14, fontWeight: '600' },
-  modalOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end',
-  },
-  candidateSheet: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 16, borderTopRightRadius: 16,
-    maxHeight: '60%', paddingBottom: 20,
-  },
-  sheetTitle: {
-    fontSize: 17, fontWeight: '600', color: '#1E293B', textAlign: 'center',
-    paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#E2E8F0',
-  },
-  candidateRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
-  },
-  candidateInfo: { flex: 1 },
-  candidateName: { fontSize: 15, fontWeight: '600', color: '#1E293B' },
-  candidateSpec: { fontSize: 13, color: '#64748B', marginTop: 2 },
-  candidateConfidence: { fontSize: 12, color: '#8B5CF6', marginTop: 2 },
-  candidateAddBtn: {
-    backgroundColor: '#2563EB', borderRadius: 6,
-    paddingHorizontal: 16, paddingVertical: 8,
-  },
-  candidateAddBtnText: { color: '#FFF', fontSize: 13, fontWeight: '600' },
-  manualSearchBtn: {
-    marginHorizontal: 16, marginTop: 12, paddingVertical: 12,
-    alignItems: 'center', backgroundColor: '#F1F5F9', borderRadius: 8,
-  },
-  manualSearchBtnText: { fontSize: 14, color: '#2563EB', fontWeight: '500' },
-  sheetCloseBtn: {
-    marginHorizontal: 16, marginTop: 8, paddingVertical: 12,
-    alignItems: 'center', backgroundColor: '#EF4444', borderRadius: 8,
-  },
-  sheetCloseBtnText: { color: '#FFF', fontSize: 15, fontWeight: '600' },
-});
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bg.primary },
+    centerContainer: {
+      flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg.primary,
+    },
+    permissionText: { fontSize: 16 * scale, color: colors.text.primary, marginBottom: 16 },
+    permissionBtn: {
+      backgroundColor: colors.brand.primary, borderRadius: 8, paddingHorizontal: 24, paddingVertical: 12,
+    },
+    permissionBtnText: { color: colors.text.inverse, fontSize: 16 * scale, fontWeight: '600' },
+    tabBar: {
+      flexDirection: 'row', backgroundColor: colors.bg.card,
+      borderBottomWidth: 1, borderBottomColor: colors.border.default,
+    },
+    tab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
+    tabActive: { borderBottomWidth: 2, borderBottomColor: colors.brand.primary },
+    tabText: { fontSize: 15 * scale, color: colors.text.secondary, fontWeight: '500' },
+    tabTextActive: { color: colors.brand.primary, fontWeight: '600' },
+    cameraContainer: { flex: 1, position: 'relative' },
+    camera: { flex: 1 },
+    scanOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    scanFrame: {
+      width: 240, height: 240, borderWidth: 2, borderColor: colors.text.inverse,
+      borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)',
+    },
+    scanHint: {
+      color: colors.text.inverse, fontSize: 14 * scale, marginTop: 16,
+      textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
+    },
+    photoOverlay: {
+      flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 60,
+    },
+    captureButton: {
+      width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.3)',
+      justifyContent: 'center', alignItems: 'center', marginBottom: 20,
+    },
+    captureInner: {
+      width: 56, height: 56, borderRadius: 28, backgroundColor: colors.text.inverse,
+      borderWidth: 4, borderColor: colors.brand.primary,
+    },
+    flipButton: { padding: 12, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 8 },
+    flipButtonText: { color: colors.text.inverse, fontSize: 14 * scale },
+    loadingOverlay: {
+      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+      justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)',
+    },
+    resultCard: {
+      backgroundColor: colors.bg.card, marginHorizontal: 16, marginBottom: 12,
+      borderRadius: 12, padding: 16,
+      shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
+    },
+    resultName: { fontSize: 17 * scale, fontWeight: '600', color: colors.text.primary },
+    resultSpec: { fontSize: 14 * scale, color: colors.text.secondary, marginTop: 2 },
+    resultPrice: { fontSize: 18 * scale, fontWeight: '700', color: colors.brand.danger, marginTop: 8 },
+    resultActions: { flexDirection: 'row', gap: 12, marginTop: 12 },
+    addCartBtn: {
+      flex: 1, backgroundColor: colors.brand.primary, borderRadius: 8,
+      paddingVertical: 10, alignItems: 'center',
+    },
+    addCartBtnText: { color: colors.text.inverse, fontSize: 15 * scale, fontWeight: '600' },
+    ignoreBtn: {
+      flex: 1, backgroundColor: colors.bg.primary, borderRadius: 8,
+      paddingVertical: 10, alignItems: 'center',
+    },
+    ignoreBtnText: { color: colors.text.secondary, fontSize: 15 * scale, fontWeight: '600' },
+    inputBar: {
+      flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg.card,
+      marginHorizontal: 12, marginBottom: 12, borderRadius: 10,
+      paddingHorizontal: 12, borderWidth: 1, borderColor: colors.border.default,
+    },
+    input: { flex: 1, fontSize: 15 * scale, color: colors.text.primary, paddingVertical: 10 },
+    submitBtn: {
+      backgroundColor: colors.brand.primary, borderRadius: 8,
+      paddingHorizontal: 16, paddingVertical: 8, marginLeft: 8,
+    },
+    submitBtnDisabled: { opacity: 0.5 },
+    submitBtnText: { color: colors.text.inverse, fontSize: 14 * scale, fontWeight: '600' },
+    modalOverlay: {
+      flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end',
+    },
+    candidateSheet: {
+      backgroundColor: colors.bg.card,
+      borderTopLeftRadius: 16, borderTopRightRadius: 16,
+      maxHeight: '60%', paddingBottom: 20,
+    },
+    sheetTitle: {
+      fontSize: 17 * scale, fontWeight: '600', color: colors.text.primary, textAlign: 'center',
+      paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border.default,
+    },
+    candidateRow: {
+      flexDirection: 'row', alignItems: 'center',
+      paddingHorizontal: 16, paddingVertical: 12,
+      borderBottomWidth: 1, borderBottomColor: colors.bg.primary,
+    },
+    candidateInfo: { flex: 1 },
+    candidateName: { fontSize: 15 * scale, fontWeight: '600', color: colors.text.primary },
+    candidateSpec: { fontSize: 13 * scale, color: colors.text.secondary, marginTop: 2 },
+    candidateConfidence: { fontSize: 12 * scale, color: '#8B5CF6', marginTop: 2 },
+    candidateAddBtn: {
+      backgroundColor: colors.brand.primary, borderRadius: 6,
+      paddingHorizontal: 16, paddingVertical: 8,
+    },
+    candidateAddBtnText: { color: colors.text.inverse, fontSize: 13 * scale, fontWeight: '600' },
+    manualSearchBtn: {
+      marginHorizontal: 16, marginTop: 12, paddingVertical: 12,
+      alignItems: 'center', backgroundColor: colors.bg.primary, borderRadius: 8,
+    },
+    manualSearchBtnText: { fontSize: 14 * scale, color: colors.brand.primary, fontWeight: '500' },
+    sheetCloseBtn: {
+      marginHorizontal: 16, marginTop: 8, paddingVertical: 12,
+      alignItems: 'center', backgroundColor: colors.brand.danger, borderRadius: 8,
+    },
+    sheetCloseBtnText: { color: colors.text.inverse, fontSize: 15 * scale, fontWeight: '600' },
+  });
+}

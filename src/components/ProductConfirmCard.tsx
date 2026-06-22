@@ -7,8 +7,9 @@
  * spec-v4.5 §7.4：草稿卡 60 秒过期变灰，仍可点击确认。
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { useTheme, type ThemeColors } from '../theme/ThemeContext';
 import type { Product } from '../db/types';
 
 // ==================== 类型 ====================
@@ -28,47 +29,28 @@ export interface ProductConfirmCardProps {
   onIgnore: () => void;
 }
 
-// ==================== 色彩常量 ====================
+// ==================== 置信度颜色 ====================
 
-const COLORS = {
-  normalBg: '#FFFFFF',
-  normalBorder: '#2563EB',
-  expiredBg: '#F1F5F9',
-  expiredBorder: '#94A3B8',
-  confidenceHigh: '#16A34A',
-  confidenceMid: '#F59E0B',
-  confidenceLow: '#EF4444',
-  confidenceBgHigh: '#DCFCE7',
-  confidenceBgMid: '#FEF3C7',
-  confidenceBgLow: '#FEE2E2',
-  primaryBtn: '#2563EB',
-  primaryBtnText: '#FFFFFF',
-  ignoreText: '#94A3B8',
-  textPrimary: '#1E293B',
-  textSecondary: '#64748B',
-  specText: '#64748B',
+const CONFIDENCE_COLORS = {
+  high: '#16A34A',
+  mid: '#F59E0B',
+  low: '#EF4444',
 };
 
 // ==================== 辅助函数 ====================
 
-/**
- * 根据置信度返回颜色和标签。
- */
 function getConfidenceMeta(confidence: number): { color: string; bg: string; label: string } {
   if (confidence >= 0.8) {
-    return { color: COLORS.confidenceHigh, bg: COLORS.confidenceBgHigh, label: '高置信度' };
+    return { color: CONFIDENCE_COLORS.high, bg: '#DCFCE7', label: '高置信度' };
   }
   if (confidence >= 0.5) {
-    return { color: COLORS.confidenceMid, bg: COLORS.confidenceBgMid, label: '中置信度' };
+    return { color: CONFIDENCE_COLORS.mid, bg: '#FEF3C7', label: '中置信度' };
   }
-  return { color: COLORS.confidenceLow, bg: COLORS.confidenceBgLow, label: '低置信度' };
+  return { color: CONFIDENCE_COLORS.low, bg: '#FEE2E2', label: '低置信度' };
 }
 
 // ==================== 组件 ====================
 
-/**
- * AI 识别结果确认卡片。
- */
 export function ProductConfirmCard({
   product,
   quantity,
@@ -77,8 +59,12 @@ export function ProductConfirmCard({
   onAddToCart,
   onIgnore,
 }: ProductConfirmCardProps): JSX.Element {
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
   const confidenceMeta = getConfidenceMeta(confidence);
   const displayName = quantity > 1 ? `${product.name} ×${quantity}` : product.name;
+
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
   return (
     <View
@@ -146,128 +132,130 @@ export function ProductConfirmCard({
 
 // ==================== 样式 ====================
 
-const styles = StyleSheet.create({
-  // 卡片容器
-  card: {
-    borderRadius: 10,
-    padding: 14,
-    marginVertical: 6,
-  },
-  cardNormal: {
-    backgroundColor: COLORS.normalBg,
-    borderWidth: 2,
-    borderColor: COLORS.normalBorder,
-  },
-  cardExpired: {
-    backgroundColor: COLORS.expiredBg,
-    borderWidth: 2,
-    borderColor: COLORS.expiredBorder,
-    opacity: 0.5,
-  },
-  // 商品信息行
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  thumbnailWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    overflow: 'hidden',
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  thumbnail: {
-    width: 48,
-    height: 48,
-  },
-  thumbnailPlaceholder: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  thumbnailPlaceholderText: {
-    fontSize: 20,
-  },
-  infoText: {
-    flex: 1,
-    marginRight: 10,
-  },
-  name: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-    marginBottom: 2,
-  },
-  nameExpired: {
-    color: COLORS.textSecondary,
-  },
-  spec: {
-    fontSize: 13,
-    color: COLORS.specText,
-    marginBottom: 4,
-  },
-  specExpired: {
-    color: COLORS.textSecondary,
-  },
-  price: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#DC2626',
-  },
-  priceExpired: {
-    color: COLORS.textSecondary,
-  },
-  // 置信度标签
-  confidenceBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  confidenceText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  // 过期提示
-  expiredHint: {
-    fontSize: 11,
-    color: COLORS.confidenceMid,
-    marginBottom: 8,
-  },
-  // 按钮行
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  addBtn: {
-    flex: 1,
-    backgroundColor: COLORS.primaryBtn,
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  addBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.primaryBtnText,
-  },
-  ignoreBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  ignoreBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.ignoreText,
-  },
-});
+function createStyles(colors: ThemeColors, scale: number) {
+  return StyleSheet.create({
+    // 卡片容器
+    card: {
+      borderRadius: 10 * scale,
+      padding: 14 * scale,
+      marginVertical: 6 * scale,
+    },
+    cardNormal: {
+      backgroundColor: colors.bg.card,
+      borderWidth: 2,
+      borderColor: colors.brand.primary,
+    },
+    cardExpired: {
+      backgroundColor: colors.bg.primary,
+      borderWidth: 2,
+      borderColor: colors.text.hint,
+      opacity: 0.5,
+    },
+    // 商品信息行
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      marginBottom: 10 * scale,
+    },
+    thumbnailWrapper: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      overflow: 'hidden',
+      marginRight: 10,
+      borderWidth: 1,
+      borderColor: colors.border.default,
+    },
+    thumbnail: {
+      width: 48,
+      height: 48,
+    },
+    thumbnailPlaceholder: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.bg.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 10,
+      borderWidth: 1,
+      borderColor: colors.border.default,
+    },
+    thumbnailPlaceholderText: {
+      fontSize: 20 * scale,
+    },
+    infoText: {
+      flex: 1,
+      marginRight: 10,
+    },
+    name: {
+      fontSize: 15 * scale,
+      fontWeight: '600',
+      color: colors.text.primary,
+      marginBottom: 2,
+    },
+    nameExpired: {
+      color: colors.text.secondary,
+    },
+    spec: {
+      fontSize: 13 * scale,
+      color: colors.text.secondary,
+      marginBottom: 4,
+    },
+    specExpired: {
+      color: colors.text.secondary,
+    },
+    price: {
+      fontSize: 16 * scale,
+      fontWeight: '700',
+      color: colors.brand.danger,
+    },
+    priceExpired: {
+      color: colors.text.secondary,
+    },
+    // 置信度标签
+    confidenceBadge: {
+      paddingHorizontal: 8 * scale,
+      paddingVertical: 4 * scale,
+      borderRadius: 6 * scale,
+    },
+    confidenceText: {
+      fontSize: 12 * scale,
+      fontWeight: '600',
+    },
+    // 过期提示
+    expiredHint: {
+      fontSize: 11 * scale,
+      color: CONFIDENCE_COLORS.mid,
+      marginBottom: 8 * scale,
+    },
+    // 按钮行
+    buttonRow: {
+      flexDirection: 'row',
+      gap: 10 * scale,
+    },
+    addBtn: {
+      flex: 1,
+      backgroundColor: colors.brand.primary,
+      borderRadius: 8 * scale,
+      paddingVertical: 10 * scale,
+      alignItems: 'center',
+    },
+    addBtnText: {
+      fontSize: 14 * scale,
+      fontWeight: '600',
+      color: colors.text.inverse,
+    },
+    ignoreBtn: {
+      flex: 1,
+      paddingVertical: 10 * scale,
+      alignItems: 'center',
+    },
+    ignoreBtnText: {
+      fontSize: 14 * scale,
+      fontWeight: '600',
+      color: colors.text.hint,
+    },
+  });
+}

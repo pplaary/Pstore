@@ -243,12 +243,12 @@ describe('ProductConfirmCard 组件', () => {
     expect(cardContent).toContain('opacity: 0.5');
   });
 
-  it('过期态背景色 #F1F5F9', () => {
-    expect(cardContent).toContain('#F1F5F9');
+  it('过期态背景色使用 colors.bg.primary', () => {
+    expect(cardContent).toContain('colors.bg.primary');
   });
 
-  it('正常态边框 #2563EB', () => {
-    expect(cardContent).toContain('#2563EB');
+  it('正常态边框使用 colors.brand.primary', () => {
+    expect(cardContent).toContain('colors.brand.primary');
   });
 
   it('加购按钮调用 onAddToCart', () => {
@@ -270,8 +270,8 @@ describe('ProductConfirmCard 组件', () => {
     expect(cardContent).toContain('×${quantity}');
   });
 
-  it('过期态文字颜色使用 textSecondary', () => {
-    expect(cardContent).toContain('textSecondary');
+  it('过期态文字颜色使用 colors.text.secondary', () => {
+    expect(cardContent).toContain('text.secondary');
   });
 });
 
@@ -284,20 +284,20 @@ describe('AIChatBubble 组件', () => {
     expect(fs.existsSync(path.join(PROJECT_ROOT, 'src', 'components', 'AIChatBubble.tsx'))).toBe(true);
   });
 
-  it('用户气泡颜色 #D1FAE5', () => {
-    expect(bubbleContent).toContain('#D1FAE5');
+  it('用户气泡背景色使用 colors.brand.success', () => {
+    expect(bubbleContent).toContain('colors.brand.success');
   });
 
-  it('用户文字色 #065F46', () => {
-    expect(bubbleContent).toContain('#065F46');
+  it('用户文字色使用 colors.text.hint', () => {
+    expect(bubbleContent).toContain('colors.text.hint');
   });
 
-  it('AI 气泡背景色 #F1F5F9', () => {
-    expect(bubbleContent).toContain('#F1F5F9');
+  it('AI 气泡背景色使用 colors.bg.primary', () => {
+    expect(bubbleContent).toContain('colors.bg.primary');
   });
 
-  it('AI 文字色 #1E293B', () => {
-    expect(bubbleContent).toContain('#1E293B');
+  it('AI 文字色使用 colors.text.primary', () => {
+    expect(bubbleContent).toContain('colors.text.primary');
   });
 
   it('用户气泡右对齐（alignSelf: flex-end）', () => {

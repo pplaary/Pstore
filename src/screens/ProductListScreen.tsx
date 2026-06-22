@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useCallback, useLayoutEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,32 +11,30 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { useStore } from '../context/store';
 import { searchProducts } from '../db/search';
+import { useTheme } from '../theme/ThemeContext';
 import { CATEGORIES } from '../db/types';
-import type { Product } from '../db/types';
+import type { Product, ProductStatus } from '../db/types';
 import type { DrawerScreenProps } from '@react-navigation/drawer';
 import type { DrawerParamList } from '../navigation/types';
 
 export type ProductListScreenProps = DrawerScreenProps<DrawerParamList, 'ProductList'>;
 
-const STATUS_COLORS: Record<string, string> = {
-  IN_SHOP: '#16A34A',
-  OUT_OF_STOCK: '#DC2626',
-  TO_BE_PURCHASED: '#EA580C',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  IN_SHOP: '在售',
-  OUT_OF_STOCK: '缺货',
-  TO_BE_PURCHASED: '待采',
-};
-
 export function ProductListScreen({ navigation, route }: ProductListScreenProps) {
   const { db, products, refreshProducts } = useStore();
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
+  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
   const filter = route.params?.filter;
 
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+
+  const statusColors: Record<string, string> = {
+    IN_SHOP: colors.brand.success,
+    OUT_OF_STOCK: colors.brand.danger,
+    TO_BE_PURCHASED: colors.brand.warning,
+  };
 
   // 右上角 "+" 按钮（仅管理模式/未过滤已删除时显示）
   useLayoutEffect(() => {
@@ -63,10 +61,8 @@ export function ProductListScreen({ navigation, route }: ProductListScreenProps)
         category: selectedCategory ?? undefined,
         sortBy: 'relevance',
       };
-      // 管理模式查看已删除商品时 includeDeleted=true
       if (filter === 'deleted') {
         options.includeDeleted = true;
-        // 过滤条件会在 buildFilters 中不添加 isDeleted=0
       }
       const result = await searchProducts(db, query.trim(), options);
       setFilteredProducts(result);
@@ -98,41 +94,48 @@ export function ProductListScreen({ navigation, route }: ProductListScreenProps)
   };
 
   // 渲染单个商品行
-  const renderItem = ({ item }: { item: Product }) => (
-    <TouchableOpacity
-      style={styles.productItem}
-      onPress={() => navigation.navigate('ProductDetail', { id: item.id })}
-    >
-      <View style={styles.productLeft}>
-        <View style={styles.productNameRow}>
-          <Text style={styles.productName} numberOfLines={1}>
-            {item.name}
-          </Text>
-          {item.pinyin ? (
-            <Text style={styles.productPinyin}>{item.pinyin}</Text>
+  const renderItem = ({ item }: { item: Product }) => {
+    const statusLabels: Record<string, string> = {
+      IN_SHOP: '在售',
+      OUT_OF_STOCK: '缺货',
+      TO_BE_PURCHASED: '待采',
+    };
+    return (
+      <TouchableOpacity
+        style={styles.productItem}
+        onPress={() => navigation.navigate('ProductDetail', { id: item.id })}
+      >
+        <View style={styles.productLeft}>
+          <View style={styles.productNameRow}>
+            <Text style={styles.productName} numberOfLines={1}>
+              {item.name}
+            </Text>
+            {item.pinyin ? (
+              <Text style={styles.productPinyin}>{item.pinyin}</Text>
+            ) : null}
+          </View>
+          {item.spec ? (
+            <Text style={styles.productSpec} numberOfLines={1}>
+              {item.spec}
+            </Text>
           ) : null}
         </View>
-        {item.spec ? (
-          <Text style={styles.productSpec} numberOfLines={1}>
-            {item.spec}
-          </Text>
-        ) : null}
-      </View>
-      <View style={styles.productRight}>
-        <Text style={styles.productPrice}>¥{item.price.toFixed(2)}</Text>
-        <View
-          style={[
-            styles.statusBadge,
-            { backgroundColor: STATUS_COLORS[item.status] || '#94A3B8' },
-          ]}
-        >
-          <Text style={styles.statusText}>
-            {STATUS_LABELS[item.status] || item.status}
-          </Text>
+        <View style={styles.productRight}>
+          <Text style={styles.productPrice}>¥{item.price.toFixed(2)}</Text>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: statusColors[item.status] || colors.text.hint },
+            ]}
+          >
+            <Text style={styles.statusText}>
+              {statusLabels[item.status] || item.status}
+            </Text>
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   const isEmpty = !query.trim() && !selectedCategory
     ? filteredProducts.length === 0
@@ -146,7 +149,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenProps)
         <TextInput
           style={styles.searchInput}
           placeholder="搜索商品名称、拼音或条码"
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={colors.text.hint}
           value={query}
           onChangeText={setQuery}
           returnKeyType="search"
@@ -226,202 +229,206 @@ export function ProductListScreen({ navigation, route }: ProductListScreenProps)
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F1F5F9',
-  },
-  // 头部按钮
-  headerButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  headerButtonText: {
-    fontSize: 28,
-    fontWeight: '300',
-    color: '#FFFFFF',
-    lineHeight: 32,
-  },
-  // 搜索栏
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 12,
-    marginTop: 12,
-    marginBottom: 8,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 44,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  searchIcon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: '#1E293B',
-    padding: 0,
-  },
-  clearButton: {
-    padding: 4,
-    marginLeft: 4,
-  },
-  clearButtonText: {
-    fontSize: 14,
-    color: '#94A3B8',
-  },
-  // 分类筛选条
-  categoryBar: {
-    marginBottom: 8,
-  },
-  categoryContent: {
-    paddingHorizontal: 12,
-    gap: 8,
-  },
-  categoryChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  categoryChipActive: {
-    backgroundColor: '#2563EB',
-    borderColor: '#2563EB',
-  },
-  categoryChipText: {
-    fontSize: 13,
-    color: '#475569',
-    fontWeight: '500',
-  },
-  categoryChipTextActive: {
-    color: '#FFFFFF',
-  },
-  // 列表
-  listContent: {
-    paddingHorizontal: 12,
-    paddingBottom: 80,
-  },
-  productItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  productLeft: {
-    flex: 1,
-    marginRight: 12,
-  },
-  productNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  productName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1E293B',
-    maxWidth: '70%',
-  },
-  productPinyin: {
-    fontSize: 12,
-    color: '#94A3B8',
-    marginLeft: 6,
-    fontWeight: '500',
-  },
-  productSpec: {
-    fontSize: 13,
-    color: '#64748B',
-    marginTop: 4,
-  },
-  productRight: {
-    alignItems: 'flex-end',
-  },
-  productPrice: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#DC2626',
-    marginBottom: 4,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  statusText: {
-    fontSize: 11,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  // 空状态
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 60,
-  },
-  emptyIcon: {
-    fontSize: 40,
-    marginBottom: 12,
-  },
-  emptyText: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#64748B',
-    marginBottom: 6,
-  },
-  emptySubText: {
-    fontSize: 14,
-    color: '#94A3B8',
-  },
-  // 底部扫码
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 12,
-    paddingBottom: 24,
-    paddingTop: 10,
-    backgroundColor: '#F1F5F9',
-  },
-  scanButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#2563EB',
-    borderRadius: 12,
-    paddingVertical: 14,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  scanButtonIcon: {
-    fontSize: 18,
-    marginRight: 8,
-  },
-  scanButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-});
+// ==================== 样式 ====================
+
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bg.primary,
+    },
+    // 头部按钮
+    headerButton: {
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+    },
+    headerButtonText: {
+      fontSize: 28 * scale,
+      fontWeight: '300',
+      color: colors.text.inverse,
+      lineHeight: 32 * scale,
+    },
+    // 搜索栏
+    searchBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.bg.card,
+      marginHorizontal: 12,
+      marginTop: 12,
+      marginBottom: 8,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      height: 44,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    searchIcon: {
+      fontSize: 16 * scale,
+      marginRight: 8,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: 15 * scale,
+      color: colors.text.primary,
+      padding: 0,
+    },
+    clearButton: {
+      padding: 4,
+      marginLeft: 4,
+    },
+    clearButtonText: {
+      fontSize: 14 * scale,
+      color: colors.text.hint,
+    },
+    // 分类筛选条
+    categoryBar: {
+      marginBottom: 8,
+    },
+    categoryContent: {
+      paddingHorizontal: 12,
+      gap: 8,
+    },
+    categoryChip: {
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 16,
+      backgroundColor: colors.bg.card,
+      borderWidth: 1,
+      borderColor: colors.border.default,
+    },
+    categoryChipActive: {
+      backgroundColor: colors.brand.primary,
+      borderColor: colors.brand.primary,
+    },
+    categoryChipText: {
+      fontSize: 13 * scale,
+      color: colors.text.secondary,
+      fontWeight: '500',
+    },
+    categoryChipTextActive: {
+      color: colors.text.inverse,
+    },
+    // 列表
+    listContent: {
+      paddingHorizontal: 12,
+      paddingBottom: 80,
+    },
+    productItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.bg.card,
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      marginBottom: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    productLeft: {
+      flex: 1,
+      marginRight: 12,
+    },
+    productNameRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+    },
+    productName: {
+      fontSize: 16 * scale,
+      fontWeight: '600',
+      color: colors.text.primary,
+      maxWidth: '70%',
+    },
+    productPinyin: {
+      fontSize: 12 * scale,
+      color: colors.text.hint,
+      marginLeft: 6,
+      fontWeight: '500',
+    },
+    productSpec: {
+      fontSize: 13 * scale,
+      color: colors.text.secondary,
+      marginTop: 4,
+    },
+    productRight: {
+      alignItems: 'flex-end',
+    },
+    productPrice: {
+      fontSize: 16 * scale,
+      fontWeight: '700',
+      color: colors.brand.danger,
+      marginBottom: 4,
+    },
+    statusBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 4,
+    },
+    statusText: {
+      fontSize: 11 * scale,
+      color: colors.text.inverse,
+      fontWeight: '600',
+    },
+    // 空状态
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingBottom: 60,
+    },
+    emptyIcon: {
+      fontSize: 40 * scale,
+      marginBottom: 12,
+    },
+    emptyText: {
+      fontSize: 17 * scale,
+      fontWeight: '600',
+      color: colors.text.secondary,
+      marginBottom: 6,
+    },
+    emptySubText: {
+      fontSize: 14 * scale,
+      color: colors.text.hint,
+    },
+    // 底部扫码
+    bottomBar: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      paddingHorizontal: 12,
+      paddingBottom: 24,
+      paddingTop: 10,
+      backgroundColor: colors.bg.primary,
+    },
+    scanButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.brand.primary,
+      borderRadius: 12,
+      paddingVertical: 14,
+      shadowColor: colors.brand.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 4,
+    },
+    scanButtonIcon: {
+      fontSize: 18 * scale,
+      marginRight: 8,
+    },
+    scanButtonText: {
+      fontSize: 16 * scale,
+      fontWeight: '600',
+      color: colors.text.inverse,
+    },
+  });
+}

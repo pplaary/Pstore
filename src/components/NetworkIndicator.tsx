@@ -15,7 +15,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useAIConfigStore } from '../store/aiConfig';
 
-// ==================== 色彩映射 ====================
+// ==================== 色彩映射（语义化，保持原色值） ====================
 
 const TIER_COLORS: Record<string, string> = {
   green: '#16A34A',
@@ -26,11 +26,6 @@ const TIER_COLORS: Record<string, string> = {
 
 // ==================== 组件 ====================
 
-/**
- * 网络质量指示器：AI 延迟色标圆点。
- *
- * 仅在 `aiConfig.mode === 'chat'` 时渲染。
- */
 export function NetworkIndicator(): JSX.Element | null {
   const mode = useAIConfigStore((s) => s.mode);
   const latencyTier = useAIConfigStore((s) => s.latencyTier);
