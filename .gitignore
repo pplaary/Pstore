@@ -32,6 +32,12 @@ temp/
 tasks/
 docs/
 
+# Plan/review files (generated during development)
+plan-*.md
+review-*.md
+gap-analysis-*.md
+CLAUDE.md
+
 # Runtime data
 n1-server/data/
 
