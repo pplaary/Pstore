@@ -9,6 +9,8 @@ import {
   Modal,
   ScrollView,
   Alert,
+  Animated,
+  Easing,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
@@ -50,7 +52,7 @@ const CART_BAR_HEIGHT = 52;
 
 export function HomeScreen({ navigation }: HomeScreenProps) {
   // ========== 全局 Store ==========
-  const { db, refreshProducts } = useStore();
+  const { db, refreshProducts, products } = useStore();
   const { theme } = useTheme();
   const { colors, scale } = theme;
   const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
@@ -101,6 +103,10 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   const aiCacheRef = useRef<AIResponseCache | null>(null);
   const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ========== 骨架屏状态 ==========
+  const [isSkeletonVisible, setIsSkeletonVisible] = useState(true);
+  const skeletonOpacity = useRef(new Animated.Value(0.4)).current;
+
   // ========== 初始化 AI 引擎实例 ==========
   useEffect(() => {
     chatManagerRef.current = new ChatManager(buildSystemPrompt);
@@ -110,6 +116,26 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
     };
   }, []);
+
+  // ========== 骨架屏脉冲动画 ==========
+  useEffect(() => {
+    if (!isSkeletonVisible) return;
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(skeletonOpacity, { toValue: 0.8, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(skeletonOpacity, { toValue: 0.4, duration: 600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ]),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [isSkeletonVisible, skeletonOpacity]);
+
+  // ========== 数据加载完成时隐藏骨架屏 ==========
+  useEffect(() => {
+    if (products.length > 0) {
+      setIsSkeletonVisible(false);
+    }
+  }, [products]);
 
   // ========== 搜索（搜索模式） ==========
   const doSearch = useCallback(async () => {
@@ -720,7 +746,13 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
               ))}
             </ScrollView>
           )}
-          {isEmpty ? (
+          {/* 骨架屏 / 空状态 / 商品列表 */}
+          {isSkeletonVisible ? (
+            <View style={styles.skeletonContainer}>
+              <Animated.View style={[styles.skeletonCard, { opacity: skeletonOpacity }]} />
+              <Animated.View style={[styles.skeletonCard, { opacity: skeletonOpacity }]} />
+            </View>
+          ) : isEmpty ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>未找到商品</Text>
             </View>
@@ -1208,5 +1240,12 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     batchBtnDangerText: { color: '#FFFFFF' },
     batchBtnExit: { backgroundColor: '#475569' },
     batchBtnExitText: { color: '#FFFFFF' },
+
+    // -- 骨架屏 --
+    skeletonContainer: { padding: 12 },
+    skeletonCard: {
+      height: 68, backgroundColor: '#E0E0E0', borderRadius: 10,
+      marginBottom: 10, opacity: 0.4,
+    },
   });
 }

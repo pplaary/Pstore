@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 import * as SQLite from 'expo-sqlite';
 import type { Product } from '../db/types';
 import { getAllProducts } from '../db/product';
+import { showToast } from '../utils/toast';
 
 // ==================== Context 类型 ====================
 
@@ -39,7 +40,7 @@ export function StoreProvider({ db, children }: StoreProviderProps) {
       console.error('refreshProducts 失败:', e);
       failCountRef.current += 1;
       if (failCountRef.current >= 3) {
-        Alert.alert('数据库异常', '连续操作失败，请重启应用');
+        showToast('数据库连续操作失败，请重启应用', 'LONG');
       }
     }
   }, [db]);
