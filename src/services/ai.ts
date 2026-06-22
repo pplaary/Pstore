@@ -285,7 +285,7 @@ export function interceptChineseNumerals(
   // 乘数单位映射
   const UNIT_MULT_MAP: Record<string, number> = {
     '十': 10, '拾': 10,
-    '百': 100,
+    '百': 100, '佰': 100,
     '千': 1000,
     '万': 10000,
   };
@@ -374,7 +374,7 @@ function chineseNumToArabic(str: string): string {
 
   const UNIT_MULT_MAP: Record<string, number> = {
     '十': 10, '拾': 10,
-    '百': 100,
+    '百': 100, '佰': 100,
     '千': 1000,
     '万': 10000,
   };
