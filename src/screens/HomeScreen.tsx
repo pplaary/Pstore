@@ -36,6 +36,7 @@ import { PinModal } from '../components/PinModal';
 import { SyncStatusIcon } from '../components/SyncStatusIcon';
 import { AIChatBubble } from '../components/AIChatBubble';
 import { ProductConfirmCard } from '../components/ProductConfirmCard';
+import { VoiceButton } from '../components/VoiceButton';
 import {
   interceptChineseNumerals,
   buildSystemPrompt,
@@ -105,6 +106,10 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   const [batchMode, setBatchMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [statusMenuId, setStatusMenuId] = useState<string | null>(null);
+
+  // ========== 语音输入状态 ==========
+  const isVoiceAvailable = useAIConfigStore((s) => s.isVoiceAvailable);
+  const [isVoiceRecording, setIsVoiceRecording] = useState(false);
 
   // ========== Refs ==========
   const tapCountRef = useRef(0);
@@ -268,23 +273,22 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   );
 
   /**
-   * 发送聊天消息。
+   * 发送聊天消息（内部核心函数，接受显式文本）。
    *
    * 流程：中文预拦截 → 缓存检查 → RAG → buildMessages → callAI → parseAIResponse
    * 失败降级：FTS5 搜索，用户无感知
    */
-  const handleAiSend = useCallback(async () => {
-    const rawInput = chatInput.trim();
-    if (!rawInput || isAiLoading) return;
+  const handleAiSendWithText = useCallback(async (inputText: string) => {
+    if (!inputText || isAiLoading) return;
 
     // 中文数字预拦截
-    const { text: inputText, replaced } = interceptChineseNumerals(rawInput);
+    const { text: processedText, replaced } = interceptChineseNumerals(inputText);
 
     // 用户消息气泡（显示预拦截后的文本）
     const userTimestamp = new Date().toISOString();
     setChatMessages((prev) => [
       ...prev,
-      { role: 'user', content: inputText, timestamp: userTimestamp },
+      { role: 'user', content: processedText, timestamp: userTimestamp },
     ]);
     setChatInput('');
     setIsAiLoading(true);
@@ -298,21 +302,21 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     }
 
     try {
-      // 1. 缓存检查（key 与 RAG 输入统一为 inputText）
-      const cached = aiCacheRef.current?.get(inputText);
+      // 1. 缓存检查（key 与 RAG 输入统一为 processedText）
+      const cached = aiCacheRef.current?.get(processedText);
       if (cached) {
-        await renderAiResponse(cached, inputText);
+        await renderAiResponse(cached, processedText);
         return;
       }
 
-      // 2. RAG 上下文（使用 inputText 保证与缓存 key 一致）
-      const rag = await buildRAGContext(db, inputText);
+      // 2. RAG 上下文
+      const rag = await buildRAGContext(db, processedText);
 
-      // 3. 构建 messages（使用 inputText）
+      // 3. 构建 messages
       const cartSnapshot = buildCartSnapshot();
       const mode = isManagement ? 'ADMIN' : 'NORMAL';
       const messages = chatManagerRef.current!.buildMessages(
-        inputText,
+        processedText,
         cartSnapshot,
         mode,
         rag,
@@ -343,11 +347,11 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         throw new Error('AI 回复解析失败');
       }
 
-      // 6. 存入缓存（key 统一为 inputText）
-      aiCacheRef.current?.set(inputText, response);
+      // 6. 存入缓存
+      aiCacheRef.current?.set(processedText, response);
 
       // 7. 渲染回复
-      await renderAiResponse(response, inputText);
+      await renderAiResponse(response, processedText);
     } catch {
       // AI 失败 → 降级为 FTS5 搜索
       const fallbackTimestamp = new Date().toISOString();
@@ -361,7 +365,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       ]);
 
       try {
-        const results = await searchProducts(db, inputText, { sortBy: 'relevance' });
+        const results = await searchProducts(db, processedText, { sortBy: 'relevance' });
         setAiFallbackResults(results);
       } catch {
         // 搜索也失败，静默
@@ -369,7 +373,32 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     } finally {
       setIsAiLoading(false);
     }
-  }, [chatInput, isAiLoading, db, isManagement, renderAiResponse, getStoredAIConfig, buildCartSnapshot]);
+  }, [isAiLoading, db, isManagement, renderAiResponse, getStoredAIConfig, buildCartSnapshot]);
+
+  /**
+   * 文字输入路径：读取 chatInput 并发送。
+   */
+  const handleAiSend = useCallback(async () => {
+    const rawInput = chatInput.trim();
+    if (!rawInput) return;
+    await handleAiSendWithText(rawInput);
+  }, [chatInput, handleAiSendWithText]);
+
+  // ========== 语音识别结果处理 ==========
+  const handleVoiceResult = useCallback((text: string) => {
+    // 中文数字预拦截（与文字输入走同一管道）
+    const { text: processed, replaced } = interceptChineseNumerals(text.trim());
+    if (!processed) {
+      showToast('未识别到有效内容');
+      return;
+    }
+    // 设置为聊天输入并自动发送
+    setChatInput(processed);
+    // 通过 setTimeout 确保 setChatInput 的 state 更新后再发送
+    setTimeout(() => {
+      handleAiSendWithText(processed);
+    }, 0);
+  }, [handleAiSendWithText]);
 
   // ========== 草稿卡操作 ==========
   const handleDraftAddToCart = useCallback(
@@ -659,18 +688,21 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       {/* ===== 聊天输入栏（仅聊天模式） ===== */}
       {isChatMode && (
         <View style={styles.chatInputBar}>
-          <TouchableOpacity style={styles.voiceBtn} activeOpacity={0.7}>
-            <Text style={styles.voiceBtnText}>🎤</Text>
-          </TouchableOpacity>
+          <VoiceButton
+            available={isVoiceAvailable}
+            onResult={handleVoiceResult}
+            onStatusChange={(status) => setIsVoiceRecording(status === 'recording')}
+          />
           <TextInput
             style={styles.chatInput}
-            placeholder='说"可乐多少钱"'
+            placeholder={isVoiceRecording ? '正在聆听...' : '说"可乐多少钱"'}
             placeholderTextColor="#94A3B8"
             value={chatInput}
             onChangeText={setChatInput}
             onSubmitEditing={handleAiSend}
             returnKeyType="send"
             autoCorrect={false}
+            editable={!isVoiceRecording}
           />
           <TouchableOpacity
             style={styles.cameraBtn}

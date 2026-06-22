@@ -19,7 +19,8 @@
         "backgroundColor": "#2563EB"
       },
       "permissions": [
-        "CAMERA"
+        "CAMERA",
+        "RECORD_AUDIO"
       ]
     },
     "assetBundlePatterns": [

@@ -23,6 +23,7 @@ import * as SecureStore from 'expo-secure-store';
 import type { AITextConfig } from '../services/ai';
 import { useSyncConfigStore } from '../store/syncConfig';
 import { getConfig } from '../services/n1';
+import { requestAudioPermission } from '../services/stt';
 
 // ==================== 常量 ====================
 
@@ -50,6 +51,12 @@ export interface AIConfigState {
   latencyTier: LatencyTier;
   /** 最近一次延迟（ms） */
   lastLatencyMs: number | null;
+  /** 麦克风权限是否已授权 */
+  micPermissionGranted: boolean;
+
+  // Derived
+  /** 语音按钮是否可用：mode=chat && reachable && micPermissionGranted */
+  isVoiceAvailable: boolean;
 
   // Actions
   /** App 启动时调用：检测 AI 配置可达性 */
@@ -60,6 +67,8 @@ export interface AIConfigState {
   setAIConfig: (config: AITextConfig) => Promise<void>;
   /** 清除 AI 配置和 SecureStore 缓存 */
   clearAIConfig: () => Promise<void>;
+  /** 检查并请求麦克风权限 */
+  checkMicPermission: () => Promise<void>;
 }
 
 // ==================== Store ====================
@@ -70,6 +79,8 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
   mode: 'search',
   latencyTier: 'unknown',
   lastLatencyMs: null,
+  micPermissionGranted: false,
+  isVoiceAvailable: false,
 
   detectReachability: async () => {
     // 第一级：N1 在线 → 拉取 AI 配置 → 检测可达性
@@ -93,6 +104,8 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
             mode: 'search',
             latencyTier: 'unknown',
             lastLatencyMs: null,
+            micPermissionGranted: false,
+            isVoiceAvailable: false,
           });
           return;
         }
@@ -102,12 +115,15 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
         // 缓存到 SecureStore（N1 短暂故障时可临时直连 AI）
         await SecureStore.setItemAsync(AI_CONFIG_KEY, JSON.stringify(aiConfig));
 
+        const { micPermissionGranted } = get();
         set({
           configured: true,
           reachable,
           mode: reachable ? 'chat' : 'search',
           latencyTier: 'unknown',
           lastLatencyMs: null,
+          micPermissionGranted,
+          isVoiceAvailable: computeVoiceAvailable(micPermissionGranted, reachable, reachable ? 'chat' : 'search'),
         });
         return;
       }
@@ -130,18 +146,23 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
             mode: 'search',
             latencyTier: 'unknown',
             lastLatencyMs: null,
+            micPermissionGranted: false,
+            isVoiceAvailable: false,
           });
           return;
         }
 
         const reachable = await checkAIReachable(aiConfig.apiUrl, aiConfig.apiKey);
 
+        const { micPermissionGranted } = get();
         set({
           configured: true,
           reachable,
           mode: reachable ? 'chat' : 'search',
           latencyTier: 'unknown',
           lastLatencyMs: null,
+          micPermissionGranted,
+          isVoiceAvailable: computeVoiceAvailable(micPermissionGranted, reachable, reachable ? 'chat' : 'search'),
         });
         return;
       }
@@ -150,12 +171,15 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
     }
 
     // 第三级：无配置 → 降级为搜索模式
+    const { micPermissionGranted } = get();
     set({
       configured: false,
       reachable: false,
       mode: 'search',
       latencyTier: 'unknown',
       lastLatencyMs: null,
+      micPermissionGranted,
+      isVoiceAvailable: false,
     });
   },
 
@@ -200,7 +224,14 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
       mode: 'search',
       latencyTier: 'unknown',
       lastLatencyMs: null,
+      micPermissionGranted: false,
+      isVoiceAvailable: false,
     });
+  },
+
+  checkMicPermission: async () => {
+    const granted = await requestAudioPermission();
+    set({ micPermissionGranted: granted, isVoiceAvailable: computeVoiceAvailable(granted, get().reachable, get().mode) });
   },
 }));
 
@@ -247,4 +278,11 @@ async function checkAIReachable(apiUrl: string, apiKey: string): Promise<boolean
   } catch {
     return false;
   }
+}
+
+/**
+ * 计算 isVoiceAvailable 的派生值。
+ */
+function computeVoiceAvailable(micPermission: boolean, reachable: boolean, mode: AIMode): boolean {
+  return mode === 'chat' && reachable && micPermission;
 }
