@@ -41,7 +41,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenProps)
 
   // 右上角 "+" 按钮（仅管理模式/未过滤已删除时显示）
   useLayoutEffect(() => {
-    if (filter === 'deleted') {
+    if (filter === 'deleted' || !isManagement) {
       navigation.setOptions({ headerRight: undefined });
     } else {
       navigation.setOptions({
@@ -109,7 +109,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenProps)
       <TouchableOpacity
         style={styles.productItem}
         onPress={() => navigation.navigate('ProductDetail', { id: item.id })}
-        accessibilityLabel={`${item.name}，价格${item.price.toFixed(2)}元，状态${statusLabels[item.status]}`}
+        accessibilityLabel={`${item.name}，价格${item.price.toFixed(2)}元，${item.spec ? `规格${item.spec}，` : ''}状态${statusLabels[item.status]}`}
         accessibilityRole="button"
       >
         <View style={styles.productLeft}>

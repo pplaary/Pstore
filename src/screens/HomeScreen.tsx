@@ -102,6 +102,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   const chatManagerRef = useRef<ChatManager | null>(null);
   const aiCacheRef = useRef<AIResponseCache | null>(null);
   const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasLoadedOnce = useRef(false);
 
   // ========== 骨架屏状态 ==========
   const [isSkeletonVisible, setIsSkeletonVisible] = useState(true);
@@ -132,9 +133,10 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
 
   // ========== 数据加载完成时隐藏骨架屏 ==========
   useEffect(() => {
-    if (products.length > 0) {
+    if (products.length > 0 || hasLoadedOnce.current) {
       setIsSkeletonVisible(false);
     }
+    hasLoadedOnce.current = true;
   }, [products]);
 
   // ========== 搜索（搜索模式） ==========
@@ -581,7 +583,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             setStatusMenuId(item.id);
           }
         }}
-        accessibilityLabel={`${item.name}，价格${item.price.toFixed(2)}元${batchMode ? '，批量选择' : ''}`}
+        accessibilityLabel={`${item.name}，价格${item.price.toFixed(2)}元，${item.spec ? `规格${item.spec}，` : ''}状态${item.status === 'IN_SHOP' ? '在售' : item.status === 'OUT_OF_STOCK' ? '缺货' : '待采'}${batchMode ? '，批量选择' : ''}`}
         accessibilityRole="button"
       >
         {batchMode && (

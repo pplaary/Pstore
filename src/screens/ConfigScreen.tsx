@@ -260,14 +260,12 @@ export function ConfigScreen(_props: Props) {
           style={styles.input}
           placeholder="API 地址"
           placeholderTextColor={colors.text.hint}
-          editable={false}
           accessibilityLabel="AI API地址"
         />
         <TextInput
           style={styles.input}
           placeholder="API Key"
           placeholderTextColor={colors.text.hint}
-          editable={false}
           secureTextEntry
           accessibilityLabel="AI API密钥"
         />
