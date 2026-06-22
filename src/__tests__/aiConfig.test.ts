@@ -28,6 +28,25 @@ vi.mock('../services/n1', () => ({
   getConfig: mockGetConfig,
 }));
 
+// expo-av mock（aiConfig.ts 通过 stt.ts 间接依赖，防止 Rollup 解析 RN 原生模块报错）
+vi.mock('expo-av', () => ({
+  Audio: {
+    requestPermissionsAsync: vi.fn(),
+    setAudioModeAsync: vi.fn(),
+    Recording: vi.fn(),
+    RecordingOptionsPresets: { HIGH_QUALITY: {} },
+    AndroidOutputFormat: { MPEG_4: 2 },
+    AndroidAudioEncoder: { AAC: 3 },
+    IOSOutputFormat: { MPEG4AAC: 1 },
+  },
+}));
+
+// expo-file-system mock（stt.ts 依赖链）
+vi.mock('expo-file-system', () => ({
+  deleteAsync: vi.fn(),
+  getInfoAsync: vi.fn(),
+}));
+
 global.fetch = vi.fn(async () =>
   Promise.resolve(new Response('', { status: 200, headers: { 'Content-Type': 'application/json' } })),
 ) as typeof fetch;

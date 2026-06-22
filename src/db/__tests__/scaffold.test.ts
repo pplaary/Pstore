@@ -44,7 +44,7 @@ describe('scaffold: project skeleton', () => {
   });
 
   it('babel.config.js 存在', () => {
-    expect(fs.existsSync(path.join(PROJECT_ROOT, 'babel.config.js'))).toBe(true);
+    expect(fs.existsSync(path.join(PROJECT_ROOT, 'babel.config.cjs'))).toBe(true);
   });
 
   // ==================== src 结构 ====================

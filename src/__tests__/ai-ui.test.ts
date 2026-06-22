@@ -99,7 +99,7 @@ describe('聊天模式 UI', () => {
     const isChatBlock = content.split('isChatMode ?')[1];
     expect(isChatBlock).toBeDefined();
     expect(isChatBlock).toContain('voiceBtn');
-    expect(isChatBlock).toContain('🎤');
+    expect(isChatBlock).toContain('<VoiceButton');
   });
 
   it('聊天模式显示相机按钮', () => {
@@ -110,7 +110,7 @@ describe('聊天模式 UI', () => {
   });
 
   it('聊天模式 placeholder 为"说\"可乐多少钱\""', () => {
-    expect(content).toContain('placeholder=\'说"可乐多少钱"\'');
+    expect(content).toContain('说"可乐多少钱"');
   });
 
   it('搜索模式 placeholder 为"搜索商品名称、拼音或条码"', () => {
