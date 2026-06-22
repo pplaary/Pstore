@@ -22,6 +22,8 @@ import {
   setWebDAVCredentials,
   getWebDAVCredentials,
 } from '../services/credential';
+import { useStore } from '../context/store';
+import { showToast } from '../utils/toast';
 
 interface WebDAVConfigProps {
   editable: boolean;
@@ -30,6 +32,7 @@ interface WebDAVConfigProps {
 type ConnState = 'untested' | 'connected' | 'failed';
 
 export function WebDAVConfig({ editable }: WebDAVConfigProps) {
+  const { db } = useStore();
   const [url, setUrl] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -47,12 +50,12 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
     });
   }, []);
 
-  // 失去焦点时保存凭据
-  const handleSaveCredentials = useCallback(() => {
+  // 保存凭据到 SecureStore
+  const saveCredentials = useCallback(async () => {
     const trimmedUrl = url.trim();
     const trimmedUsername = username.trim();
     if (trimmedUrl && trimmedUsername && password) {
-      setWebDAVCredentials(trimmedUrl, trimmedUsername, password).catch(console.warn);
+      await setWebDAVCredentials(trimmedUrl, trimmedUsername, password);
     }
   }, [url, username, password]);
 
@@ -62,15 +65,15 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
     const trimmedUsername = username.trim();
 
     if (!trimmedUrl || !trimmedUsername || !password) {
-      Alert.alert('提示', '请填写完整的 WebDAV 凭据');
+      showToast('请填写完整的 WebDAV 凭据');
       return;
     }
 
     // 先保存凭据
     try {
-      await setWebDAVCredentials(trimmedUrl, trimmedUsername, password);
+      await saveCredentials();
     } catch {
-      Alert.alert('错误', '凭据保存失败');
+      showToast('凭据保存失败');
       return;
     }
 
@@ -79,41 +82,61 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
       const result = await testConnection();
       if (result.ok) {
         setConnState('connected');
-        Alert.alert('WebDAV 连接成功', `已连接到 ${trimmedUrl}`);
+        showToast(`WebDAV 连接成功`);
       } else {
         setConnState('failed');
-        Alert.alert('连接失败', result.error ?? '未知错误');
+        showToast(result.error ?? '连接失败');
       }
     } catch (e) {
       setConnState('failed');
-      Alert.alert('连接失败', String(e));
+      showToast(String(e));
     } finally {
       setTesting(false);
     }
-  }, [url, username, password]);
+  }, [url, username, password, saveCredentials]);
 
   // 导出备份
   const handleExport = useCallback(async () => {
+    const trimmedUrl = url.trim();
+    const trimmedUsername = username.trim();
+
+    // 导出前确保凭据已保存
+    if (trimmedUrl && trimmedUsername && password) {
+      try {
+        await saveCredentials();
+      } catch { /* ignore */ }
+    }
+
     setExporting(true);
     try {
       const result = await exportToWebDAV();
       if (result.ok) {
-        Alert.alert(
-          '导出成功',
-          `备份已导出至 WebDAV（${result.remotePath?.split('/').pop() ?? ''}）`,
+        showToast(
+          `备份已导出（${result.remotePath?.split('/').pop() ?? ''}）`,
+          'LONG',
         );
       } else {
-        Alert.alert('导出失败', result.error ?? '未知错误');
+        showToast(result.error ?? '导出失败');
       }
     } catch (e) {
-      Alert.alert('导出失败', String(e));
+      showToast(String(e));
     } finally {
       setExporting(false);
     }
-  }, []);
+  }, [url, username, password, saveCredentials]);
 
   // 从备份恢复
   const handleRestore = useCallback(async () => {
+    const trimmedUrl = url.trim();
+    const trimmedUsername = username.trim();
+
+    // 恢复前确保凭据已保存
+    if (trimmedUrl && trimmedUsername && password) {
+      try {
+        await saveCredentials();
+      } catch { /* ignore */ }
+    }
+
     Alert.alert(
       '确认恢复',
       '将覆盖当前所有数据，是否继续？',
@@ -125,17 +148,17 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
           onPress: async () => {
             setRestoring(true);
             try {
-              const result = await restoreFromWebDAV();
+              const result = await restoreFromWebDAV(undefined, db);
               if (result.ok) {
                 Alert.alert(
                   '恢复完成',
                   `数据已从备份恢复（共 ${result.productCount ?? '?'} 件商品），建议重启 App 以重新加载数据库`,
                 );
               } else {
-                Alert.alert('恢复失败', result.error ?? '未知错误');
+                showToast(result.error ?? '恢复失败');
               }
             } catch (e) {
-              Alert.alert('恢复失败', String(e));
+              showToast(String(e));
             } finally {
               setRestoring(false);
             }
@@ -144,7 +167,7 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
       ],
       { cancelable: true },
     );
-  }, []);
+  }, [url, username, password, db, saveCredentials]);
 
   // 连接状态文字和颜色
   const statusLabel =
@@ -152,7 +175,7 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
       ? '● 已连接'
       : connState === 'failed'
         ? '● 连接失败'
-        : '○ 未测试';
+        : '○ 未配置';
   const statusColor =
     connState === 'connected'
       ? '#16A34A'
@@ -172,7 +195,6 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="url"
-        onBlur={handleSaveCredentials}
       />
       <TextInput
         style={styles.input}
@@ -183,7 +205,6 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
         editable={editable}
         autoCapitalize="none"
         autoCorrect={false}
-        onBlur={handleSaveCredentials}
       />
       <TextInput
         style={styles.input}
@@ -195,7 +216,6 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
         secureTextEntry
         autoCapitalize="none"
         autoCorrect={false}
-        onBlur={handleSaveCredentials}
       />
 
       <View style={styles.statusRow}>

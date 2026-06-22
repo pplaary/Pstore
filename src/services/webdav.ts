@@ -3,6 +3,10 @@
  *
  * 基于 webdav npm 包 v5，提供连接测试、备份文件上传/下载、远程文件列表。
  * 定位为手动冷备份，不参与实时 N1 同步。
+ *
+ * 注意：上传/下载二进制数据库文件使用 Base64 编码传输。
+ * 这是 React Native 环境下的实用方案（expo-file-system 仅支持 Base64 编码读写二进制），
+ * 代价是传输体积膨胀约 33%。未来可考虑 native module 提供 Buffer 直传。
  */
 
 import { createClient, type WebDAVClient } from 'webdav';
@@ -10,6 +14,7 @@ import * as FileSystem from 'expo-file-system';
 import { getWebDAVCredentials } from './credential';
 
 const BACKUP_DIR = '/pstore-backups';
+const TIMEOUT_MS = 30000;
 
 // ==================== 内部 ====================
 
@@ -48,12 +53,22 @@ async function ensureBackupDir(client: WebDAVClient): Promise<void> {
   }
 }
 
+/** 包装超时的 Promise */
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(`${label} 超时（${ms}ms）`)), ms),
+  );
+  return Promise.race([promise, timeout]);
+}
+
 // ==================== 公开 API ====================
 
 /**
  * 测试 WebDAV 连接可达性。
  *
- * 尝试列出远程根目录内容，成功即表示可达。
+ * 流程：
+ * 1. 尝试列出根目录内容（验证连接和读权限）
+ * 2. 若根目录可读，再尝试验证备份目录是否存在（可选创建以验证写权限）
  */
 export async function testConnection(): Promise<{
   ok: boolean;
@@ -61,8 +76,21 @@ export async function testConnection(): Promise<{
 }> {
   try {
     const client = await getClientOrThrow();
-    // 确保备份目录存在（顺便验证写权限）
-    await ensureBackupDir(client);
+
+    // 1. 列出根目录内容，验证连接可达性
+    await withTimeout(
+      client.getDirectoryContents('/'),
+      TIMEOUT_MS,
+      '连接测试',
+    );
+
+    // 2. 验证备份目录（含写权限检查）
+    await withTimeout(
+      ensureBackupDir(client),
+      TIMEOUT_MS,
+      '备份目录检查',
+    );
+
     return { ok: true };
   } catch (e) {
     return {
@@ -88,15 +116,19 @@ export async function uploadBackup(
 
     const remotePath = `${BACKUP_DIR}/${remoteFileName}`;
 
-    // 读取本地文件内容
+    // 读取本地文件内容（React Native 仅支持 Base64 编码传输二进制）
     const content = await FileSystem.readAsStringAsync(localPath, {
       encoding: FileSystem.EncodingType.Base64,
     });
 
-    // 上传（webdav v5 的 putFileContents 接受 string | Buffer）
-    await client.putFileContents(remotePath, content, {
-      contentLength: false,
-    });
+    // 上传（webdav v5 的 putFileContents 接受 string | Buffer | Stream）
+    await withTimeout(
+      client.putFileContents(remotePath, content, {
+        contentLength: false,
+      }),
+      TIMEOUT_MS,
+      '上传备份',
+    );
 
     return { ok: true, remotePath };
   } catch (e) {
@@ -121,10 +153,12 @@ export async function downloadBackup(
     const remotePath = `${BACKUP_DIR}/${remoteFileName}`;
     const localPath = `${FileSystem.cacheDirectory}${remoteFileName}`;
 
-    // 下载文件内容（webdav v5 返回 string）
-    const content = await client.getFileContents(remotePath, {
-      format: 'text',
-    });
+    // 下载文件内容（webdav v5 的 getFileContents 返回 string）
+    const content = await withTimeout(
+      client.getFileContents(remotePath, { format: 'text' }),
+      TIMEOUT_MS,
+      '下载备份',
+    );
 
     // 写入本地临时目录
     await FileSystem.writeAsStringAsync(localPath, content as string, {

@@ -8,6 +8,7 @@
  */
 
 import * as SQLite from 'expo-sqlite';
+import * as FileSystem from 'expo-file-system';
 import { tokenizeChinese } from './tokenizer';
 import type { Product } from './types';
 import { performRecovery } from '../services/backup/recovery';
@@ -20,7 +21,24 @@ export const CURRENT_SCHEMA_VERSION = 3;
 // ==================== 路径 ====================
 
 /**
- * 返回平台自适应的数据库路径。
+ * 数据库文件物理路径（模块级缓存）。
+ * expo-sqlite 在 Android 上将数据库存放在 documentDirectory 下的 SQLite 子目录。
+ */
+let _dbFilePath: string | null = null;
+
+/**
+ * 返回数据库文件的完整物理路径（FileSystem 可用）。
+ * 用于 snapshot / restore / recovery 等需要直接操作数据库文件的场景。
+ */
+export function getDatabaseFilePath(): string {
+  if (!_dbFilePath) {
+    _dbFilePath = `${FileSystem.documentDirectory}SQLite/${DB_NAME}`;
+  }
+  return _dbFilePath;
+}
+
+/**
+ * 返回平台自适应的数据库名称。
  * expo-sqlite 的 openDatabaseAsync 接受数据库名称即可，
  * 内部自动处理 Android/iOS 的默认存储位置。
  */
@@ -36,6 +54,7 @@ export function getDatabasePath(): string {
  */
 export async function openAndMigrate(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
+  await db.execAsync('PRAGMA journal_mode = WAL');
   await migrate(db, CURRENT_SCHEMA_VERSION);
   return db;
 }

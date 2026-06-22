@@ -10,7 +10,7 @@
 
 import * as FileSystem from 'expo-file-system';
 import * as SQLite from 'expo-sqlite';
-import { getDatabasePath, openAndMigrate } from '../../db/init';
+import { getDatabasePath, getDatabaseFilePath, openAndMigrate } from '../../db/init';
 import { performSync } from '../sync';
 import { useSyncConfigStore } from '../../store/syncConfig';
 import { restoreFromWebDAV } from './restore';
@@ -19,6 +19,20 @@ export interface RecoveryResult {
   recovered: boolean;
   source: 'N1' | 'WEBDAV' | 'empty' | 'none';
   message: string;
+}
+
+/**
+ * 删除 WAL/SHM 伴生文件。
+ * WAL 模式下的 SQLite 数据库会产生 -wal 和 -shm 伴生文件，
+ * 删除主数据库文件时必须一并清理。
+ */
+async function cleanupCompanionFiles(fullDbPath: string): Promise<void> {
+  const companions = [`${fullDbPath}-wal`, `${fullDbPath}-shm`];
+  for (const companion of companions) {
+    try {
+      await FileSystem.deleteAsync(companion, { idempotent: true });
+    } catch { /* ignore */ }
+  }
 }
 
 /**
@@ -33,7 +47,6 @@ export async function performRecovery(
 
   try {
     const dbPath = getDatabasePath();
-    const fullDbPath = `${FileSystem.documentDirectory}SQLite/${dbPath}`;
 
     // 1. 尝试打开数据库并执行完整性校验
     try {
@@ -63,11 +76,11 @@ export async function performRecovery(
     // 3. 按优先级恢复
     // 路径 A：N1 全量拉取恢复
     if (n1Available) {
-      return await recoverFromN1(fullDbPath);
+      return await recoverFromN1();
     }
 
     // 路径 B：从 WebDAV 最近备份恢复
-    return await recoverFromWebDAV(fullDbPath);
+    return await recoverFromWebDAV();
   } finally {
     if (checkDb) {
       try {
@@ -80,14 +93,19 @@ export async function performRecovery(
 /**
  * 路径 A：删除损坏 DB → 重建空库 → N1 全量拉取。
  */
-async function recoverFromN1(fullDbPath: string): Promise<RecoveryResult> {
+async function recoverFromN1(): Promise<RecoveryResult> {
   try {
-    // 删除损坏的数据库文件
+    // 删除损坏的数据库文件及伴生文件
+    const fullDbPath = getDatabaseFilePath();
     try {
-      await FileSystem.deleteAsync(fullDbPath, { idempotent: true });
+      await SQLite.deleteDatabaseAsync(getDatabasePath());
     } catch {
-      // 删除失败也继续（可能文件已不存在）
+      // deleteDatabaseAsync 失败时尝试文件级删除
+      try {
+        await FileSystem.deleteAsync(fullDbPath, { idempotent: true });
+      } catch { /* ignore */ }
     }
+    await cleanupCompanionFiles(fullDbPath);
 
     // 重建空库
     const db = await openAndMigrate();
@@ -133,12 +151,18 @@ async function recoverFromN1(fullDbPath: string): Promise<RecoveryResult> {
  * 路径 B：删除损坏 DB → 从 WebDAV 最近备份恢复。
  * WebDAV 不可用或恢复失败 → 新建空库。
  */
-async function recoverFromWebDAV(fullDbPath: string): Promise<RecoveryResult> {
+async function recoverFromWebDAV(): Promise<RecoveryResult> {
   try {
-    // 先删除损坏的数据库文件
+    // 删除损坏的数据库文件及伴生文件
+    const fullDbPath = getDatabaseFilePath();
     try {
-      await FileSystem.deleteAsync(fullDbPath, { idempotent: true });
-    } catch { /* ignore */ }
+      await SQLite.deleteDatabaseAsync(getDatabasePath());
+    } catch {
+      try {
+        await FileSystem.deleteAsync(fullDbPath, { idempotent: true });
+      } catch { /* ignore */ }
+    }
+    await cleanupCompanionFiles(fullDbPath);
 
     // 尝试从 WebDAV 恢复
     const result = await restoreFromWebDAV();

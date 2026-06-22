@@ -8,6 +8,7 @@
 import * as FileSystem from 'expo-file-system';
 import { exportSnapshot } from './snapshot';
 import { uploadBackup } from '../webdav';
+import { getWebDAVCredentials } from '../credential';
 
 export interface ExportResult {
   ok: boolean;
@@ -19,15 +20,22 @@ export interface ExportResult {
 /**
  * 完整导出备份流程。
  *
- * 1. 调用 exportSnapshot() 导出本地 SQLite 快照
- * 2. 生成远程文件名（pstore-backup-{ISO_TIMESTAMP}.db）
- * 3. 上传到 WebDAV
- * 4. 成功后删除本地临时快照；失败则保留供用户手动处理
+ * 1. 检查 WebDAV 凭据是否已配置
+ * 2. 调用 exportSnapshot() 导出本地 SQLite 快照
+ * 3. 生成远程文件名（pstore-backup-{ISO_TIMESTAMP}.db）
+ * 4. 上传到 WebDAV
+ * 5. 成功后删除本地临时快照；失败则保留供用户手动处理
  */
 export async function exportToWebDAV(): Promise<ExportResult> {
   let snapshotPath: string | undefined;
 
   try {
+    // 0. 检查凭据是否已配置
+    const creds = await getWebDAVCredentials();
+    if (!creds.url || !creds.username || !creds.password) {
+      return { ok: false, error: '请先在配置中心填写 WebDAV 凭据' };
+    }
+
     // 1. 导出本地快照
     const snapshot = await exportSnapshot();
     if (!snapshot.ok || !snapshot.snapshotPath) {

@@ -2,6 +2,7 @@
  * 配置中心页面
  *
  * N1 服务配置 + WebDAV 配置 + AI 配置（占位）
+ * WebDAV 配置仅在管理模式下可编辑；普通模式下只读展示。
  */
 
 import React, { useState, useCallback } from 'react';
@@ -16,6 +17,7 @@ import {
 } from 'react-native';
 import { useNetworkDetection } from '../hooks/useNetworkDetection';
 import { useSyncConfigStore } from '../store/syncConfig';
+import { useModeStore } from '../store/mode';
 import { performSync } from '../services/sync';
 import type { RootStackScreenProps } from '../navigation/types';
 import { useStore } from '../context/store';
@@ -26,6 +28,7 @@ type Props = RootStackScreenProps<'Config'>;
 export function ConfigScreen(_props: Props) {
   const serverUrl = useSyncConfigStore((s) => s.serverUrl);
   const setServerUrl = useSyncConfigStore((s) => s.setServerUrl);
+  const isManagement = useModeStore((s) => s.isManagement);
   const { db } = useStore();
   const [inputUrl, setInputUrl] = useState(serverUrl ?? '');
   const [checking, setChecking] = useState(false);
@@ -115,7 +118,7 @@ export function ConfigScreen(_props: Props) {
       {/* WebDAV 配置 */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>WebDAV 配置</Text>
-        <WebDAVConfig editable={true} />
+        <WebDAVConfig editable={isManagement} />
       </View>
 
       {/* AI 配置（占位） */}
