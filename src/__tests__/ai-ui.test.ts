@@ -173,11 +173,16 @@ describe('NetworkIndicator 组件', () => {
     expect(fs.existsSync(path.join(PROJECT_ROOT, 'src', 'components', 'NetworkIndicator.tsx'))).toBe(true);
   });
 
+  it('仅在 chat 模式渲染', () => {
+    expect(indicatorContent).toContain("mode !== 'chat'");
+    expect(indicatorContent).toContain('return null');
+  });
+
   it('延迟色标颜色映射正确', () => {
-    expect(indicatorContent).toContain('#4CAF50'); // green
-    expect(indicatorContent).toContain('#FFC107'); // yellow
-    expect(indicatorContent).toContain('#F44336'); // red
-    expect(indicatorContent).toContain('#9E9E9E'); // unknown
+    expect(indicatorContent).toContain('#16A34A'); // green
+    expect(indicatorContent).toContain('#F59E0B'); // yellow
+    expect(indicatorContent).toContain('#EF4444'); // red
+    expect(indicatorContent).toContain('#94A3B8'); // unknown
   });
 
   it('圆点尺寸为 8px', () => {
@@ -200,18 +205,22 @@ describe('SyncStatusIcon AI 集成', () => {
     'utf8',
   );
 
-  it('引入 NetworkIndicator', () => {
-    expect(content).toContain('NetworkIndicator');
+  it('引入 useAIConfigStore', () => {
+    expect(content).toContain('useAIConfigStore');
   });
 
-  it('始终渲染 NetworkIndicator', () => {
-    // NetworkIndicator 不再受 aiMode/aiReachable 条件限制
+  it('读取 aiMode', () => {
+    expect(content).toContain('aiMode');
+  });
+
+  it('读取 aiReachable', () => {
+    expect(content).toContain('aiReachable');
+  });
+
+  it('聊天模式可达时显示 NetworkIndicator', () => {
+    expect(content).toContain('aiMode === \'chat\'');
+    expect(content).toContain('aiReachable');
     expect(content).toContain('<NetworkIndicator');
-  });
-
-  it('移除了 aiMode/aiReachable 的条件渲染', () => {
-    expect(content).not.toContain('aiMode === \'chat\'');
-    expect(content).not.toContain('aiReachable');
   });
 });
 

@@ -40,7 +40,10 @@ export function StoreProvider({ db, children }: StoreProviderProps) {
       console.error('refreshProducts 失败:', e);
       failCountRef.current += 1;
       if (failCountRef.current >= 3) {
-        showToast('数据库连续操作失败，请重启应用', 'LONG');
+        showToast('数据库异常，请重启应用', 'LONG');
+        failCountRef.current = 0;
+      } else {
+        showToast('操作失败，请重试', 'SHORT');
       }
     }
   }, [db]);

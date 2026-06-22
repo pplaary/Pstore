@@ -942,7 +942,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             <TouchableOpacity style={[styles.batchBtn, styles.batchBtnDanger]} onPress={handleBatchDelete} accessibilityLabel="批量删除">
               <Text style={[styles.batchBtnText, styles.batchBtnDangerText]}>删除</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.batchBtn, styles.batchBtnExit]} onPress={() => { setBatchMode(false); setSelectedIds(new Set()); }}>
+            <TouchableOpacity style={[styles.batchBtn, styles.batchBtnExit]} onPress={() => { setBatchMode(false); setSelectedIds(new Set()); }} accessibilityLabel="退出批量管理">
               <Text style={styles.batchBtnExitText}>退出</Text>
             </TouchableOpacity>
           </View>
