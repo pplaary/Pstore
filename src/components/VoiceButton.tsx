@@ -573,6 +573,9 @@ export function VoiceButton({ onResult, available = true, onStatusChange }: Voic
           },
           isActive && styles.buttonActive,
         ]}
+        accessibilityLabel={available ? '按住说话' : '语音不可用'}
+        accessibilityRole="button"
+        accessibilityState={{ busy: isActive }}
       >
         {/* PanResponder 绑定层 */}
         <View {...panResponder.panHandlers} style={styles.touchTarget}>

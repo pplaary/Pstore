@@ -141,6 +141,8 @@ export function LooseGoodsManageScreen({ navigation }: LooseGoodsManageScreenPro
             style={[styles.dragBtn, index === 0 && styles.dragBtnDisabled]}
             onPress={() => moveUp(index)}
             disabled={index === 0}
+            accessibilityLabel="标签上移"
+            accessibilityRole="button"
           >
             <Text style={styles.dragBtnText}>↑</Text>
           </TouchableOpacity>
@@ -148,6 +150,8 @@ export function LooseGoodsManageScreen({ navigation }: LooseGoodsManageScreenPro
             style={[styles.dragBtn, index === labels.length - 1 && styles.dragBtnDisabled]}
             onPress={() => moveDown(index)}
             disabled={index === labels.length - 1}
+            accessibilityLabel="标签下移"
+            accessibilityRole="button"
           >
             <Text style={styles.dragBtnText}>↓</Text>
           </TouchableOpacity>
@@ -168,17 +172,19 @@ export function LooseGoodsManageScreen({ navigation }: LooseGoodsManageScreenPro
 
         <View style={styles.itemActions}>
           {isEditing ? (
-            <TouchableOpacity style={styles.actionBtn} onPress={saveEdit}>
+            <TouchableOpacity style={styles.actionBtn} onPress={saveEdit} accessibilityLabel="保存编辑">
               <Text style={styles.actionBtnText}>保存</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.actionBtn} onPress={() => startEdit(item)}>
+            <TouchableOpacity style={styles.actionBtn} onPress={() => startEdit(item)} accessibilityLabel="编辑标签">
               <Text style={styles.actionBtnText}>编辑</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity
             style={[styles.actionBtn, styles.actionBtnDanger]}
             onPress={() => handleDelete(item)}
+            accessibilityLabel="删除标签"
+            accessibilityRole="button"
           >
             <Text style={[styles.actionBtnText, styles.actionBtnDangerText]}>删除</Text>
           </TouchableOpacity>
@@ -199,11 +205,14 @@ export function LooseGoodsManageScreen({ navigation }: LooseGoodsManageScreenPro
           onChangeText={setNewLabelText}
           onSubmitEditing={handleAdd}
           returnKeyType="done"
+          accessibilityLabel="新标签名称"
         />
         <TouchableOpacity
           style={[styles.addBtn, !newLabelText.trim() && styles.addBtnDisabled]}
           onPress={handleAdd}
           disabled={!newLabelText.trim()}
+          accessibilityLabel="添加标签"
+          accessibilityRole="button"
         >
           <Text style={styles.addBtnText}>+ 添加</Text>
         </TouchableOpacity>

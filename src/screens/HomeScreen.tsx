@@ -172,12 +172,19 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         <TouchableOpacity
           onPress={() => navigation.openDrawer()}
           style={styles.headerMenuBtn}
+          accessibilityLabel="打开菜单"
+          accessibilityRole="button"
         >
           <Text style={styles.headerMenuText}>☰</Text>
         </TouchableOpacity>
       ),
       headerTitle: () => (
-        <TouchableOpacity onPress={handleTitlePress} activeOpacity={0.6}>
+        <TouchableOpacity
+          onPress={handleTitlePress}
+          activeOpacity={0.6}
+          accessibilityLabel={isManagement ? '连击5次退出管理模式' : '连击5次进入管理模式'}
+          accessibilityRole="button"
+        >
           <Text style={styles.headerTitle}>
             {isManagement ? 'PStore [管理]' : 'PStore'}
           </Text>
@@ -548,9 +555,11 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             setStatusMenuId(item.id);
           }
         }}
+        accessibilityLabel={`${item.name}，价格${item.price.toFixed(2)}元${batchMode ? '，批量选择' : ''}`}
+        accessibilityRole="button"
       >
         {batchMode && (
-          <View style={[styles.checkbox, isSelected && styles.checkboxChecked]}>
+          <View style={[styles.checkbox, isSelected && styles.checkboxChecked]} accessible accessibilityLabel={`复选框${isSelected ? '已选中' : '未选中'}`}>
             {isSelected && <Text style={styles.checkboxMark}>✓</Text>}
           </View>
         )}
@@ -564,6 +573,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             <TouchableOpacity
               style={styles.addCartBtn}
               onPress={() => handleAddToCart(item)}
+              accessibilityLabel={`加入购物车：${item.name}`}
+              accessibilityRole="button"
             >
               <Text style={styles.addCartBtnText}>+</Text>
             </TouchableOpacity>
@@ -579,6 +590,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       key={item.id}
       style={styles.fallbackItem}
       onPress={() => navigation.navigate('ProductDetail', { id: item.id })}
+      accessibilityLabel={`${item.name}，价格${item.price.toFixed(2)}元`}
+      accessibilityRole="button"
     >
       <View style={styles.fallbackLeft}>
         <Text style={styles.fallbackName} numberOfLines={1}>{item.name}</Text>
@@ -609,9 +622,15 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             onChangeText={setQuery}
             returnKeyType="search"
             autoCorrect={false}
+            accessibilityLabel="搜索商品"
           />
           {query.length > 0 && (
-            <TouchableOpacity style={styles.clearBtn} onPress={() => setQuery('')}>
+            <TouchableOpacity
+              style={styles.clearBtn}
+              onPress={() => setQuery('')}
+              accessibilityLabel="清除搜索"
+              accessibilityRole="button"
+            >
               <Text style={styles.clearBtnText}>✕</Text>
             </TouchableOpacity>
           )}
@@ -693,6 +712,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                   key={tag.id}
                   style={styles.looseGoodsTag}
                   onPress={() => handleLooseGoodsTagPress(tag.label)}
+                  accessibilityLabel={`散装标签：${tag.label}`}
+                  accessibilityRole="button"
                 >
                   <Text style={styles.looseGoodsTagText}>{tag.label}</Text>
                 </TouchableOpacity>
@@ -733,11 +754,14 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             returnKeyType="send"
             autoCorrect={false}
             editable={!isVoiceRecording}
+            accessibilityLabel="聊天输入"
           />
           <TouchableOpacity
             style={styles.cameraBtn}
             onPress={() => navigation.navigate('ScanBarcode', { mode: 'scan' })}
             activeOpacity={0.7}
+            accessibilityLabel="扫码"
+            accessibilityRole="button"
           >
             <Text style={styles.cameraBtnText}>📷</Text>
           </TouchableOpacity>
@@ -750,6 +774,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
           <TouchableOpacity
             style={styles.cartCollapsed}
             onPress={() => setCartExpanded(!cartExpanded)}
+            accessibilityLabel="购物车，展开查看"
+            accessibilityRole="button"
           >
             <Text style={styles.cartIcon}>🛒</Text>
             <Text style={styles.cartCount}>×{totalQty}</Text>
@@ -757,6 +783,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             <TouchableOpacity
               style={styles.checkoutBtn}
               onPress={() => setCheckoutVisible(true)}
+              accessibilityLabel="结账"
+              accessibilityRole="button"
             >
               <Text style={styles.checkoutBtnText}>结账</Text>
             </TouchableOpacity>
@@ -769,25 +797,25 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                   <View key={item.productId} style={styles.cartItem}>
                     <Text style={styles.cartItemName} numberOfLines={1}>{item.name}</Text>
                     <Text style={styles.cartItemPrice}>¥{item.price.toFixed(2)}</Text>
-                    <TouchableOpacity onPress={() => removeFromCart(item.productId)}>
+                    <TouchableOpacity onPress={() => removeFromCart(item.productId)} accessibilityLabel={`减少${item.name}数量`}>
                       <Text style={styles.cartQtyBtn}>⊖</Text>
                     </TouchableOpacity>
                     <Text style={styles.cartQty}>{item.quantity}</Text>
-                    <TouchableOpacity onPress={() => addToCart(item.productId, item.name, item.price)}>
+                    <TouchableOpacity onPress={() => addToCart(item.productId, item.name, item.price)} accessibilityLabel={`增加${item.name}数量`}>
                       <Text style={styles.cartQtyBtn}>⊕</Text>
                     </TouchableOpacity>
                     <Text style={styles.cartSubtotal}>¥{(item.price * item.quantity).toFixed(2)}</Text>
-                    <TouchableOpacity onPress={() => removeItem(item.productId)}>
+                    <TouchableOpacity onPress={() => removeItem(item.productId)} accessibilityLabel={`移除${item.name}`}>
                       <Text style={styles.cartRemove}>✕</Text>
                     </TouchableOpacity>
                   </View>
                 ))}
               </ScrollView>
               <View style={styles.cartActions}>
-                <TouchableOpacity style={styles.clearBtnLarge} onPress={clearCart}>
+                <TouchableOpacity style={styles.clearBtnLarge} onPress={clearCart} accessibilityLabel="清空购物车">
                   <Text style={styles.clearBtnLargeText}>清空</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.checkoutBtnLarge} onPress={() => { setCheckoutVisible(true); setCartExpanded(false); }}>
+                <TouchableOpacity style={styles.checkoutBtnLarge} onPress={() => { setCheckoutVisible(true); setCartExpanded(false); }} accessibilityLabel="结账">
                   <Text style={styles.checkoutBtnLargeText}>结账</Text>
                 </TouchableOpacity>
               </View>
@@ -814,6 +842,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             <TouchableOpacity
               style={styles.modalCloseBtn}
               onPress={() => { clearCart(); setCheckoutVisible(false); }}
+              accessibilityLabel="关闭结账弹窗并清空购物车"
+              accessibilityRole="button"
             >
               <Text style={styles.modalCloseBtnText}>关闭并清空</Text>
             </TouchableOpacity>
@@ -833,6 +863,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         <TouchableOpacity
           style={styles.fab}
           onPress={() => navigation.navigate('ProductEdit', {})}
+          accessibilityLabel="添加新商品"
+          accessibilityRole="button"
         >
           <Text style={styles.fabText}>+</Text>
         </TouchableOpacity>
@@ -843,6 +875,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         <TouchableOpacity
           style={[styles.fab, styles.fabScan, isManagement && styles.fabScanWithMgmt]}
           onPress={() => navigation.navigate('ScanBarcode', { mode: 'scan' })}
+          accessibilityLabel="扫码"
+          accessibilityRole="button"
         >
           <Text style={styles.fabScanText}>📷</Text>
         </TouchableOpacity>
@@ -853,10 +887,10 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         <View style={styles.batchToolbar}>
           <Text style={styles.batchToolbarText}>已选 {selectedIds.size} 项</Text>
           <View style={styles.batchToolbarRow}>
-            <TouchableOpacity style={styles.batchBtn} onPress={selectAll}>
+            <TouchableOpacity style={styles.batchBtn} onPress={selectAll} accessibilityLabel="全选">
               <Text style={styles.batchBtnText}>全选</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.batchBtn} onPress={deselectAll}>
+            <TouchableOpacity style={styles.batchBtn} onPress={deselectAll} accessibilityLabel="取消全选">
               <Text style={styles.batchBtnText}>反选</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -869,10 +903,11 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                   { text: '取消', style: 'cancel' },
                 ]);
               }}
+              accessibilityLabel="批量改状态"
             >
               <Text style={styles.batchBtnText}>改状态</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.batchBtn, styles.batchBtnDanger]} onPress={handleBatchDelete}>
+            <TouchableOpacity style={[styles.batchBtn, styles.batchBtnDanger]} onPress={handleBatchDelete} accessibilityLabel="批量删除">
               <Text style={[styles.batchBtnText, styles.batchBtnDangerText]}>删除</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.batchBtn, styles.batchBtnExit]} onPress={() => { setBatchMode(false); setSelectedIds(new Set()); }}>

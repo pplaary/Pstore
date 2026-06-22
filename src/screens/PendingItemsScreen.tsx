@@ -84,12 +84,16 @@ export function PendingItemsScreen({ navigation }: any) {
         <TouchableOpacity
           style={styles.convertBtn}
           onPress={() => handleConvert(item)}
+          accessibilityLabel="转为商品"
+          accessibilityRole="button"
         >
           <Text style={styles.convertBtnText}>转为商品</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.deleteBtn}
           onPress={() => handleDelete(item)}
+          accessibilityLabel="删除条码记录"
+          accessibilityRole="button"
         >
           <Text style={styles.deleteBtnText}>删除</Text>
         </TouchableOpacity>

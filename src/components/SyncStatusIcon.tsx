@@ -58,7 +58,7 @@ export function SyncStatusIcon() {
   }
 
   return (
-    <TouchableOpacity style={styles.container} activeOpacity={0.7}>
+    <TouchableOpacity style={styles.container} activeOpacity={0.7} accessibilityLabel={`同步状态：${label}`} accessibilityRole="button">
       <Ionicons name={iconName} size={20} color={color} />
       <Text style={[styles.label, { color }]}>{label}</Text>
       {/* AI 聊天模式下显示网络延迟指示器 */}

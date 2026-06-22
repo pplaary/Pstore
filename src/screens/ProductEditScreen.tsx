@@ -152,6 +152,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
           onSubmitEditing={() => {
             priceRef.current?.focus();
           }}
+          accessibilityLabel="商品名称"
         />
       </View>
 
@@ -165,6 +166,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
           value={aliases}
           onChangeText={setAliases}
           returnKeyType="next"
+          accessibilityLabel="别名"
         />
       </View>
 
@@ -182,6 +184,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
           onChangeText={setPrice}
           keyboardType="decimal-pad"
           returnKeyType="next"
+          accessibilityLabel="价格"
         />
       </View>
 
@@ -195,6 +198,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
           value={spec}
           onChangeText={setSpec}
           returnKeyType="next"
+          accessibilityLabel="规格"
         />
       </View>
 
@@ -209,6 +213,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
           onChangeText={setBarcode}
           returnKeyType="next"
           autoCapitalize="none"
+          accessibilityLabel="条码"
         />
       </View>
 
@@ -223,6 +228,9 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
                 key={cat}
                 style={[styles.categoryChip, active && styles.categoryChipActive]}
                 onPress={() => setCategory(cat)}
+                accessibilityLabel={`分类：${cat}${active ? '，已选中' : ''}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
               >
                 <Text
                   style={[
@@ -255,6 +263,9 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
                   },
                 ]}
                 onPress={() => setStatus(opt.value)}
+                accessibilityLabel={`状态：${opt.label}${active ? '，已选中' : ''}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
               >
                 <Text
                   style={[
@@ -275,6 +286,9 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         style={[styles.saveButton, saving && styles.saveButtonDisabled]}
         onPress={handleSave}
         disabled={saving}
+        accessibilityLabel={saving ? '保存中' : '保存商品'}
+        accessibilityRole="button"
+        accessibilityState={{ busy: saving }}
       >
         <Text style={styles.saveButtonText}>{saving ? '保存中...' : '保存'}</Text>
       </TouchableOpacity>

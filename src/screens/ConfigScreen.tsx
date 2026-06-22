@@ -174,6 +174,9 @@ export function ConfigScreen(_props: Props) {
               ]}
               onPress={() => handleModeSelect(mode)}
               disabled={isSystemMode}
+              accessibilityLabel={label}
+              accessibilityRole="button"
+              accessibilityState={{ selected: currentMode === mode, disabled: isSystemMode }}
             >
               <Text style={[
                 styles.modeChipText,
@@ -205,12 +208,16 @@ export function ConfigScreen(_props: Props) {
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="url"
+          accessibilityLabel="N1服务地址"
         />
         <View style={styles.buttonRow}>
           <TouchableOpacity
             style={[styles.button, styles.testButton]}
             onPress={handleTestConnection}
             disabled={checking}
+            accessibilityLabel={checking ? '检测连接中' : '测试N1连接'}
+            accessibilityRole="button"
+            accessibilityState={{ busy: checking }}
           >
             <Text style={styles.buttonText}>{checking ? '检测中...' : '测试连接'}</Text>
           </TouchableOpacity>
@@ -218,6 +225,9 @@ export function ConfigScreen(_props: Props) {
             style={[styles.button, styles.syncButton]}
             onPress={handleSync}
             disabled={syncing}
+            accessibilityLabel={syncing ? '同步中' : '立即同步'}
+            accessibilityRole="button"
+            accessibilityState={{ busy: syncing }}
           >
             <Text style={styles.buttonText}>{syncing ? '同步中...' : '立即同步'}</Text>
           </TouchableOpacity>
@@ -251,6 +261,7 @@ export function ConfigScreen(_props: Props) {
           placeholder="API 地址"
           placeholderTextColor={colors.text.hint}
           editable={false}
+          accessibilityLabel="AI API地址"
         />
         <TextInput
           style={styles.input}
@@ -258,6 +269,7 @@ export function ConfigScreen(_props: Props) {
           placeholderTextColor={colors.text.hint}
           editable={false}
           secureTextEntry
+          accessibilityLabel="AI API密钥"
         />
       </View>
       {/* 数据管理 */}
@@ -268,12 +280,16 @@ export function ConfigScreen(_props: Props) {
           <TouchableOpacity
             style={[styles.button, styles.dangerButton]}
             onPress={handleClearProducts}
+            accessibilityLabel="清空所有商品"
+            accessibilityRole="button"
           >
             <Text style={styles.buttonText}>清空商品</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, styles.dangerButton]}
             onPress={handleResetDatabase}
+            accessibilityLabel="重置数据库"
+            accessibilityRole="button"
           >
             <Text style={styles.buttonText}>重置数据库</Text>
           </TouchableOpacity>

@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  type ViewStyle,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useModeStore } from '../store/mode';
 import { useStore } from '../context/store';
 import { searchProducts } from '../db/search';
 import { useTheme } from '../theme/ThemeContext';
@@ -25,6 +27,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenProps)
   const { colors, scale } = theme;
   const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
   const filter = route.params?.filter;
+  const isManagement = useModeStore(s => s.isManagement);
 
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -46,6 +49,8 @@ export function ProductListScreen({ navigation, route }: ProductListScreenProps)
           <TouchableOpacity
             style={styles.headerButton}
             onPress={() => navigation.navigate('ProductEdit', {})}
+            accessibilityLabel="添加新商品"
+            accessibilityRole="button"
           >
             <Text style={styles.headerButtonText}>+</Text>
           </TouchableOpacity>
@@ -104,6 +109,8 @@ export function ProductListScreen({ navigation, route }: ProductListScreenProps)
       <TouchableOpacity
         style={styles.productItem}
         onPress={() => navigation.navigate('ProductDetail', { id: item.id })}
+        accessibilityLabel={`${item.name}，价格${item.price.toFixed(2)}元，状态${statusLabels[item.status]}`}
+        accessibilityRole="button"
       >
         <View style={styles.productLeft}>
           <View style={styles.productNameRow}>
@@ -154,11 +161,14 @@ export function ProductListScreen({ navigation, route }: ProductListScreenProps)
           onChangeText={setQuery}
           returnKeyType="search"
           autoCorrect={false}
+          accessibilityLabel="搜索商品"
         />
         {query.length > 0 && (
           <TouchableOpacity
             style={styles.clearButton}
             onPress={() => setQuery('')}
+            accessibilityLabel="清除搜索"
+            accessibilityRole="button"
           >
             <Text style={styles.clearButtonText}>✕</Text>
           </TouchableOpacity>
@@ -179,6 +189,8 @@ export function ProductListScreen({ navigation, route }: ProductListScreenProps)
                 key={cat}
                 style={[styles.categoryChip, active && styles.categoryChipActive]}
                 onPress={() => handleCategoryPress(cat)}
+                accessibilityLabel={`分类：${cat}${active ? '，已选中' : ''}`}
+                accessibilityRole="button"
               >
                 <Text
                   style={[
@@ -220,11 +232,26 @@ export function ProductListScreen({ navigation, route }: ProductListScreenProps)
         <TouchableOpacity
           style={styles.scanButton}
           onPress={() => navigation.navigate('ScanBarcode')}
+          accessibilityLabel="扫码识别"
+          accessibilityRole="button"
         >
           <Text style={styles.scanButtonIcon}>&#x1F4F7;</Text>
           <Text style={styles.scanButtonText}>扫码识别</Text>
         </TouchableOpacity>
       </View>
+
+      {/* 管理模式 FAB */}
+      {isManagement && (
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => navigation.navigate('ProductEdit' as any)}
+          activeOpacity={0.8}
+          accessibilityLabel="添加新商品"
+          accessibilityRole="button"
+        >
+          <Text style={styles.fabText}>+</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -429,6 +456,29 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       fontSize: 16 * scale,
       fontWeight: '600',
       color: colors.text.inverse,
+    },
+    // 管理模式 FAB
+    fab: {
+      position: 'absolute',
+      bottom: 24,
+      right: 24,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: colors.brand.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      elevation: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+    },
+    fabText: {
+      color: '#FFFFFF',
+      fontSize: 28,
+      fontWeight: '300',
+      lineHeight: 30,
     },
   });
 }

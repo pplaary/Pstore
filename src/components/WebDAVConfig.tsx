@@ -200,6 +200,7 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="url"
+        accessibilityLabel="WebDAV地址"
       />
       <TextInput
         style={styles.input}
@@ -210,6 +211,7 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
         editable={editable}
         autoCapitalize="none"
         autoCorrect={false}
+        accessibilityLabel="WebDAV账号"
       />
       <TextInput
         style={styles.input}
@@ -221,6 +223,7 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
         secureTextEntry
         autoCapitalize="none"
         autoCorrect={false}
+        accessibilityLabel="WebDAV密码"
       />
 
       <View style={styles.statusRow}>

@@ -72,16 +72,17 @@ export function ProductConfirmCard({
         styles.card,
         expired ? styles.cardExpired : styles.cardNormal,
       ]}
+      accessible
     >
       {/* 商品信息区 */}
       <View style={styles.infoRow}>
         {/* 缩略图 */}
         {product.imageUri ? (
           <View style={styles.thumbnailWrapper}>
-            <Image source={{ uri: product.imageUri }} style={styles.thumbnail} />
+            <Image source={{ uri: product.imageUri }} style={styles.thumbnail} accessible accessibilityLabel="商品图片" />
           </View>
         ) : (
-          <View style={styles.thumbnailPlaceholder}>
+          <View style={styles.thumbnailPlaceholder} accessible accessibilityLabel="商品占位图">
             <Text style={styles.thumbnailPlaceholderText}>📦</Text>
           </View>
         )}
@@ -116,12 +117,16 @@ export function ProductConfirmCard({
         <TouchableOpacity
           style={styles.addBtn}
           onPress={() => onAddToCart(product, quantity)}
+          accessibilityLabel={`加购${quantity > 1 ? quantity + '个' : ''}${product.name}`}
+          accessibilityRole="button"
         >
           <Text style={styles.addBtnText}>加购</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.ignoreBtn}
           onPress={onIgnore}
+          accessibilityLabel="忽略此商品"
+          accessibilityRole="button"
         >
           <Text style={styles.ignoreBtnText}>忽略</Text>
         </TouchableOpacity>

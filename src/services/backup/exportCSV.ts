@@ -17,6 +17,8 @@ export interface CSVResult {
   error?: string;
 }
 
+export type ExportScope = 'all' | 'in_stock' | 'to_be_purchased';
+
 // ==================== 辅助 ====================
 
 function csvEscape(value: string): string {
@@ -51,15 +53,23 @@ function priceHistoryToCsvRow(h: PriceHistory): string {
 // ==================== 导出全部商品 ====================
 
 /**
- * 导出全部未删除商品为 CSV 文件并分享。
+ * 导出未删除商品为 CSV 文件并分享。
  *
  * @param products 商品数组（通常从 exportProducts() 获取）
+ * @param scope    导出范围：all / in_stock / to_be_purchased
  */
 export async function exportProductsCSV(
   products: Product[],
+  scope: ExportScope = 'all',
 ): Promise<CSVResult> {
   try {
-    if (products.length === 0) {
+    const filtered = scope === 'in_stock'
+      ? products.filter(p => p.status === 'IN_SHOP' && !p.isDeleted)
+      : scope === 'to_be_purchased'
+        ? products.filter(p => p.status === 'TO_BE_PURCHASED' && !p.isDeleted)
+        : products.filter(p => !p.isDeleted);
+
+    if (filtered.length === 0) {
       return { ok: false, error: '没有可导出的商品' };
     }
 
@@ -68,12 +78,12 @@ export async function exportProductsCSV(
 
     const lines = [
       '﻿' + headerLine,
-      ...products.map(productToCsvRow),
+      ...filtered.map(productToCsvRow),
     ];
 
     const csvContent = lines.join('\n');
 
-    const fileName = `pstore-products-${new Date().toISOString().slice(0, 10)}.csv`;
+    const fileName = `pstore-products-${scope}-${new Date().toISOString().slice(0, 10)}.csv`;
     const filePath = `${FileSystem.cacheDirectory}${fileName}`;
 
     await FileSystem.writeAsStringAsync(filePath, csvContent, {

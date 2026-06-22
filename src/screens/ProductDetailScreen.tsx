@@ -51,10 +51,10 @@ export function ProductDetailScreen({ navigation, route }: ProductDetailScreenPr
     <View style={styles.container}>
       <DetailContent db={db} productId={productId} />
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={handleEdit}>
+        <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={handleEdit} accessibilityLabel="编辑商品">
           <Text style={styles.actionButtonText}>编辑</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={handleDelete}>
+        <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={handleDelete} accessibilityLabel="软删除商品">
           <Text style={[styles.actionButtonText, styles.deleteButtonText]}>软删除</Text>
         </TouchableOpacity>
       </View>
@@ -171,7 +171,7 @@ function DetailContent({ db, productId }: { db: ReturnType<typeof useStore>['db'
         <View style={styles.cardHeaderRow}>
           <Text style={styles.sectionTitle}>价格历史</Text>
           {history.length > 0 && (
-            <TouchableOpacity onPress={handleExportPriceHistory}>
+            <TouchableOpacity onPress={handleExportPriceHistory} accessibilityLabel="导出价格历史 CSV">
               <Text style={styles.exportButton}>📤</Text>
             </TouchableOpacity>
           )}

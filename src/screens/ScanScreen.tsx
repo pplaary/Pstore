@@ -69,7 +69,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.permissionText}>需要相机权限才能扫码</Text>
-        <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission}>
+        <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission} accessibilityLabel="授权相机权限" accessibilityRole="button">
           <Text style={styles.permissionBtnText}>授权</Text>
         </TouchableOpacity>
       </View>
@@ -256,6 +256,9 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
             key={m}
             style={[styles.tab, mode === m && styles.tabActive]}
             onPress={() => setMode(m)}
+            accessibilityLabel={m === 'scan' ? '扫码模式' : '拍照模式'}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: mode === m }}
           >
             <Text
               style={[styles.tabText, mode === m && styles.tabTextActive]}
@@ -303,6 +306,8 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
                 style={styles.captureButton}
                 onPress={handleTakePhoto}
                 disabled={isLoading}
+                accessibilityLabel="拍照识别"
+                accessibilityRole="button"
               >
                 <View style={styles.captureInner} />
               </TouchableOpacity>
@@ -311,6 +316,8 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
                 onPress={() =>
                   setFacing((f) => (f === 'back' ? 'front' : 'back'))
                 }
+                accessibilityLabel="切换前后摄像头"
+                accessibilityRole="button"
               >
                 <Text style={styles.flipButtonText}>翻转</Text>
               </TouchableOpacity>
@@ -340,12 +347,16 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
             <TouchableOpacity
               style={styles.addCartBtn}
               onPress={() => handleAddToCart(matchedProduct)}
+              accessibilityLabel={`加购${matchedProduct.name}`}
+              accessibilityRole="button"
             >
               <Text style={styles.addCartBtnText}>加购</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.ignoreBtn}
               onPress={handleIgnore}
+              accessibilityLabel="忽略此商品"
+              accessibilityRole="button"
             >
               <Text style={styles.ignoreBtnText}>忽略</Text>
             </TouchableOpacity>
@@ -366,11 +377,14 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
           keyboardType="number-pad"
           returnKeyType="search"
           onSubmitEditing={handleManualSubmit}
+          accessibilityLabel="手动输入条码"
         />
         <TouchableOpacity
           style={[styles.submitBtn, !barcodeInput.trim() && styles.submitBtnDisabled]}
           onPress={handleManualSubmit}
           disabled={!barcodeInput.trim()}
+          accessibilityLabel="确认条码"
+          accessibilityRole="button"
         >
           <Text style={styles.submitBtnText}>确认</Text>
         </TouchableOpacity>
@@ -403,6 +417,8 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
                   <TouchableOpacity
                     style={styles.candidateAddBtn}
                     onPress={() => handleCandidateAddToCart(item)}
+                    accessibilityLabel={`加购候选商品：${item.name}`}
+                    accessibilityRole="button"
                   >
                     <Text style={styles.candidateAddBtnText}>加购</Text>
                   </TouchableOpacity>
@@ -412,6 +428,8 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
             <TouchableOpacity
               style={styles.manualSearchBtn}
               onPress={handleCandidateManualSearch}
+              accessibilityLabel="手动搜索"
+              accessibilityRole="button"
             >
               <Text style={styles.manualSearchBtnText}>
                 以上都不是 → 手动搜索
@@ -420,6 +438,8 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
             <TouchableOpacity
               style={styles.sheetCloseBtn}
               onPress={() => setShowCandidates(false)}
+              accessibilityLabel="关闭候选列表"
+              accessibilityRole="button"
             >
               <Text style={styles.sheetCloseBtnText}>关闭</Text>
             </TouchableOpacity>

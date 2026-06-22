@@ -106,18 +106,21 @@ export function PinModal({ visible, onClose, onSuccess }: PinModalProps) {
             placeholder="••••"
             placeholderTextColor={colors.text.hint}
             onSubmitEditing={handleConfirm}
+            accessibilityLabel="输入PIN"
           />
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={handleClose}>
+            <TouchableOpacity style={styles.cancelBtn} onPress={handleClose} accessibilityLabel="取消PIN输入" accessibilityRole="button">
               <Text style={styles.cancelBtnText}>取消</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.confirmBtn, verifying && styles.confirmBtnDisabled]}
               onPress={handleConfirm}
               disabled={verifying}
+              accessibilityLabel="确认PIN"
+              accessibilityRole="button"
             >
               <Text style={styles.confirmBtnText}>{verifying ? '验证中...' : '确认'}</Text>
             </TouchableOpacity>

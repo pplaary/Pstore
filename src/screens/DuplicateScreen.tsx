@@ -122,6 +122,8 @@ export function DuplicateScreen({ navigation }: any) {
       <TouchableOpacity
         style={styles.autoMergeBtn}
         onPress={() => handleAutoMerge(item)}
+        accessibilityLabel="自动合并重复商品"
+        accessibilityRole="button"
       >
         <Text style={styles.autoMergeBtnText}>自动合并</Text>
       </TouchableOpacity>
@@ -142,12 +144,16 @@ export function DuplicateScreen({ navigation }: any) {
         <TouchableOpacity
           style={styles.mergeBtn}
           onPress={() => handleConfirmMerge(item)}
+          accessibilityLabel="合并商品"
+          accessibilityRole="button"
         >
           <Text style={styles.mergeBtnText}>合并</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.notDupBtn}
           onPress={() => handleConfirmNotDuplicate(item)}
+          accessibilityLabel="标记为非重复"
+          accessibilityRole="button"
         >
           <Text style={styles.notDupBtnText}>非重复</Text>
         </TouchableOpacity>
@@ -240,12 +246,16 @@ export function DuplicateScreen({ navigation }: any) {
               <TouchableOpacity
                 style={styles.cancelBtn}
                 onPress={() => setConfirmState(null)}
+                accessibilityLabel="取消合并"
+                accessibilityRole="button"
               >
                 <Text style={styles.cancelBtnText}>取消</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.confirmMergeBtn}
                 onPress={doMerge}
+                accessibilityLabel="确认合并"
+                accessibilityRole="button"
               >
                 <Text style={styles.confirmMergeBtnText}>确认合并</Text>
               </TouchableOpacity>

@@ -108,36 +108,48 @@ export default function DrawerContent(props: any) {
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => props.navigation.navigate('ProductList')}
+            accessibilityLabel="商品管理"
+            accessibilityRole="menuitem"
           >
             <Text style={styles.menuItemText}>📦 商品管理</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => props.navigation.navigate('PendingItems')}
+            accessibilityLabel="待处理条码"
+            accessibilityRole="menuitem"
           >
             <Text style={styles.menuItemText}>📋 待处理条码</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => props.navigation.navigate('ProductList', { filter: 'deleted' })}
+            accessibilityLabel="已删除商品"
+            accessibilityRole="menuitem"
           >
             <Text style={styles.menuItemText}>🗑 已删除商品</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => props.navigation.navigate('DuplicateList')}
+            accessibilityLabel="重复检测"
+            accessibilityRole="menuitem"
           >
             <Text style={styles.menuItemText}>🔍 重复检测</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => props.navigation.navigate('LooseGoodsManage')}
+            accessibilityLabel="散装标签管理"
+            accessibilityRole="menuitem"
           >
             <Text style={styles.menuItemText}>🏷 散装标签管理</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.menuItem}
             onPress={handleExport}
+            accessibilityLabel="商品数据导出"
+            accessibilityRole="menuitem"
           >
             <Text style={styles.menuItemText}>📤 商品数据导出</Text>
           </TouchableOpacity>
@@ -150,6 +162,8 @@ export default function DrawerContent(props: any) {
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => props.navigation.navigate('Config')}
+          accessibilityLabel="同步配置"
+          accessibilityRole="menuitem"
         >
           <Text style={styles.menuItemText}>🔄 同步配置</Text>
         </TouchableOpacity>
@@ -161,18 +175,24 @@ export default function DrawerContent(props: any) {
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => props.navigation.navigate('Config')}
+          accessibilityLabel="深色模式"
+          accessibilityRole="menuitem"
         >
           <Text style={styles.menuItemText}>🌙 深色模式 ›</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => props.navigation.navigate('Config')}
+          accessibilityLabel="关怀模式"
+          accessibilityRole="menuitem"
         >
           <Text style={styles.menuItemText}>👴 关怀模式 ›</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => alert('设置页开发中')}
+          accessibilityLabel="设置"
+          accessibilityRole="menuitem"
         >
           <Text style={styles.menuItemText}>⚙️ 设置</Text>
         </TouchableOpacity>
@@ -183,6 +203,8 @@ export default function DrawerContent(props: any) {
         <TouchableOpacity
           style={[styles.modeButton, isManagement && styles.modeButtonActive]}
           onPress={handleModeToggle}
+          accessibilityLabel={isManagement ? '退出管理模式' : '进入管理模式'}
+          accessibilityRole="button"
         >
           <Text style={styles.modeButtonText}>
             {isManagement ? '✓ 已进入管理模式（点击退出）' : '🔒 进入管理模式'}
@@ -192,7 +214,7 @@ export default function DrawerContent(props: any) {
 
       {/* 清空购物车 */}
       {items.length > 0 && (
-        <TouchableOpacity style={styles.clearCartBtn} onPress={clearCart}>
+        <TouchableOpacity style={styles.clearCartBtn} onPress={clearCart} accessibilityLabel="清空购物车" accessibilityRole="button">
           <Text style={styles.clearCartText}>🗑 清空购物车</Text>
         </TouchableOpacity>
       )}
@@ -217,6 +239,7 @@ export default function DrawerContent(props: any) {
               keyboardType="number-pad"
               maxLength={6}
               autoFocus
+              accessibilityLabel="输入PIN"
             />
             <View style={styles.pinActions}>
               <TouchableOpacity
@@ -225,12 +248,16 @@ export default function DrawerContent(props: any) {
                   setPinModalVisible(false);
                   setPinInput('');
                 }}
+                accessibilityLabel="取消PIN输入"
+                accessibilityRole="button"
               >
                 <Text style={styles.pinCancelBtnText}>取消</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.pinConfirmBtn}
                 onPress={handlePinAction}
+                accessibilityLabel="确认PIN"
+                accessibilityRole="button"
               >
                 <Text style={styles.pinConfirmBtnText}>确认</Text>
               </TouchableOpacity>
