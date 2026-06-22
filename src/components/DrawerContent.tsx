@@ -115,6 +115,12 @@ export default function DrawerContent(props: any) {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.menuItem}
+            onPress={() => props.navigation.navigate('LooseGoodsManage')}
+          >
+            <Text style={styles.menuItemText}>🏷 散装标签管理</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItem}
             onPress={() => alert('商品数据导出功能开发中')}
           >
             <Text style={styles.menuItemText}>📤 商品数据导出</Text>

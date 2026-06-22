@@ -111,3 +111,12 @@ export interface PushChange {
   isDeleted: number;
   updatedAt: string;
 }
+
+// ==================== 散装标签类型 ====================
+
+/** 散装快捷标签 */
+export interface LooseGoodsLabel {
+  id: string;
+  label: string;
+  order: number;
+}

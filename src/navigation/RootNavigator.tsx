@@ -23,6 +23,7 @@ import { ScanScreen } from '../screens/ScanScreen';
 import { PendingItemsScreen } from '../screens/PendingItemsScreen';
 import { DuplicateScreen } from '../screens/DuplicateScreen';
 import { ConfigScreen } from '../screens/ConfigScreen';
+import { LooseGoodsManageScreen } from '../screens/LooseGoodsManageScreen';
 import DrawerContent from '../components/DrawerContent';
 import { SyncStatusIcon } from '../components/SyncStatusIcon';
 import type { RootStackParamList } from './types';
@@ -88,6 +89,11 @@ export function RootNavigator() {
         name="DuplicateList"
         component={DuplicateScreen}
         options={{ presentation: 'card', headerShown: true, title: '重复检测' }}
+      />
+      <Stack.Screen
+        name="LooseGoodsManage"
+        component={LooseGoodsManageScreen}
+        options={{ presentation: 'card', headerShown: true, title: '散装标签管理' }}
       />
     </Stack.Navigator>
   );

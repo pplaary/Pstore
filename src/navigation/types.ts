@@ -13,6 +13,7 @@ export type RootStackParamList = {
   ScanBarcode: { mode?: 'scan' | 'photo' };
   PendingItems: undefined;
   DuplicateList: undefined;
+  LooseGoodsManage: undefined;
 };
 
 export type DrawerParamList = {
@@ -29,3 +30,4 @@ export type ProductDetailScreenProps = RootStackScreenProps<'ProductDetail'>;
 export type ProductEditScreenProps = RootStackScreenProps<'ProductEdit'>;
 export type ScanScreenProps = RootStackScreenProps<'ScanBarcode'>;
 export type HomeScreenProps = DrawerScreenProps<'Home'>;
+export type LooseGoodsManageScreenProps = RootStackScreenProps<'LooseGoodsManage'>;

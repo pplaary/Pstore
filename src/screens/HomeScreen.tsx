@@ -17,6 +17,7 @@ import { useCartStore } from '../store/cart';
 import { useModeStore } from '../store/mode';
 import { useAIConfigStore } from '../store/aiConfig';
 import { searchProducts } from '../db/search';
+import { getAllLabels } from '../db/looseGoods';
 import { updateProduct, softDeleteProduct } from '../db/product';
 import { useTheme } from '../theme/ThemeContext';
 import { PinModal } from '../components/PinModal';
@@ -58,6 +59,9 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   const { isManagement, exitManagement } = useModeStore();
   const aiMode = useAIConfigStore((s) => s.mode);
   const isChatMode = aiMode === 'chat';
+
+  // ========== 散装标签状态 ==========
+  const [looseGoodsLabels, setLooseGoodsLabels] = useState<Array<{ id: string; label: string }>>([]);
 
   // ========== 搜索模式状态 ==========
   const [query, setQuery] = useState('');
@@ -121,6 +125,34 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     }
   }, [db, query, selectedCategory]);
 
+  // ========== 散装标签 ==========
+  const loadLooseGoodsLabels = useCallback(async () => {
+    try {
+      const { getAllLabels } = await import('../db/looseGoods');
+      const labels = await getAllLabels(db);
+      setLooseGoodsLabels(labels.map((l) => ({ id: l.id, label: l.label })));
+    } catch {
+      // 静默失败
+    }
+  }, [db]);
+
+  /** 点击散装标签：搜索同名商品 → 自动加入购物车（首个结果） */
+  const handleLooseGoodsTagPress = useCallback(
+    async (labelText: string) => {
+      try {
+        const results = await searchProducts(db, labelText, { limit: 1 });
+        if (results.length > 0) {
+          handleAddToCart(results[0]);
+        } else {
+          showToast(`未找到「${labelText}」，请先添加到商品库`);
+        }
+      } catch {
+        showToast(`搜索「${labelText}」失败`);
+      }
+    },
+    [db, handleAddToCart],
+  );
+
   React.useEffect(() => {
     if (!isChatMode) doSearch();
   }, [doSearch, isChatMode]);
@@ -128,7 +160,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   useFocusEffect(
     useCallback(() => {
       refreshProducts();
-    }, [refreshProducts]),
+      loadLooseGoodsLabels();
+    }, [refreshProducts, loadLooseGoodsLabels]),
   );
 
   // ========== 连击标题进入/退出管理模式 ==========
@@ -648,6 +681,25 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       ) : (
         /* ---------- 搜索模式（原有逻辑） ---------- */
         <View style={styles.searchArea}>
+          {/* 散装快捷标签行 */}
+          {looseGoodsLabels.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.looseGoodsRow}
+              keyboardShouldPersistTaps="handled"
+            >
+              {looseGoodsLabels.map((tag) => (
+                <TouchableOpacity
+                  key={tag.id}
+                  style={styles.looseGoodsTag}
+                  onPress={() => handleLooseGoodsTagPress(tag.label)}
+                >
+                  <Text style={styles.looseGoodsTagText}>{tag.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
           {isEmpty ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>未找到商品</Text>
@@ -866,6 +918,25 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
 
     // -- 搜索模式内容 --
     searchArea: { flex: 1 },
+    looseGoodsRow: {
+      paddingHorizontal: 12,
+      paddingTop: 4,
+      paddingBottom: 8,
+      gap: 8,
+    },
+    looseGoodsTag: {
+      backgroundColor: colors.brand.primary + '12',
+      borderRadius: 16,
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderWidth: 1,
+      borderColor: colors.brand.primary + '30',
+    },
+    looseGoodsTagText: {
+      fontSize: 13 * scale,
+      color: colors.brand.primary,
+      fontWeight: '500',
+    },
     listContent: { paddingHorizontal: 12, paddingBottom: 100 },
     productItem: {
       flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
