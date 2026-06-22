@@ -15,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSyncConfigStore } from '../store/syncConfig';
-import { useAIConfigStore } from '../store/aiConfig';
 import { useNetworkDetection } from '../hooks/useNetworkDetection';
 import { NetworkIndicator } from './NetworkIndicator';
 import { useTheme } from '../theme/ThemeContext';
@@ -26,8 +25,6 @@ export function SyncStatusIcon() {
   const serverUrl = useSyncConfigStore((s) => s.serverUrl);
   const isConnected = useNetworkDetection(serverUrl);
   const [webdavConfigured, setWebdavConfigured] = useState(false);
-  const aiMode = useAIConfigStore((s) => s.mode);
-  const aiReachable = useAIConfigStore((s) => s.reachable);
 
   const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
@@ -62,7 +59,7 @@ export function SyncStatusIcon() {
       <Ionicons name={iconName} size={20} color={color} />
       <Text style={[styles.label, { color }]}>{label}</Text>
       {/* AI 聊天模式下显示网络延迟指示器 */}
-      {aiMode === 'chat' && aiReachable && <NetworkIndicator />}
+      <NetworkIndicator />
     </TouchableOpacity>
   );
 }

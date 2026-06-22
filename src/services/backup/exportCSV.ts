@@ -31,14 +31,14 @@ function csvEscape(value: string): string {
 function productToCsvRow(p: Product): string {
   return [
     csvEscape(p.name),
-    csvEscape(p.aliases ?? ''),
-    p.price.toFixed(2),
     csvEscape(p.spec ?? ''),
-    csvEscape(p.barcode ?? ''),
+    p.price.toFixed(2),
     csvEscape(p.category ?? ''),
     csvEscape(p.status),
-    csvEscape(p.updatedAt),
+    csvEscape(p.barcode ?? ''),
+    csvEscape(p.aliases ?? ''),
     csvEscape(p.createdAt),
+    csvEscape(p.updatedAt),
   ].join(',');
 }
 
@@ -73,7 +73,7 @@ export async function exportProductsCSV(
       return { ok: false, error: '没有可导出的商品' };
     }
 
-    const headers = ['名称', '别名', '价格', '规格', '条码', '分类', '状态', '更新时间', '创建时间'];
+    const headers = ['名称', '规格', '售价', '分类', '状态', '条码', '别名', '创建时间', '更新时间'];
     const headerLine = headers.map(csvEscape).join(',');
 
     const lines = [

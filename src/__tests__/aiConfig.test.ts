@@ -78,7 +78,7 @@ function resetStore(): void {
     configured: false,
     reachable: false,
     mode: 'search',
-    latencyTier: 'unknown',
+    latencyTier: 'green',
     lastLatencyMs: null,
   });
   useSyncConfigStore.setState({
@@ -178,7 +178,7 @@ describe('AI 配置 SecureStore 操作', () => {
       expect(state.configured).toBe(false);
       expect(state.reachable).toBe(false);
       expect(state.mode).toBe('search');
-      expect(state.latencyTier).toBe('unknown');
+      expect(state.latencyTier).toBe('green');
       expect(state.lastLatencyMs).toBeNull();
     });
   });

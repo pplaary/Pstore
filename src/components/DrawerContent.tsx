@@ -23,7 +23,7 @@ import { useCartStore } from '../store/cart';
 import { usePinStore } from '../store/pin';
 import { useTheme } from '../theme/ThemeContext';
 import { useStore } from '../context/store';
-import { exportProductsCSV } from '../services/backup/exportCSV';
+import { exportProductsCSV, type ExportScope } from '../services/backup/exportCSV';
 import { exportProducts } from '../db/search';
 
 export default function DrawerContent(props: any) {
@@ -36,10 +36,23 @@ export default function DrawerContent(props: any) {
   const [pinInput, setPinInput] = useState('');
   const [pinModalVisible, setPinModalVisible] = useState(false);
 
-  const handleExport = useCallback(async () => {
+  const handleExport = useCallback(() => {
+    Alert.alert(
+      '选择导出范围',
+      '请选择要导出的商品范围',
+      [
+        { text: '全部商品', onPress: () => exportAndSave('all') },
+        { text: '在售商品', onPress: () => exportAndSave('in_stock') },
+        { text: '待采商品', onPress: () => exportAndSave('to_be_purchased') },
+        { text: '取消', style: 'cancel' },
+      ],
+    );
+  }, [db]);
+
+  const exportAndSave = useCallback(async (scope: ExportScope) => {
     try {
       const products = await exportProducts(db);
-      const result = await exportProductsCSV(products);
+      const result = await exportProductsCSV(products, scope);
       if (!result.ok) {
         Alert.alert('导出失败', result.error ?? '未知错误');
       }

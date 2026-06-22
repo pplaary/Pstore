@@ -31,9 +31,9 @@ import { requestAudioPermission } from '../services/stt';
 const AI_CONFIG_KEY = 'pstore_ai_config';
 
 /** 延迟色标阈值（ms） */
-const LATENCY_GREEN_MS = 1000;   // < 1s → green
-const LATENCY_YELLOW_MS = 3000;  // 1-3s → yellow
-// > 3s → red
+const LATENCY_GREEN_MS = 1000;   // < 1s → green (#4CAF50)
+const LATENCY_YELLOW_MS = 3000;  // 1-3s → yellow (#FFC107)
+// > 3s → red (#F44336)
 
 // ==================== 类型 ====================
 
@@ -77,7 +77,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
   configured: false,
   reachable: false,
   mode: 'search',
-  latencyTier: 'unknown',
+  latencyTier: 'green',
   lastLatencyMs: null,
   micPermissionGranted: false,
   isVoiceAvailable: false,
@@ -102,7 +102,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
             configured: false,
             reachable: false,
             mode: 'search',
-            latencyTier: 'unknown',
+            latencyTier: 'green',
             lastLatencyMs: null,
             micPermissionGranted: false,
             isVoiceAvailable: false,
@@ -120,7 +120,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
           configured: true,
           reachable,
           mode: reachable ? 'chat' : 'search',
-          latencyTier: 'unknown',
+          latencyTier: 'green',
           lastLatencyMs: null,
           micPermissionGranted,
           isVoiceAvailable: computeVoiceAvailable(micPermissionGranted, reachable, reachable ? 'chat' : 'search'),
@@ -144,7 +144,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
             configured: false,
             reachable: false,
             mode: 'search',
-            latencyTier: 'unknown',
+            latencyTier: 'green',
             lastLatencyMs: null,
             micPermissionGranted: false,
             isVoiceAvailable: false,
@@ -159,7 +159,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
           configured: true,
           reachable,
           mode: reachable ? 'chat' : 'search',
-          latencyTier: 'unknown',
+          latencyTier: 'green',
           lastLatencyMs: null,
           micPermissionGranted,
           isVoiceAvailable: computeVoiceAvailable(micPermissionGranted, reachable, reachable ? 'chat' : 'search'),
@@ -176,7 +176,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
       configured: false,
       reachable: false,
       mode: 'search',
-      latencyTier: 'unknown',
+      latencyTier: 'green',
       lastLatencyMs: null,
       micPermissionGranted,
       isVoiceAvailable: false,
@@ -207,7 +207,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
       configured: true,
       reachable,
       mode: reachable ? 'chat' : 'search',
-      latencyTier: 'unknown',
+      latencyTier: 'green',
       lastLatencyMs: null,
     });
   },
@@ -222,7 +222,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
       configured: false,
       reachable: false,
       mode: 'search',
-      latencyTier: 'unknown',
+      latencyTier: 'green',
       lastLatencyMs: null,
       micPermissionGranted: false,
       isVoiceAvailable: false,
