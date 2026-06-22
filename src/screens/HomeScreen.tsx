@@ -136,23 +136,6 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     }
   }, [db]);
 
-  /** 点击散装标签：搜索同名商品 → 自动加入购物车（首个结果） */
-  const handleLooseGoodsTagPress = useCallback(
-    async (labelText: string) => {
-      try {
-        const results = await searchProducts(db, labelText, { limit: 1 });
-        if (results.length > 0) {
-          handleAddToCart(results[0]);
-        } else {
-          showToast(`未找到「${labelText}」，请先添加到商品库`);
-        }
-      } catch {
-        showToast(`搜索「${labelText}」失败`);
-      }
-    },
-    [db, handleAddToCart],
-  );
-
   React.useEffect(() => {
     if (!isChatMode) doSearch();
   }, [doSearch, isChatMode]);
@@ -214,6 +197,23 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     addToCart(product.id, product.name, product.price);
     showToast(`已加入购物车：${product.name} ¥${product.price.toFixed(2)}`);
   }, [addToCart]);
+
+  /** 点击散装标签：搜索同名商品 → 自动加入购物车（首个结果） */
+  const handleLooseGoodsTagPress = useCallback(
+    async (labelText: string) => {
+      try {
+        const results = await searchProducts(db, labelText, { limit: 1 });
+        if (results.length > 0) {
+          handleAddToCart(results[0]);
+        } else {
+          showToast(`未找到「${labelText}」，请先添加到商品库`);
+        }
+      } catch {
+        showToast(`搜索「${labelText}」失败`);
+      }
+    },
+    [db, handleAddToCart],
+  );
 
   // ========== AI 辅助函数 ==========
 

@@ -40,6 +40,7 @@ export function ConfigScreen(_props: Props) {
   const [inputUrl, setInputUrl] = useState(serverUrl ?? '');
   const [checking, setChecking] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const networkStatus = useNetworkDetection(inputUrl.trim() || null);
 
   // ─── 主题 ────────────────────────────────────────────────
   const isSystemMode = theme.storedMode === 'system';
@@ -221,7 +222,18 @@ export function ConfigScreen(_props: Props) {
             <Text style={styles.buttonText}>{syncing ? '同步中...' : '立即同步'}</Text>
           </TouchableOpacity>
         </View>
-        <SyncStatusPreview url={inputUrl.trim() || null} />
+        {!inputUrl.trim() ? (
+          <View style={styles.statusRow}>
+            <Text style={styles.statusText}>未配置 N1 地址</Text>
+          </View>
+        ) : (
+          <View style={styles.statusRow}>
+            <Text style={[styles.statusDot, { backgroundColor: networkStatus ? '#16A34A' : '#94A3B8' }]} />
+            <Text style={[styles.statusText, { color: networkStatus ? '#16A34A' : '#94A3B8' }]}>
+              {networkStatus ? '已连接' : '不可达'}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* WebDAV 配置 */}
@@ -268,30 +280,6 @@ export function ConfigScreen(_props: Props) {
         </View>
       </View>
     </ScrollView>
-  );
-}
-
-// ==================== 子组件：状态预览 ====================
-
-function SyncStatusPreview({ url }: { url: string | null }) {
-  const isConnected = useNetworkDetection(url);
-
-  if (!url) {
-    return (
-      <View style={styles.statusRow}>
-        <Text style={styles.statusText}>未配置 N1 地址</Text>
-      </View>
-    );
-  }
-
-  const statusColor = isConnected ? '#16A34A' : '#94A3B8';
-  const statusText = isConnected ? '已连接' : '不可达';
-
-  return (
-    <View style={styles.statusRow}>
-      <Text style={[styles.statusDot, { backgroundColor: statusColor }]} />
-      <Text style={[styles.statusText, { color: statusColor }]}>{statusText}</Text>
-    </View>
   );
 }
 
@@ -349,7 +337,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     careHint: {
       fontSize: 12 * scale,
-      color: '#EA580C',
+      color: colors.brand.warning,
       marginTop: 10,
       lineHeight: 18 * scale,
     },

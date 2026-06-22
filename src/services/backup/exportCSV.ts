@@ -8,6 +8,7 @@
 
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import type { SQLiteDatabase } from 'expo-sqlite';
 import type { Product, PriceHistory } from '../../db/types';
 
 export interface CSVResult {
@@ -109,7 +110,7 @@ export async function exportProductsCSV(
  * @param productName 商品名称（用于文件名）
  */
 export async function exportPriceHistoryCSV(
-  db: unknown,
+  db: SQLiteDatabase,
   productId: string,
   productName: string,
 ): Promise<CSVResult> {
