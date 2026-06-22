@@ -30,6 +30,7 @@ const { mockFileSystem, mockSQLite, mockSecureStore, mockSyncStore, mockPerformS
     },
     mockSQLite: {
       openDatabaseAsync: vi.fn().mockResolvedValue(_mockDb),
+      deleteDatabaseAsync: vi.fn().mockResolvedValue(undefined),
     },
     mockSecureStore: {
       getItemAsync: vi.fn(),
@@ -67,6 +68,7 @@ vi.mock('../store/syncConfig', () => ({
 // db/init module  — 模拟实际的 initDatabase 出口
 vi.mock('../db/init', () => ({
   getDatabasePath: () => 'pstore.db',
+  getDatabaseFilePath: () => 'file:///documents/SQLite/pstore.db',
   openAndMigrate: vi.fn().mockResolvedValue({ execAsync: vi.fn(), closeAsync: vi.fn() }),
 }));
 
@@ -104,13 +106,18 @@ describe('备份恢复引擎', () => {
 
   describe('exportSnapshot', () => {
     it('生成的文件存在且大小 > 0', async () => {
+      const execAsync = vi.fn().mockResolvedValue(undefined);
+      mockSQLite.openDatabaseAsync.mockResolvedValue({
+        execAsync,
+        closeAsync: vi.fn().mockResolvedValue(undefined),
+      });
       mockFileSystem.getInfoAsync.mockResolvedValue({ exists: true, size: 8192 });
 
       const result = await exportSnapshot('file:///cache/test-snapshot.db');
 
       expect(result.ok).toBe(true);
       expect(result.snapshotPath).toBe('file:///cache/test-snapshot.db');
-      expect(mockFileSystem.copyAsync).toHaveBeenCalled();
+      expect(execAsync).toHaveBeenCalledWith(expect.stringContaining('VACUUM INTO'));
     });
 
     it('快照文件为空时返回 ok=false', async () => {
@@ -135,7 +142,10 @@ describe('备份恢复引擎', () => {
     });
 
     it('文件系统错误时返回 ok=false', async () => {
-      mockFileSystem.copyAsync.mockRejectedValue(new Error('ENOSPC: no space left'));
+      mockSQLite.openDatabaseAsync.mockResolvedValue({
+        execAsync: vi.fn().mockRejectedValue(new Error('ENOSPC: no space left')),
+        closeAsync: vi.fn().mockResolvedValue(undefined),
+      });
 
       const result = await exportSnapshot();
 
