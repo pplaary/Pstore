@@ -228,8 +228,8 @@ export function ConfigScreen(_props: Props) {
           </View>
         ) : (
           <View style={styles.statusRow}>
-            <Text style={[styles.statusDot, { backgroundColor: networkStatus ? '#16A34A' : '#94A3B8' }]} />
-            <Text style={[styles.statusText, { color: networkStatus ? '#16A34A' : '#94A3B8' }]}>
+            <Text style={[styles.statusDot, { backgroundColor: networkStatus ? colors.brand.success : colors.text.hint }]} />
+            <Text style={[styles.statusText, { color: networkStatus ? colors.brand.success : colors.text.hint }]}>
               {networkStatus ? '已连接' : '不可达'}
             </Text>
           </View>

@@ -125,7 +125,7 @@ export async function searchProducts(
                WHERE ${clauses.join(' AND ')}
                ORDER BY ${orderBy}`;
 
-    if (options?.limit) {
+    if (options?.limit !== undefined) {
       sql += ` LIMIT ${options.limit}`;
     }
 
@@ -153,7 +153,7 @@ export async function searchProducts(
                CASE WHEN p.status = 'IN_SHOP' THEN 0 ELSE 1 END,
                p.name ASC`;
 
-  if (options?.limit) {
+  if (options?.limit !== undefined) {
     sql += ` LIMIT ${options.limit}`;
   }
 
@@ -214,7 +214,7 @@ export async function searchByCategory(
              WHERE ${clauses.join(' AND ')}
              ORDER BY ${orderBy}`;
 
-  if (options?.limit) {
+  if (options?.limit !== undefined) {
     sql += ` LIMIT ${options.limit}`;
   }
 
@@ -247,7 +247,7 @@ export async function searchByStatus(
              WHERE ${clauses.join(' AND ')}
              ORDER BY ${orderBy}`;
 
-  if (options?.limit) {
+  if (options?.limit !== undefined) {
     sql += ` LIMIT ${options.limit}`;
   }
 

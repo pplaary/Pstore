@@ -192,7 +192,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       width: 8,
       height: 8,
       borderRadius: 4,
-      shadowColor: '#000',
+      shadowColor: '#00000030',
       shadowOffset: { width: 0, height: 0 },
       shadowOpacity: 0.15,
       shadowRadius: 2,

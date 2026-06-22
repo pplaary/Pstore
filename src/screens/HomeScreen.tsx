@@ -128,7 +128,6 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   // ========== 散装标签 ==========
   const loadLooseGoodsLabels = useCallback(async () => {
     try {
-      const { getAllLabels } = await import('../db/looseGoods');
       const labels = await getAllLabels(db);
       setLooseGoodsLabels(labels.map((l) => ({ id: l.id, label: l.label })));
     } catch {

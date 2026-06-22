@@ -49,22 +49,28 @@ export async function addLabel(
   db: SQLite.SQLiteDatabase,
   label: string,
 ): Promise<LooseGoodsLabel> {
+  const trimmed = label.trim();
   const id = randomUUID();
-  // 放到末尾：获取当前最大 order
-  const maxRow = await db.getFirstAsync<Record<string, unknown>>(
-    `SELECT MAX("order") AS maxOrder FROM loose_goods_labels`,
-  );
-  const maxOrder = (maxRow?.maxOrder as number) ?? 0;
-  const newOrder = maxOrder + 1;
+  let maxOrder = 0;
+  let newOrder = 1;
 
-  await db.runAsync(
-    `INSERT INTO loose_goods_labels (id, label, "order") VALUES (?, ?, ?)`,
-    id,
-    label.trim(),
-    newOrder,
-  );
+  await db.withTransactionAsync(async () => {
+    // 放到末尾：获取当前最大 order（在事务内读取，保证原子性）
+    const maxRow = await db.getFirstAsync<Record<string, unknown>>(
+      `SELECT MAX("order") AS maxOrder FROM loose_goods_labels`,
+    );
+    maxOrder = (maxRow?.maxOrder as number) ?? 0;
+    newOrder = maxOrder + 1;
 
-  return { id, label: label.trim(), order: newOrder };
+    await db.runAsync(
+      `INSERT INTO loose_goods_labels (id, label, "order") VALUES (?, ?, ?)`,
+      id,
+      trimmed,
+      newOrder,
+    );
+  });
+
+  return { id, label: trimmed, order: newOrder };
 }
 
 // ==================== 3. updateLabel ====================

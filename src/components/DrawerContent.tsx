@@ -158,14 +158,18 @@ export default function DrawerContent(props: any) {
       {/* 设置 */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>设置</Text>
-        <View style={styles.settingRow}>
-          <Text style={styles.settingLabel}>🌙 深色模式</Text>
-          <Switch value={false} disabled />
-        </View>
-        <View style={styles.settingRow}>
-          <Text style={styles.settingLabel}>👴 关怀模式</Text>
-          <Switch value={false} disabled />
-        </View>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => props.navigation.navigate('Config')}
+        >
+          <Text style={styles.menuItemText}>🌙 深色模式 ›</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => props.navigation.navigate('Config')}
+        >
+          <Text style={styles.menuItemText}>👴 关怀模式 ›</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => alert('设置页开发中')}

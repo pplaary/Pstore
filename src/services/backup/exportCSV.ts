@@ -147,7 +147,7 @@ export async function exportPriceHistoryCSV(
 
     const csvContent = lines.join('\n');
 
-    const safeName = productName.replace(/[^一-鿿\w]/g, '_').slice(0, 20);
+    const safeName = productName.replace(/[^一-鿿㐀-䶿豈-﫿\w]/g, '_').slice(0, 20);
     const dateStr = new Date().toISOString().slice(0, 10);
     const fileName = `pstore-price-${safeName}-${dateStr}.csv`;
     const filePath = `${FileSystem.cacheDirectory}${fileName}`;
