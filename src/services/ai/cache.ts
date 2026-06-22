@@ -93,9 +93,9 @@ export class AIResponseCache {
       }
     }
 
-    // 清理过期草稿（与缓存共用 5 分钟 TTL）
+    // 清理过期草稿（与 getDraft 一致，60 秒）
     for (const [key, entry] of this.drafts) {
-      if (now - entry.createdAt > CACHE_TTL_MS) {
+      if (now - entry.createdAt > DRAFT_GREY_MS) {
         this.drafts.delete(key);
       }
     }

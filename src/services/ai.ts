@@ -85,9 +85,10 @@ export async function callAI(
   config: AITextConfig,
   messages: AIMessage[],
 ): Promise<string | null> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     const url = `${config.apiUrl}/chat/completions`;
 
@@ -155,15 +156,18 @@ export async function parseAIResponse(
       try {
         parsed = JSON.parse(codeBlockMatch[1].trim());
       } catch {
+        console.warn('[AI] parseAIResponse: markdown 代码块内 JSON 解析失败');
         return null;
       }
     } else {
+      console.warn('[AI] parseAIResponse: 原始 JSON 解析失败且无 markdown 代码块');
       return null;
     }
   }
 
   // 3. 验证必需字段
   if (!isValidAIResponse(parsed)) {
+    console.warn('[AI] parseAIResponse: 响应缺少必需字段', parsed);
     return null;
   }
 
@@ -173,6 +177,7 @@ export async function parseAIResponse(
   if (resp.productId) {
     const exists = await isProductValid(db, resp.productId);
     if (!exists) {
+      console.warn('[AI] parseAIResponse: productId 本地校验失败', resp.productId);
       return null;
     }
   }
@@ -207,11 +212,11 @@ function isValidAIResponse(value: unknown): value is AIResponse {
     }
   }
 
-  // quantity 必填且为正整数
+  // quantity 必填且为 ≥1 的整数
   if (
     typeof obj.quantity !== 'number' ||
-    obj.quantity < 1 ||
-    !Number.isInteger(obj.quantity)
+    !Number.isInteger(obj.quantity) ||
+    obj.quantity < 1
   ) {
     return false;
   }
@@ -252,8 +257,11 @@ async function isProductValid(
  * 支持独立字（两→2、三→3…）、组合形式（二十三→23、三十→30）、
  * 半/打组合（半打→6）、以及百/千/万级。
  *
- * 算法：正则扫描所有数字字符位置，带 1-char lookahead。
- * 对「digit + 乘数单位(十/百/千/万)」做乘法合成。
+ * 算法：
+ * 1. 先处理「半打」特殊组合
+ * 2. 再处理独立乘数单位（十/百/千/万自身）
+ * 3. 处理组合形式：digit + 单位（二十三→23）
+ * 4. 最后处理独立数字字
  *
  * 返回处理后的文本和是否做过替换。
  */
@@ -274,7 +282,7 @@ export function interceptChineseNumerals(
     '九': 9, '玖': 9,
   };
 
-  // 乘数单位：digit 后跟这些字 → 乘法
+  // 乘数单位映射
   const UNIT_MULT_MAP: Record<string, number> = {
     '十': 10, '拾': 10,
     '百': 100,
@@ -285,49 +293,112 @@ export function interceptChineseNumerals(
   // 特殊组合：半 + 打 = 6
   const HALF_DOZEN = '半打';
 
-  // 2. 先处理「半打」组合
   let result = input;
   let replaced = false;
+
+  // 2. 先处理「半打」组合
   if (result.includes(HALF_DOZEN)) {
     result = result.replaceAll(HALF_DOZEN, '6');
     replaced = true;
   }
 
-  // 3. 正则扫描数字字符 + 1-char lookahead
-  //    匹配单个中文字符，后面跟一个字符（用于判断是否为单位字）
-  const numeralChar = Object.keys(CHAR_MAP).concat(Object.keys(UNIT_MULT_MAP)).join('');
-  const NUMERAL_SCAN_RE = new RegExp(`([${numeralChar}])(.)?`, 'g');
+  // 3. 用单遍扫描处理所有组合（二十三→23、十五→15、壹佰→100 等）
+  const digitChars = Object.keys(CHAR_MAP).join('');
+  const unitChars = Object.keys(UNIT_MULT_MAP).join('');
 
-  result = result.replace(NUMERAL_SCAN_RE, (_full, ch, next) => {
-    // 检查是否为乘数单位
+  let scan = '';
+  let i = 0;
+  while (i < result.length) {
+    const ch = result[i];
+    // 遇到中文数字：收集连续的中文数字序列，统一处理
+    if (CHAR_MAP[ch] !== undefined || UNIT_MULT_MAP[ch] !== undefined) {
+      let j = i;
+      while (j < result.length && (CHAR_MAP[result[j]] !== undefined || UNIT_MULT_MAP[result[j]] !== undefined)) {
+        j++;
+      }
+      const numeralSeq = result.slice(i, j);
+      scan += chineseNumToArabic(numeralSeq);
+      replaced = true;
+      i = j;
+    } else {
+      scan += ch;
+      i++;
+    }
+  }
+  result = scan;
+
+  // 4. 处理独立乘数单位（未被上一步处理的孤立的 十/百/千/万）
+  //    以及独立的数字字
+  const allNumeralChars = digitChars + unitChars;
+  const SINGLE_RE = new RegExp(`[${allNumeralChars}]`, 'g');
+
+  result = result.replace(SINGLE_RE, (ch) => {
     if (ch in UNIT_MULT_MAP) {
-      // 十/百/千/万 自身映射（如 "十" → "10"）
+      // 独立乘数单位（如孤立的「十」→ "10"）
       replaced = true;
       return String(UNIT_MULT_MAP[ch]);
     }
-
-    // 检查是否为数字字
     if (ch in CHAR_MAP) {
       const digit = CHAR_MAP[ch];
-
-      // 检查下一个字符是否为乘数单位 → 乘法合成
-      if (next && next in UNIT_MULT_MAP) {
-        replaced = true;
-        return String(digit * UNIT_MULT_MAP[next]);
-      }
-
-      // 「零」在非结尾位置是分隔符，跳过
-      if (digit === 0 && next) {
-        return '';
-      }
-
-      // 普通数字字，直接替换
       replaced = true;
       return String(digit);
     }
-
-    return _full;
+    return ch;
   });
 
   return { text: result, replaced };
+}
+
+/**
+ * 将中文数字字符串转为阿拉伯数字。
+ * 支持简单组合（二十三→23）和带乘数单位的形式。
+ *
+ * 算法：逐字扫描
+ * - 遇到 digit：累加到当前位
+ * - 遇到 unit：当前位 × unit 加入结果，重置当前位
+ * - 特殊处理：「十」前面无 digit 时视为「一十」
+ */
+function chineseNumToArabic(str: string): string {
+  const CHAR_MAP: Record<string, number> = {
+    '零': 0, '〇': 0,
+    '一': 1, '壹': 1,
+    '二': 2, '贰': 2, '两': 2, '俩': 2,
+    '三': 3, '叁': 3,
+    '四': 4, '肆': 4,
+    '五': 5, '伍': 5,
+    '六': 6, '陆': 6,
+    '七': 7, '柒': 7,
+    '八': 8, '捌': 8,
+    '九': 9, '玖': 9,
+  };
+
+  const UNIT_MULT_MAP: Record<string, number> = {
+    '十': 10, '拾': 10,
+    '百': 100,
+    '千': 1000,
+    '万': 10000,
+  };
+
+  let result = 0;
+  let current = 0; // 当前位的值
+
+  for (const ch of str) {
+    if (ch in CHAR_MAP) {
+      current = CHAR_MAP[ch];
+    } else if (ch in UNIT_MULT_MAP) {
+      const unit = UNIT_MULT_MAP[ch];
+      if (current === 0) {
+        // 「十」前面没有数字，视为「一十」：1 × 10
+        result += 1 * unit;
+      } else {
+        result += current * unit;
+      }
+      current = 0;
+    }
+  }
+
+  // 加上末尾的个位数
+  result += current;
+
+  return String(result);
 }

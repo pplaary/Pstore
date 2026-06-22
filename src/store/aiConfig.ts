@@ -174,7 +174,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
   setAIConfig: async (config: AITextConfig) => {
     if (!validateAIConfig(config)) {
       console.warn('setAIConfig: config has empty fields, treating as cleared');
-      await clearAIConfigStore();
+      await get().clearAIConfig();
       return;
     }
     await SecureStore.setItemAsync(AI_CONFIG_KEY, JSON.stringify(config));
@@ -189,7 +189,18 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
   },
 
   clearAIConfig: async () => {
-    await clearAIConfigStore();
+    try {
+      await SecureStore.deleteItemAsync(AI_CONFIG_KEY);
+    } catch {
+      // ignore
+    }
+    set({
+      configured: false,
+      reachable: false,
+      mode: 'search',
+      latencyTier: 'unknown',
+      lastLatencyMs: null,
+    });
   },
 }));
 
@@ -208,24 +219,6 @@ function validateAIConfig(config: AITextConfig): boolean {
     typeof config.textModel === 'string' &&
     config.textModel.trim().length > 0
   );
-}
-
-/**
- * 清除 AI 配置并更新 store 状态。
- */
-async function clearAIConfigStore(): Promise<void> {
-  try {
-    await SecureStore.deleteItemAsync(AI_CONFIG_KEY);
-  } catch {
-    // ignore
-  }
-  set({
-    configured: false,
-    reachable: false,
-    mode: 'search',
-    latencyTier: 'unknown',
-    lastLatencyMs: null,
-  });
 }
 
 /**
