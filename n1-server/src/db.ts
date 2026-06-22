@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 
-const DATA_DIR = process.env.DATA_DIR || '/data';
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const db = new Database(path.join(DATA_DIR, 'n1.db'));
 db.pragma('journal_mode = WAL');
 

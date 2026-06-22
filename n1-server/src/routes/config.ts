@@ -1,25 +1,11 @@
-import { Request, Response } from 'express';
-import { db, type ProductRow } from '../db.js';
+import { Router, Request, Response } from 'express';
+import { db } from '../db.js';
 
+const router = Router();
 const CONFIG_PIN = process.env.CONFIG_PIN || '0000';
 
-function rowToProduct(row: ProductRow) {
-  return {
-    id: row.id,
-    name: row.name,
-    price: row.price,
-    barcode: row.barcode ?? undefined,
-    category: row.category,
-    unit: row.unit,
-    imageUri: row.imageUri ?? undefined,
-    isDeleted: row.isDeleted,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-  };
-}
-
 // POST /api/config/get
-export function handleGetConfig(_req: Request, res: Response): void {
+router.post('/get', (_req: Request, res: Response) => {
   const keys = ['apiUrl', 'apiKey', 'textModel', 'visionModel'];
   const result: Record<string, string> = {};
   for (const key of keys) {
@@ -27,10 +13,10 @@ export function handleGetConfig(_req: Request, res: Response): void {
     result[key] = row ? row.value : '';
   }
   res.json(result);
-}
+});
 
 // POST /api/config/set
-export function handleSetConfig(req: Request, res: Response): void {
+router.post('/set', (req: Request, res: Response) => {
   const { pin, apiUrl, apiKey, textModel, visionModel } = req.body;
 
   if (pin !== CONFIG_PIN) {
@@ -53,4 +39,6 @@ export function handleSetConfig(req: Request, res: Response): void {
   tx();
 
   res.json({ ok: true });
-}
+});
+
+export default router;

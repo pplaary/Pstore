@@ -1,8 +1,10 @@
-import { Request, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { db, type ProductRow, type PushChange } from '../db.js';
 
+const router = Router();
+
 // POST /api/products/sync
-export function handleSyncProducts(req: Request, res: Response): void {
+router.post('/sync', (req: Request, res: Response) => {
   const { after } = req.body as { after?: string };
 
   let stmt;
@@ -35,10 +37,10 @@ export function handleSyncProducts(req: Request, res: Response): void {
     })),
     serverTime: new Date().toISOString(),
   });
-}
+});
 
 // POST /api/products/push
-export function handlePushProducts(req: Request, res: Response): void {
+router.post('/push', (req: Request, res: Response) => {
   const { changes } = req.body as { changes: PushChange[] };
 
   if (!Array.isArray(changes)) {
@@ -81,4 +83,6 @@ export function handlePushProducts(req: Request, res: Response): void {
 
   const count = tx();
   res.json({ ok: true, count });
-}
+});
+
+export default router;

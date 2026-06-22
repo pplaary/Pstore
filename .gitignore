@@ -31,3 +31,9 @@ npm-debug.log*
 temp/
 tasks/
 docs/
+
+# Runtime data
+n1-server/data/
+
+# Test artifacts
+test-*.txt
