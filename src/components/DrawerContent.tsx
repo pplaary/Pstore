@@ -22,6 +22,9 @@ import { useModeStore } from '../store/mode';
 import { useCartStore } from '../store/cart';
 import { usePinStore } from '../store/pin';
 import { useTheme } from '../theme/ThemeContext';
+import { useStore } from '../context/store';
+import { exportProductsCSV } from '../services/backup/exportCSV';
+import { exportProducts } from '../db/search';
 
 export default function DrawerContent(props: any) {
   const { theme } = useTheme();
@@ -29,8 +32,21 @@ export default function DrawerContent(props: any) {
   const { isManagement, enterManagement, exitManagement } = useModeStore();
   const { items, total, clearCart } = useCartStore();
   const { pinHash, isPinSet, verifyPin, setPin } = usePinStore();
+  const { db } = useStore();
   const [pinInput, setPinInput] = useState('');
   const [pinModalVisible, setPinModalVisible] = useState(false);
+
+  const handleExport = useCallback(async () => {
+    try {
+      const products = await exportProducts(db);
+      const result = await exportProductsCSV(products);
+      if (!result.ok) {
+        Alert.alert('导出失败', result.error ?? '未知错误');
+      }
+    } catch (e) {
+      Alert.alert('导出失败', e instanceof Error ? e.message : '未知错误');
+    }
+  }, [db]);
 
   const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
@@ -121,7 +137,7 @@ export default function DrawerContent(props: any) {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => alert('商品数据导出功能开发中')}
+            onPress={handleExport}
           >
             <Text style={styles.menuItemText}>📤 商品数据导出</Text>
           </TouchableOpacity>

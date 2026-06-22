@@ -6,7 +6,10 @@ import { getProductById } from '../db/product';
 import { getPriceHistory } from '../db/product';
 import { softDeleteProduct } from '../db/product';
 import { useTheme } from '../theme/ThemeContext';
-import type { Product, ProductStatus } from '../db/types';
+import { PriceChart } from '../components/PriceChart';
+import { exportPriceHistoryCSV, exportProductsCSV } from '../services/backup/exportCSV';
+import { exportProducts } from '../db/search';
+import type { Product, ProductStatus, PriceHistory } from '../db/types';
 import type { ProductDetailScreenProps } from '../navigation/types';
 
 export function ProductDetailScreen({ navigation, route }: ProductDetailScreenProps) {
@@ -67,7 +70,7 @@ function DetailContent({ db, productId }: { db: ReturnType<typeof useStore>['db'
   const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
   const [product, setProduct] = useState<Product | null>(null);
-  const [history, setHistory] = useState<{ id: string; oldPrice: number; newPrice: number; changedAt: string }[]>([]);
+  const [history, setHistory] = useState<PriceHistory[]>([]);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
@@ -80,7 +83,7 @@ function DetailContent({ db, productId }: { db: ReturnType<typeof useStore>['db'
         return getPriceHistory(db, productId);
       }).then((h) => {
         if (cancelled) return;
-        setHistory(h);
+        setHistory(h ?? []);
         setLoading(false);
       }).catch(() => {
         if (!cancelled) setLoading(false);
@@ -113,11 +116,39 @@ function DetailContent({ db, productId }: { db: ReturnType<typeof useStore>['db'
 
   const statusLabels = { IN_SHOP: '在售', OUT_OF_STOCK: '缺货', TO_BE_PURCHASED: '待采' };
 
+  // 导出商品 CSV
+  const handleExportAll = useCallback(async () => {
+    try {
+      const products = await exportProducts(db);
+      const result = await exportProductsCSV(products);
+      if (!result.ok) {
+        Alert.alert('导出失败', result.error ?? '未知错误');
+      }
+    } catch (e) {
+      Alert.alert('导出失败', e instanceof Error ? e.message : '未知错误');
+    }
+  }, [db]);
+
+  // 导出价格历史 CSV
+  const handleExportPriceHistory = useCallback(async () => {
+    if (!product) return;
+    try {
+      const result = await exportPriceHistoryCSV(db, product.id, product.name);
+      if (!result.ok) {
+        Alert.alert('导出失败', result.error ?? '未知错误');
+      }
+    } catch (e) {
+      Alert.alert('导出失败', e instanceof Error ? e.message : '未知错误');
+    }
+  }, [db, product]);
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
       {/* 商品信息 */}
       <View style={styles.card}>
-        <Text style={styles.productName}>{product.name}</Text>
+        <View style={styles.cardHeader}>
+          <Text style={styles.productName}>{product.name}</Text>
+        </View>
         <View style={styles.infoContent}>
           {product.pinyin && <InfoRow label="拼音" value={product.pinyin} />}
           <InfoRow label="价格" value={`¥${product.price.toFixed(2)}`} highlight />
@@ -137,20 +168,31 @@ function DetailContent({ db, productId }: { db: ReturnType<typeof useStore>['db'
 
       {/* 价格历史 */}
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>价格历史</Text>
+        <View style={styles.cardHeaderRow}>
+          <Text style={styles.sectionTitle}>价格历史</Text>
+          {history.length > 0 && (
+            <TouchableOpacity onPress={handleExportPriceHistory}>
+              <Text style={styles.exportButton}>📤</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         {history.length === 0 ? (
           <Text style={styles.emptyText}>暂无价格变更记录</Text>
         ) : (
-          history.map((h) => (
-            <View key={h.id} style={styles.historyItem}>
-              <View style={styles.historyPriceRow}>
-                <Text style={styles.historyOldPrice}>¥{h.oldPrice.toFixed(2)}</Text>
-                <Text style={styles.historyArrow}>→</Text>
-                <Text style={styles.historyNewPrice}>¥{h.newPrice.toFixed(2)}</Text>
+          <View>
+            {history.map((h) => (
+              <View key={h.id} style={styles.historyItem}>
+                <View style={styles.historyPriceRow}>
+                  <Text style={styles.historyOldPrice}>¥{h.oldPrice.toFixed(2)}</Text>
+                  <Text style={styles.historyArrow}>→</Text>
+                  <Text style={styles.historyNewPrice}>¥{h.newPrice.toFixed(2)}</Text>
+                </View>
+                <Text style={styles.historyDate}>{h.changedAt}</Text>
               </View>
-              <Text style={styles.historyDate}>{h.changedAt}</Text>
-            </View>
-          ))
+            ))}
+            {/* 价格折线图 */}
+            <PriceChart history={history} />
+          </View>
         )}
       </View>
     </ScrollView>
@@ -193,11 +235,19 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       shadowRadius: 2,
       elevation: 1,
     },
+    cardHeader: {
+      marginBottom: 12,
+    },
+    cardHeaderRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
     productName: {
       fontSize: 18 * scale,
       fontWeight: '700',
       color: colors.text.primary,
-      marginBottom: 12,
     },
     infoContent: {
       gap: 8,
@@ -263,7 +313,9 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       fontSize: 16 * scale,
       fontWeight: '600',
       color: colors.text.primary,
-      marginBottom: 12,
+    },
+    exportButton: {
+      fontSize: 18 * scale,
     },
     historyItem: {
       paddingVertical: 10,

@@ -389,7 +389,25 @@ export async function addPriceRecord(
   };
 }
 
-// ==================== 8. getPriceHistory ====================
+// ==================== 9. clearInventory ====================
+
+/**
+ * 清空库存：将全部未删除商品的状态设为缺货 (OUT_OF_STOCK)。
+ *
+ * - 在事务中批量更新，效率高于逐条更新
+ * - 返回受影响行数
+ */
+export async function clearInventory(
+  db: SQLite.SQLiteDatabase,
+): Promise<number> {
+  const result = await db.runAsync(
+    `UPDATE product SET status = 'OUT_OF_STOCK', updatedAt = ? WHERE isDeleted = 0`,
+    new Date().toISOString(),
+  );
+  return result.changes ?? 0;
+}
+
+// ==================== 10. getPriceHistory ====================
 
 /**
  * 获取指定商品的价格历史（按时间降序）。

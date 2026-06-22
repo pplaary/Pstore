@@ -20,6 +20,8 @@ import { useNetworkDetection } from '../hooks/useNetworkDetection';
 import { useSyncConfigStore } from '../store/syncConfig';
 import { useModeStore } from '../store/mode';
 import { performSync } from '../services/sync';
+import { clearAllProducts, resetDatabase } from '../services/backup/clear';
+import { showToast } from '../utils/toast';
 import type { RootStackScreenProps } from '../navigation/types';
 import { useStore } from '../context/store';
 import { WebDAVConfig } from '../components/WebDAVConfig';
@@ -97,6 +99,52 @@ export function ConfigScreen(_props: Props) {
       setSyncing(false);
     }
   }, [inputUrl, db]);
+
+  // ─── 数据管理 ────────────────────────────────────────────
+
+  const handleClearProducts = useCallback(async () => {
+    Alert.alert(
+      '清空商品',
+      '此操作将所有商品标记为已删除（软删除），数据仍可通过 WebDAV 备份恢复。确定继续？',
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '确定',
+          style: 'destructive',
+          onPress: async () => {
+            const result = await clearAllProducts(db);
+            if (result.ok) {
+              showToast(result.message, 'LONG');
+            } else {
+              Alert.alert('清空失败', result.message);
+            }
+          },
+        },
+      ],
+    );
+  }, [db]);
+
+  const handleResetDatabase = useCallback(async () => {
+    Alert.alert(
+      '重置数据库',
+      '此操作将删除全部数据（商品、价格历史、待扫清单等），且不可恢复。建议先导出备份。确定继续？',
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '重置',
+          style: 'destructive',
+          onPress: async () => {
+            const result = await resetDatabase(db);
+            if (result.ok) {
+              showToast(result.message, 'LONG');
+            } else {
+              Alert.alert('重置失败', result.message);
+            }
+          },
+        },
+      ],
+    );
+  }, [db]);
 
   return (
     <ScrollView style={styles.container}>
@@ -199,6 +247,25 @@ export function ConfigScreen(_props: Props) {
           editable={false}
           secureTextEntry
         />
+      </View>
+      {/* 数据管理 */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>数据管理</Text>
+        <Text style={styles.hint}>清空商品或完全重置数据库</Text>
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={[styles.button, styles.dangerButton]}
+            onPress={handleClearProducts}
+          >
+            <Text style={styles.buttonText}>清空商品</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.dangerButton]}
+            onPress={handleResetDatabase}
+          >
+            <Text style={styles.buttonText}>重置数据库</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ScrollView>
   );
@@ -317,6 +384,9 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     syncButton: {
       backgroundColor: colors.brand.success,
+    },
+    dangerButton: {
+      backgroundColor: colors.brand.danger,
     },
     buttonText: {
       color: colors.text.inverse,
