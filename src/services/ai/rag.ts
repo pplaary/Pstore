@@ -7,7 +7,7 @@
 
 import * as SQLite from 'expo-sqlite';
 import { searchProducts } from '../../db/search';
-import type { Product, ProductStatus } from '../../db/types';
+import { IN_SHOP, type Product, type ProductStatus } from '../../db/types';
 import type { AIResponse } from '../ai';
 
 // ==================== 类型 ====================

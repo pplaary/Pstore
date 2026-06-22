@@ -32,6 +32,22 @@ const MAX_ROUNDS = 10; // spec §7.2: 最大 10 轮，FIFO 溢出
  */
 export class ChatManager {
   private rounds: ConversationRound[] = [];
+  private buildSystemPrompt: (context: {
+    cartSnapshot: string;
+    mode: 'NORMAL' | 'ADMIN';
+    productSummary: string;
+  }) => string;
+
+  constructor(
+    buildSystemPrompt: (context: {
+      cartSnapshot: string;
+      mode: 'NORMAL' | 'ADMIN';
+      productSummary: string;
+    }) => string,
+  ) {
+    this.buildSystemPrompt = buildSystemPrompt;
+    this.rounds = [];
+  }
 
   /** 添加一轮对话，超出 10 轮时 FIFO 丢弃最旧轮次 */
   addRound(userInput: string, aiResponse: AIResponse): void {
@@ -69,11 +85,6 @@ export class ChatManager {
    * @param rag               RAG 上下文
    */
   buildMessages(
-    buildSystemPrompt: (context: {
-      cartSnapshot: string;
-      mode: 'NORMAL' | 'ADMIN';
-      productSummary: string;
-    }) => string,
     userInput: string,
     cartSnapshot: string,
     mode: 'NORMAL' | 'ADMIN',
@@ -84,7 +95,7 @@ export class ChatManager {
     // 1. system message：注入购物车快照、模式、RAG 摘要
     messages.push({
       role: 'system',
-      content: buildSystemPrompt({
+      content: this.buildSystemPrompt({
         cartSnapshot,
         mode,
         productSummary: rag.summary,
