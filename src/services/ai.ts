@@ -112,8 +112,7 @@ export async function callAI(
       return null;
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
+    const content = (await response.json()).choices?.[0]?.message?.content;
 
     if (!content) {
       return null;
@@ -127,6 +126,8 @@ export async function callAI(
       console.warn('AI text API failed:', err);
     }
     return null;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -194,9 +195,16 @@ function isValidAIResponse(value: unknown): value is AIResponse {
     return false;
   }
 
-  // productId 可选，若存在须为字符串
-  if (obj.productId !== undefined && typeof obj.productId !== 'string') {
-    return false;
+  // action=addToCart 时 productId 必填
+  if (obj.action === 'addToCart') {
+    if (typeof obj.productId !== 'string' || obj.productId.length === 0) {
+      return false;
+    }
+  } else {
+    // 其他 action 下 productId 可选，若存在须为字符串
+    if (obj.productId !== undefined && typeof obj.productId !== 'string') {
+      return false;
+    }
   }
 
   // quantity 必填且为正整数
@@ -238,107 +246,87 @@ async function isProductValid(
 // ==================== 4. interceptChineseNumerals ====================
 
 /**
- * 中文数字映射：独立字/词 → 阿拉伯数字
- */
-const NUMERAL_MAP: Record<string, string> = {
-  '零': '0',
-  '〇': '0',
-  '一': '1',
-  '壹': '1',
-  '二': '2',
-  '贰': '2',
-  '两': '2',
-  '俩': '2',
-  '三': '3',
-  '叁': '3',
-  '四': '4',
-  '肆': '4',
-  '五': '5',
-  '伍': '5',
-  '六': '6',
-  '陆': '6',
-  '七': '7',
-  '柒': '7',
-  '八': '8',
-  '捌': '8',
-  '九': '9',
-  '玖': '9',
-  '十': '10',
-  '拾': '10',
-  '廿': '20',
-  '半': '0.5',
-  '打': '12',
-};
-
-/**
- * 组合型数字前缀：2-4 字前缀 → 数值
- *
- * 长前缀在前，确保优先匹配（如「二十三」先匹配「二十」而非「二」）。
- */
-const COMBINATION_PREFIXES: [string, number][] = [
-  ['一万', 10000],
-  ['二千', 2000],
-  ['两千', 2000],
-  ['一千', 1000],
-  ['九百', 900],
-  ['八百', 800],
-  ['七百', 700],
-  ['六百', 600],
-  ['五百', 500],
-  ['四百', 400],
-  ['三百', 300],
-  ['两百', 200],
-  ['二百', 200],
-  ['一百', 100],
-  ['九十', 90],
-  ['八十', 80],
-  ['七十', 70],
-  ['六十', 60],
-  ['五十', 50],
-  ['四十', 40],
-  ['三十', 30],
-  ['二十', 20],
-];
-
-/**
- * 正则：组合前缀（最长优先）+ 单个数字字
- *
- * 使用 matchAll 全局扫描，每个位置匹配最长前缀或单个字。
- */
-const NUMERAL_REGEX = new RegExp(
-  '(?:' +
-    COMBINATION_PREFIXES.map(([w]) => w).join('|') +
-    ')|[零〇一二三四五六七八九十壹贰叁肆伍陆柒捌玖拾廿半打]',
-  'g',
-);
-
-/**
  * 中文数字预拦截。
  *
  * 在用户输入中识别中文数字并替换为阿拉伯数字。
- * 两/二→2、三→3、...、十→10、半→0.5、打→12。
- * 支持组合形式（如「二十三」→23、「半打」→0.5×12=6）。
+ * 支持独立字（两→2、三→3…）、组合形式（二十三→23、三十→30）、
+ * 半/打组合（半打→6）、以及百/千/万级。
+ *
+ * 算法：正则扫描所有数字字符位置，带 1-char lookahead。
+ * 对「digit + 乘数单位(十/百/千/万)」做乘法合成。
  *
  * 返回处理后的文本和是否做过替换。
  */
 export function interceptChineseNumerals(
   input: string,
 ): { text: string; replaced: boolean } {
+  // 1. 字符级别映射
+  const CHAR_MAP: Record<string, number> = {
+    '零': 0, '〇': 0,
+    '一': 1, '壹': 1,
+    '二': 2, '贰': 2, '两': 2, '俩': 2,
+    '三': 3, '叁': 3,
+    '四': 4, '肆': 4,
+    '五': 5, '伍': 5,
+    '六': 6, '陆': 6,
+    '七': 7, '柒': 7,
+    '八': 8, '捌': 8,
+    '九': 9, '玖': 9,
+  };
+
+  // 乘数单位：digit 后跟这些字 → 乘法
+  const UNIT_MULT_MAP: Record<string, number> = {
+    '十': 10, '拾': 10,
+    '百': 100,
+    '千': 1000,
+    '万': 10000,
+  };
+
+  // 特殊组合：半 + 打 = 6
+  const HALF_DOZEN = '半打';
+
+  // 2. 先处理「半打」组合
+  let result = input;
   let replaced = false;
-  const result = input.replace(NUMERAL_REGEX, (match) => {
-    // 先检查组合前缀
-    const combo = COMBINATION_PREFIXES.find(([w]) => match === w);
-    if (combo) {
+  if (result.includes(HALF_DOZEN)) {
+    result = result.replaceAll(HALF_DOZEN, '6');
+    replaced = true;
+  }
+
+  // 3. 正则扫描数字字符 + 1-char lookahead
+  //    匹配单个中文字符，后面跟一个字符（用于判断是否为单位字）
+  const numeralChar = Object.keys(CHAR_MAP).concat(Object.keys(UNIT_MULT_MAP)).join('');
+  const NUMERAL_SCAN_RE = new RegExp(`([${numeralChar}])(.)?`, 'g');
+
+  result = result.replace(NUMERAL_SCAN_RE, (_full, ch, next) => {
+    // 检查是否为乘数单位
+    if (ch in UNIT_MULT_MAP) {
+      // 十/百/千/万 自身映射（如 "十" → "10"）
       replaced = true;
-      return String(combo[1]);
+      return String(UNIT_MULT_MAP[ch]);
     }
-    // 再检查独立映射
-    const mapped = NUMERAL_MAP[match];
-    if (mapped) {
+
+    // 检查是否为数字字
+    if (ch in CHAR_MAP) {
+      const digit = CHAR_MAP[ch];
+
+      // 检查下一个字符是否为乘数单位 → 乘法合成
+      if (next && next in UNIT_MULT_MAP) {
+        replaced = true;
+        return String(digit * UNIT_MULT_MAP[next]);
+      }
+
+      // 「零」在非结尾位置是分隔符，跳过
+      if (digit === 0 && next) {
+        return '';
+      }
+
+      // 普通数字字，直接替换
       replaced = true;
-      return mapped;
+      return String(digit);
     }
-    return match;
+
+    return _full;
   });
 
   return { text: result, replaced };

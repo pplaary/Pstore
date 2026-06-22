@@ -85,6 +85,18 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
           textModel: n1Config.textModel,
         };
 
+        if (!validateAIConfig(aiConfig)) {
+          // N1 返回了空配置 → 降级为搜索模式
+          set({
+            configured: false,
+            reachable: false,
+            mode: 'search',
+            latencyTier: 'unknown',
+            lastLatencyMs: null,
+          });
+          return;
+        }
+
         const reachable = await checkAIReachable(aiConfig.apiUrl, aiConfig.apiKey);
 
         // 缓存到 SecureStore（N1 短暂故障时可临时直连 AI）
@@ -108,6 +120,20 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
       const cached = await SecureStore.getItemAsync(AI_CONFIG_KEY);
       if (cached) {
         const aiConfig: AITextConfig = JSON.parse(cached);
+
+        if (!validateAIConfig(aiConfig)) {
+          // 缓存配置为空 → 清除并降级
+          await SecureStore.deleteItemAsync(AI_CONFIG_KEY);
+          set({
+            configured: false,
+            reachable: false,
+            mode: 'search',
+            latencyTier: 'unknown',
+            lastLatencyMs: null,
+          });
+          return;
+        }
+
         const reachable = await checkAIReachable(aiConfig.apiUrl, aiConfig.apiKey);
 
         set({
@@ -146,6 +172,11 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
   },
 
   setAIConfig: async (config: AITextConfig) => {
+    if (!validateAIConfig(config)) {
+      console.warn('setAIConfig: config has empty fields, treating as cleared');
+      await clearAIConfigStore();
+      return;
+    }
     await SecureStore.setItemAsync(AI_CONFIG_KEY, JSON.stringify(config));
     const reachable = await checkAIReachable(config.apiUrl, config.apiKey);
     set({
@@ -158,18 +189,44 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
   },
 
   clearAIConfig: async () => {
-    await SecureStore.deleteItemAsync(AI_CONFIG_KEY);
-    set({
-      configured: false,
-      reachable: false,
-      mode: 'search',
-      latencyTier: 'unknown',
-      lastLatencyMs: null,
-    });
+    await clearAIConfigStore();
   },
 }));
 
 // ==================== 内部工具 ====================
+
+/**
+ * 校验 AI 配置三字段均为非空字符串。
+ * 返回 true 表示配置有效，false 表示至少一个字段为空。
+ */
+function validateAIConfig(config: AITextConfig): boolean {
+  return (
+    typeof config.apiUrl === 'string' &&
+    config.apiUrl.trim().length > 0 &&
+    typeof config.apiKey === 'string' &&
+    config.apiKey.trim().length > 0 &&
+    typeof config.textModel === 'string' &&
+    config.textModel.trim().length > 0
+  );
+}
+
+/**
+ * 清除 AI 配置并更新 store 状态。
+ */
+async function clearAIConfigStore(): Promise<void> {
+  try {
+    await SecureStore.deleteItemAsync(AI_CONFIG_KEY);
+  } catch {
+    // ignore
+  }
+  set({
+    configured: false,
+    reachable: false,
+    mode: 'search',
+    latencyTier: 'unknown',
+    lastLatencyMs: null,
+  });
+}
 
 /**
  * 检测 AI API 是否可达：HEAD /v1/models，5s 超时。
@@ -179,18 +236,21 @@ async function checkAIReachable(apiUrl: string, apiKey: string): Promise<boolean
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const baseUrl = apiUrl.replace(/\/+$/, '');
-    const url = `${baseUrl}/v1/models`;
-    const response = await fetch(url, {
-      method: 'HEAD',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-      signal: controller.signal,
-    });
+    try {
+      const baseUrl = apiUrl.replace(/\/+$/, '');
+      const url = `${baseUrl}/v1/models`;
+      const response = await fetch(url, {
+        method: 'HEAD',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+        signal: controller.signal,
+      });
 
-    clearTimeout(timeoutId);
-    return response.ok;
+      return response.ok;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   } catch {
     return false;
   }
