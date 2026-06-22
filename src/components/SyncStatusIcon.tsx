@@ -4,6 +4,8 @@
  * 显示 N1 云服务或 WebDAV 备份连接状态。
  * 优先级：N1 可达 > WebDAV 已配置 > 本地模式。
  *
+ * 附加：AI 模式下显示网络延迟指示器（NetworkIndicator）。
+ *
  * 使用 useFocusEffect 确保每次屏幕获取焦点时重新检测 WebDAV 凭据状态。
  */
 
@@ -13,12 +15,16 @@ import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSyncConfigStore } from '../store/syncConfig';
+import { useAIConfigStore } from '../store/aiConfig';
 import { useNetworkDetection } from '../hooks/useNetworkDetection';
+import { NetworkIndicator } from './NetworkIndicator';
 
 export function SyncStatusIcon() {
   const serverUrl = useSyncConfigStore((s) => s.serverUrl);
   const isConnected = useNetworkDetection(serverUrl);
   const [webdavConfigured, setWebdavConfigured] = useState(false);
+  const aiMode = useAIConfigStore((s) => s.mode);
+  const aiReachable = useAIConfigStore((s) => s.reachable);
 
   // 每次屏幕获取焦点时重新读取 WebDAV 凭据状态
   useFocusEffect(
@@ -50,6 +56,8 @@ export function SyncStatusIcon() {
     <TouchableOpacity style={styles.container} activeOpacity={0.7}>
       <Ionicons name={iconName} size={20} color={color} />
       <Text style={[styles.label, { color }]}>{label}</Text>
+      {/* AI 聊天模式下显示网络延迟指示器 */}
+      {aiMode === 'chat' && aiReachable && <NetworkIndicator />}
     </TouchableOpacity>
   );
 }

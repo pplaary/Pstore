@@ -1,14 +1,18 @@
 /**
  * 主界面 (HomeScreen)
  *
+ * 双模式：
+ * - 搜索模式：搜索栏 + 商品列表（FTS5）
+ * - 聊天模式：AI 对话气泡 + 商品确认卡片
+ *
  * 包含：
- * 1. 搜索栏 + 商品列表（复用 ProductListScreen 核心逻辑）
- * 2. 购物车折叠栏（底部固定）
- * 3. 底部输入栏（语音 + 搜索框 + 相机）
+ * 1. 搜索栏 + 商品列表（搜索模式）
+ * 2. AI 聊天区域（聊天模式）
+ * 3. 购物车折叠栏（底部固定）
  * 4. 连击标题进入管理模式（5 次/5 秒）
  */
 
-import React, { useState, useCallback, useLayoutEffect, useRef } from 'react';
+import React, { useState, useCallback, useLayoutEffect, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -21,14 +25,32 @@ import {
   Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store';
 import { useStore } from '../context/store';
 import { useCartStore } from '../store/cart';
 import { useModeStore } from '../store/mode';
+import { useAIConfigStore } from '../store/aiConfig';
 import { searchProducts } from '../db/search';
 import { updateProduct, softDeleteProduct } from '../db/product';
 import { PinModal } from '../components/PinModal';
+import { SyncStatusIcon } from '../components/SyncStatusIcon';
+import { AIChatBubble } from '../components/AIChatBubble';
+import { ProductConfirmCard } from '../components/ProductConfirmCard';
+import {
+  interceptChineseNumerals,
+  buildSystemPrompt,
+  callAI,
+  parseAIResponse,
+} from '../services/ai';
+import { buildRAGContext } from '../services/ai/rag';
+import { showToast } from '../utils/toast';
+import { ChatManager } from '../services/ai/chat';
+import { AIResponseCache } from '../services/ai/cache';
+import type { AIResponse } from '../services/ai';
 import type { Product, ProductStatus } from '../db/types';
 import type { HomeScreenProps } from '../navigation/types';
+
+// ==================== 常量 ====================
 
 const STATUS_COLORS: Record<string, string> = {
   IN_SHOP: '#16A34A',
@@ -42,23 +64,66 @@ const STATUS_LABELS: Record<string, string> = {
   TO_BE_PURCHASED: '待采',
 };
 
+/** 聊天输入栏高度 */
+const CHAT_INPUT_HEIGHT = 52;
+/** 购物车栏折叠态高度 */
+const CART_BAR_HEIGHT = 52;
+
+// ==================== 组件 ====================
+
 export function HomeScreen({ navigation }: HomeScreenProps) {
+  // ========== 全局 Store ==========
   const { db, refreshProducts } = useStore();
   const { items, total, addToCart, removeFromCart, removeItem, clearCart } = useCartStore();
   const { isManagement, exitManagement } = useModeStore();
+  const aiMode = useAIConfigStore((s) => s.mode);
+  const isChatMode = aiMode === 'chat';
+
+  // ========== 搜索模式状态 ==========
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+
+  // ========== 聊天模式状态 ==========
+  const [chatMessages, setChatMessages] = useState<
+    Array<{ role: 'user' | 'assistant'; content: string; timestamp: string }>
+  >([]);
+  const [draftCard, setDraftCard] = useState<{
+    product: Product;
+    quantity: number;
+    confidence: number;
+    expired: boolean;
+  } | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [aiFallbackResults, setAiFallbackResults] = useState<Product[] | null>(null);
+
+  // ========== 共享状态 ==========
   const [cartExpanded, setCartExpanded] = useState(false);
   const [checkoutVisible, setCheckoutVisible] = useState(false);
   const [pinVisible, setPinVisible] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [statusMenuId, setStatusMenuId] = useState<string | null>(null);
+
+  // ========== Refs ==========
   const tapCountRef = useRef(0);
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const chatManagerRef = useRef<ChatManager | null>(null);
+  const aiCacheRef = useRef<AIResponseCache | null>(null);
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 搜索
+  // ========== 初始化 AI 引擎实例 ==========
+  useEffect(() => {
+    chatManagerRef.current = new ChatManager(buildSystemPrompt);
+    aiCacheRef.current = new AIResponseCache();
+
+    return () => {
+      if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+    };
+  }, []);
+
+  // ========== 搜索（搜索模式） ==========
   const doSearch = useCallback(async () => {
     try {
       const result = await searchProducts(db, query.trim(), {
@@ -73,8 +138,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   }, [db, query, selectedCategory]);
 
   React.useEffect(() => {
-    doSearch();
-  }, [doSearch]);
+    if (!isChatMode) doSearch();
+  }, [doSearch, isChatMode]);
 
   useFocusEffect(
     useCallback(() => {
@@ -82,7 +147,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     }, [refreshProducts]),
   );
 
-  // 连击标题进入/退出管理模式
+  // ========== 连击标题进入/退出管理模式 ==========
   const handleTitlePress = useCallback(() => {
     tapCountRef.current += 1;
     if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
@@ -101,7 +166,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     }
   }, [isManagement, exitManagement]);
 
-  // 顶部栏
+  // ========== 顶部栏 ==========
   useLayoutEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
@@ -119,13 +184,218 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
           </Text>
         </TouchableOpacity>
       ),
+      headerRight: () => (
+        <View style={styles.headerRight}>
+          <SyncStatusIcon />
+        </View>
+      ),
     });
   }, [navigation, isManagement, handleTitlePress]);
 
+  // ========== 通用操作 ==========
   const handleAddToCart = useCallback((product: Product) => {
     addToCart(product.id, product.name, product.price);
+    showToast(`已加入购物车：${product.name} ¥${product.price.toFixed(2)}`);
   }, [addToCart]);
 
+  // ========== AI 辅助函数 ==========
+
+  /** 从 SecureStore 读取 AI 配置 */
+  const getStoredAIConfig = useCallback(async (): Promise<
+    { apiUrl: string; apiKey: string; textModel: string } | null
+  > => {
+    try {
+      const raw = await SecureStore.getItemAsync('pstore_ai_config');
+      if (!raw) return null;
+      const config = JSON.parse(raw);
+      if (config.apiUrl && config.apiKey && config.textModel) {
+        return config;
+      }
+    } catch {
+      // ignore
+    }
+    return null;
+  }, []);
+
+  /** 构建购物车快照（注入 System Prompt） */
+  const buildCartSnapshot = useCallback((): string => {
+    const cartItems = useCartStore.getState().items;
+    if (cartItems.length === 0) return '购物车为空';
+    return cartItems.map((i) => `${i.name} ×${i.quantity}`).join('、');
+  }, []);
+
+  /**
+   * 渲染 AI 回复：添加消息气泡 + 可选草稿卡。
+   */
+  const renderAiResponse = useCallback(
+    async (response: AIResponse, userInput: string) => {
+      // AI 消息气泡
+      const aiTimestamp = new Date().toISOString();
+      setChatMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: response.message, timestamp: aiTimestamp },
+      ]);
+
+      // 加入对话上下文
+      chatManagerRef.current?.addRound(userInput, response);
+
+      // addToCart action → 显示商品确认卡片
+      if (response.action === 'addToCart' && response.productId) {
+        try {
+          const product = await db.getFirstAsync<Product>(
+            'SELECT * FROM product WHERE id = ? AND isDeleted = 0',
+            response.productId,
+          );
+          if (product) {
+            setDraftCard({
+              product,
+              quantity: response.quantity,
+              confidence: response.confidence,
+              expired: false,
+            });
+            // 60 秒后过期变灰（视觉提示，不阻断交互）
+            if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+            draftTimerRef.current = setTimeout(() => {
+              setDraftCard((prev) => (prev ? { ...prev, expired: true } : null));
+            }, 60_000);
+          }
+        } catch {
+          // 商品查询失败，忽略草稿卡
+        }
+      }
+    },
+    [db],
+  );
+
+  /**
+   * 发送聊天消息。
+   *
+   * 流程：中文预拦截 → 缓存检查 → RAG → buildMessages → callAI → parseAIResponse
+   * 失败降级：FTS5 搜索，用户无感知
+   */
+  const handleAiSend = useCallback(async () => {
+    const rawInput = chatInput.trim();
+    if (!rawInput || isAiLoading) return;
+
+    // 中文数字预拦截
+    const { text: inputText, replaced } = interceptChineseNumerals(rawInput);
+
+    // 用户消息气泡（显示预拦截后的文本）
+    const userTimestamp = new Date().toISOString();
+    setChatMessages((prev) => [
+      ...prev,
+      { role: 'user', content: inputText, timestamp: userTimestamp },
+    ]);
+    setChatInput('');
+    setIsAiLoading(true);
+    setDraftCard(null);
+    setAiFallbackResults(null);
+
+    // 清除旧计时器
+    if (draftTimerRef.current) {
+      clearTimeout(draftTimerRef.current);
+      draftTimerRef.current = null;
+    }
+
+    try {
+      // 1. 缓存检查（key 与 RAG 输入统一为 inputText）
+      const cached = aiCacheRef.current?.get(inputText);
+      if (cached) {
+        await renderAiResponse(cached, inputText);
+        return;
+      }
+
+      // 2. RAG 上下文（使用 inputText 保证与缓存 key 一致）
+      const rag = await buildRAGContext(db, inputText);
+
+      // 3. 构建 messages（使用 inputText）
+      const cartSnapshot = buildCartSnapshot();
+      const mode = isManagement ? 'ADMIN' : 'NORMAL';
+      const messages = chatManagerRef.current!.buildMessages(
+        inputText,
+        cartSnapshot,
+        mode,
+        rag,
+      );
+
+      // 4. 调用 AI
+      const aiConfig = await getStoredAIConfig();
+      if (!aiConfig) {
+        throw new Error('AI 未配置');
+      }
+
+      const startTime = Date.now();
+      const raw = await callAI(aiConfig, messages);
+
+      // 更新延迟色标
+      if (raw) {
+        const latencyMs = Date.now() - startTime;
+        useAIConfigStore.getState().updateLatency(latencyMs);
+      }
+
+      if (!raw) {
+        throw new Error('AI 返回空');
+      }
+
+      // 5. 解析 AI 回复
+      const response = await parseAIResponse(db, raw);
+      if (!response) {
+        throw new Error('AI 回复解析失败');
+      }
+
+      // 6. 存入缓存（key 统一为 inputText）
+      aiCacheRef.current?.set(inputText, response);
+
+      // 7. 渲染回复
+      await renderAiResponse(response, inputText);
+    } catch {
+      // AI 失败 → 降级为 FTS5 搜索
+      const fallbackTimestamp = new Date().toISOString();
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: 'AI 暂不可用，已切换为本地搜索',
+          timestamp: fallbackTimestamp,
+        },
+      ]);
+
+      try {
+        const results = await searchProducts(db, inputText, { sortBy: 'relevance' });
+        setAiFallbackResults(results);
+      } catch {
+        // 搜索也失败，静默
+      }
+    } finally {
+      setIsAiLoading(false);
+    }
+  }, [chatInput, isAiLoading, db, isManagement, renderAiResponse, getStoredAIConfig, buildCartSnapshot]);
+
+  // ========== 草稿卡操作 ==========
+  const handleDraftAddToCart = useCallback(
+    (product: Product, quantity: number) => {
+      for (let i = 0; i < quantity; i++) {
+        addToCart(product.id, product.name, product.price);
+      }
+      showToast(`已加入购物车：${product.name} ×${quantity}`);
+      setDraftCard(null);
+      if (draftTimerRef.current) {
+        clearTimeout(draftTimerRef.current);
+        draftTimerRef.current = null;
+      }
+    },
+    [addToCart],
+  );
+
+  const handleDraftIgnore = useCallback(() => {
+    setDraftCard(null);
+    if (draftTimerRef.current) {
+      clearTimeout(draftTimerRef.current);
+      draftTimerRef.current = null;
+    }
+  }, []);
+
+  // ========== 搜索模式：商品操作 ==========
   const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -178,7 +448,6 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
 
   const handleItemLongPress = useCallback((item: Product) => {
     if (!isManagement || batchMode) return;
-    // 长按弹出操作菜单
     Alert.alert(
       item.name,
       '选择操作',
@@ -221,7 +490,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     );
   }, [isManagement, batchMode, db, navigation, doSearch]);
 
-  // 渲染商品
+  // ========== 渲染：搜索模式商品项 ==========
   const renderItem = ({ item }: { item: Product }) => {
     const isSelected = selectedIds.has(item.id);
     return (
@@ -264,51 +533,158 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     );
   };
 
+  // ========== 渲染：降级搜索结果项 ==========
+  const renderFallbackItem = (item: Product) => (
+    <TouchableOpacity
+      key={item.id}
+      style={styles.fallbackItem}
+      onPress={() => navigation.navigate('ProductDetail', { id: item.id })}
+    >
+      <View style={styles.fallbackLeft}>
+        <Text style={styles.fallbackName} numberOfLines={1}>{item.name}</Text>
+        {item.spec && <Text style={styles.fallbackSpec} numberOfLines={1}>{item.spec}</Text>}
+      </View>
+      <Text style={styles.fallbackPrice}>¥{item.price.toFixed(2)}</Text>
+    </TouchableOpacity>
+  );
+
+  // ========== 计算属性 ==========
   const isEmpty = !query.trim() && !selectedCategory
     ? filteredProducts.length === 0
     : filteredProducts.length === 0;
-
   const totalQty = items.reduce((s, i) => s + i.quantity, 0);
 
+  // ========== JSX ==========
   return (
     <View style={styles.container}>
-      {/* 搜索栏 */}
-      <View style={styles.searchBar}>
-        <Text style={styles.searchIcon}>🔍</Text>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="搜索商品名称、拼音或条码"
-          placeholderTextColor="#94A3B8"
-          value={query}
-          onChangeText={setQuery}
-          returnKeyType="search"
-          autoCorrect={false}
-        />
-        {query.length > 0 && (
-          <TouchableOpacity style={styles.clearBtn} onPress={() => setQuery('')}>
-            <Text style={styles.clearBtnText}>✕</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* 商品列表 */}
-      {isEmpty ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>未找到商品</Text>
+      {/* ===== 搜索栏（仅搜索模式） ===== */}
+      {!isChatMode && (
+        <View style={styles.searchBar}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="搜索商品名称、拼音或条码"
+            placeholderTextColor="#94A3B8"
+            value={query}
+            onChangeText={setQuery}
+            returnKeyType="search"
+            autoCorrect={false}
+          />
+          {query.length > 0 && (
+            <TouchableOpacity style={styles.clearBtn} onPress={() => setQuery('')}>
+              <Text style={styles.clearBtnText}>✕</Text>
+            </TouchableOpacity>
+          )}
         </View>
-      ) : (
-        <FlatList
-          data={filteredProducts}
-          keyExtractor={(i) => i.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          keyboardShouldPersistTaps="handled"
-        />
       )}
 
-      {/* 购物车折叠栏 */}
+      {/* ===== 主内容区 ===== */}
+      {isChatMode ? (
+        /* ---------- 聊天模式 ---------- */
+        <View style={styles.chatArea}>
+          {chatMessages.length === 0 && !isAiLoading && !aiFallbackResults ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>输入商品名称开始查价</Text>
+              <Text style={styles.emptyHint}>例如：「可乐多少钱」「两瓶矿泉水」</Text>
+            </View>
+          ) : (
+            <ScrollView
+              style={styles.chatScroll}
+              contentContainerStyle={[
+                styles.chatContent,
+                {
+                  paddingBottom: items.length > 0
+                    ? CART_BAR_HEIGHT + CHAT_INPUT_HEIGHT + 20
+                    : CHAT_INPUT_HEIGHT + 20,
+                },
+              ]}
+              keyboardShouldPersistTaps="handled"
+            >
+              {chatMessages.map((msg, idx) => (
+                <AIChatBubble
+                  key={idx}
+                  role={msg.role}
+                  content={msg.content}
+                  timestamp={msg.timestamp}
+                />
+              ))}
+              {isAiLoading && (
+                <View style={styles.loadingBubble}>
+                  <Text style={styles.loadingText}>思考中...</Text>
+                </View>
+              )}
+              {draftCard && (
+                <ProductConfirmCard
+                  product={draftCard.product}
+                  quantity={draftCard.quantity}
+                  confidence={draftCard.confidence}
+                  expired={draftCard.expired}
+                  onAddToCart={handleDraftAddToCart}
+                  onIgnore={handleDraftIgnore}
+                />
+              )}
+              {aiFallbackResults && aiFallbackResults.length > 0 && (
+                <View style={styles.fallbackSection}>
+                  <Text style={styles.fallbackTitle}>搜索结果</Text>
+                  {aiFallbackResults.map(renderFallbackItem)}
+                </View>
+              )}
+              {aiFallbackResults && aiFallbackResults.length === 0 && (
+                <View style={styles.fallbackEmpty}>
+                  <Text style={styles.fallbackEmptyText}>未找到匹配商品</Text>
+                </View>
+              )}
+            </ScrollView>
+          )}
+        </View>
+      ) : (
+        /* ---------- 搜索模式（原有逻辑） ---------- */
+        <View style={styles.searchArea}>
+          {isEmpty ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>未找到商品</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={filteredProducts}
+              keyExtractor={(i) => i.id}
+              renderItem={renderItem}
+              contentContainerStyle={styles.listContent}
+              keyboardShouldPersistTaps="handled"
+            />
+          )}
+        </View>
+      )}
+
+      {/* ===== 聊天输入栏（仅聊天模式） ===== */}
+      {isChatMode && (
+        <View style={styles.chatInputBar}>
+          <TouchableOpacity style={styles.voiceBtn} activeOpacity={0.7}>
+            <Text style={styles.voiceBtnText}>🎤</Text>
+          </TouchableOpacity>
+          <TextInput
+            style={styles.chatInput}
+            placeholder='说"可乐多少钱"'
+            placeholderTextColor="#94A3B8"
+            value={chatInput}
+            onChangeText={setChatInput}
+            onSubmitEditing={handleAiSend}
+            returnKeyType="send"
+            autoCorrect={false}
+          />
+          <TouchableOpacity
+            style={styles.cameraBtn}
+            onPress={() => navigation.navigate('ScanBarcode', { mode: 'scan' })}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.cameraBtnText}>📷</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* ===== 购物车折叠栏 ===== */}
       {items.length > 0 && (
-        <View style={styles.cartBar}>
+        <View style={[styles.cartBar, isChatMode && styles.cartBarInChat]}>
           <TouchableOpacity
             style={styles.cartCollapsed}
             onPress={() => setCartExpanded(!cartExpanded)}
@@ -358,7 +734,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         </View>
       )}
 
-      {/* 结账弹窗 */}
+      {/* ===== 结账弹窗 ===== */}
       <Modal visible={checkoutVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -383,15 +759,15 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         </View>
       </Modal>
 
-      {/* PIN 弹窗 */}
+      {/* ===== PIN 弹窗 ===== */}
       <PinModal
         visible={pinVisible}
         onClose={() => setPinVisible(false)}
         onSuccess={() => setPinVisible(false)}
       />
 
-      {/* 管理模式 FAB 按钮 */}
-      {isManagement && !batchMode && (
+      {/* ===== 管理模式 FAB（搜索模式） ===== */}
+      {isManagement && !batchMode && !isChatMode && (
         <TouchableOpacity
           style={styles.fab}
           onPress={() => navigation.navigate('ProductEdit', {})}
@@ -400,8 +776,8 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         </TouchableOpacity>
       )}
 
-      {/* 扫码按钮（全员可见） */}
-      {!batchMode && (
+      {/* ===== 扫码按钮（搜索模式） ===== */}
+      {!batchMode && !isChatMode && (
         <TouchableOpacity
           style={[styles.fab, styles.fabScan, isManagement && styles.fabScanWithMgmt]}
           onPress={() => navigation.navigate('ScanBarcode', { mode: 'scan' })}
@@ -410,7 +786,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         </TouchableOpacity>
       )}
 
-      {/* 批量管理工具栏 */}
+      {/* ===== 批量管理工具栏 ===== */}
       {batchMode && (
         <View style={styles.batchToolbar}>
           <Text style={styles.batchToolbarText}>已选 {selectedIds.size} 项</Text>
@@ -447,11 +823,23 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   );
 }
 
+// ==================== 样式 ====================
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F1F5F9' },
+
+  // -- 顶部栏 --
   headerMenuBtn: { paddingHorizontal: 12, paddingVertical: 4 },
   headerMenuText: { fontSize: 22, color: '#2563EB' },
   headerTitle: { fontSize: 17, fontWeight: '600', color: '#1E293B' },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingRight: 4,
+  },
+
+  // -- 搜索栏 --
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#FFFFFF', marginHorizontal: 12, marginTop: 8, marginBottom: 8,
@@ -463,6 +851,9 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 15, color: '#1E293B', padding: 0 },
   clearBtn: { padding: 4, marginLeft: 4 },
   clearBtnText: { fontSize: 14, color: '#94A3B8' },
+
+  // -- 搜索模式内容 --
+  searchArea: { flex: 1 },
   listContent: { paddingHorizontal: 12, paddingBottom: 100 },
   productItem: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -481,11 +872,104 @@ const styles = StyleSheet.create({
     backgroundColor: '#2563EB', alignItems: 'center', justifyContent: 'center',
   },
   addCartBtnText: { fontSize: 16, color: '#FFF', fontWeight: '700' },
-  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 80 },
-  emptyText: { fontSize: 16, color: '#94A3B8' },
+
+  // -- 聊天模式 --
+  chatArea: { flex: 1 },
+  chatScroll: { flex: 1 },
+  chatContent: { paddingHorizontal: 12, paddingTop: 8 },
+  loadingBubble: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginVertical: 4,
+  },
+  loadingText: { fontSize: 14, color: '#64748B', fontStyle: 'italic' },
+
+  // -- 降级搜索结果 --
+  fallbackSection: {
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    paddingTop: 8,
+  },
+  fallbackTitle: {
+    fontSize: 13,
+    color: '#64748B',
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  fallbackItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 6,
+  },
+  fallbackLeft: { flex: 1, marginRight: 8 },
+  fallbackName: { fontSize: 14, fontWeight: '500', color: '#1E293B' },
+  fallbackSpec: { fontSize: 12, color: '#64748B', marginTop: 2 },
+  fallbackPrice: { fontSize: 14, fontWeight: '700', color: '#DC2626' },
+  fallbackEmpty: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  fallbackEmptyText: {
+    fontSize: 14,
+    color: '#94A3B8',
+  },
+
+  // -- 聊天输入栏 --
+  chatInputBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 12,
+    marginBottom: 4,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    height: 44,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+  },
+  voiceBtn: {
+    padding: 6,
+    marginRight: 4,
+  },
+  voiceBtnText: {
+    fontSize: 20,
+  },
+  chatInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1E293B',
+    padding: 0,
+    maxHeight: 100,
+  },
+  cameraBtn: {
+    padding: 6,
+    marginLeft: 4,
+  },
+  cameraBtnText: {
+    fontSize: 20,
+  },
+
+  // -- 购物车栏 --
   cartBar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E2E8F0',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+  },
+  cartBarInChat: {
+    bottom: CHAT_INPUT_HEIGHT,
   },
   cartCollapsed: {
     flexDirection: 'row', alignItems: 'center',
@@ -522,6 +1006,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#2563EB', alignItems: 'center',
   },
   checkoutBtnLargeText: { fontSize: 14, color: '#FFF', fontWeight: '600' },
+
+  // -- 弹窗 --
   modalOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center', alignItems: 'center',
@@ -547,6 +1033,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12, alignItems: 'center',
   },
   modalCloseBtnText: { fontSize: 16, fontWeight: '600', color: '#FFF' },
+
+  // -- 复选框 --
   checkbox: {
     width: 22, height: 22, borderRadius: 11,
     borderWidth: 2, borderColor: '#CBD5E1',
@@ -559,6 +1047,8 @@ const styles = StyleSheet.create({
   productItemSelected: {
     backgroundColor: '#EFF6FF',
   },
+
+  // -- FAB --
   fab: {
     position: 'absolute',
     bottom: 80, right: 16,
@@ -575,6 +1065,13 @@ const styles = StyleSheet.create({
   },
   fabScanWithMgmt: { bottom: 216 },
   fabScanText: { fontSize: 22 },
+
+  // -- 空状态 --
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 80 },
+  emptyText: { fontSize: 16, color: '#94A3B8' },
+  emptyHint: { fontSize: 13, color: '#94A3B8', marginTop: 6 },
+
+  // -- 批量管理工具栏 --
   batchToolbar: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: '#1E293B', paddingHorizontal: 12, paddingVertical: 8,
