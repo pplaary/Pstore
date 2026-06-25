@@ -19,7 +19,7 @@ import { useAIConfigStore } from '../store/aiConfig';
 import { findByBarcode, createOrUpdate } from '../db/pending';
 import { searchProducts } from '../db/search';
 import { recognizeProduct } from '../services/vision';
-import { aiParseImage } from '../services/n1';
+import { aiParse, aiParseImage } from '../services/n1';
 import { useSyncConfigStore } from '../store/syncConfig';
 import { useTheme } from '../theme/ThemeContext';
 import type { Product } from '../db/types';
@@ -101,16 +101,32 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
           setMatchedProduct(results[0]);
         } else {
           setMatchedProduct(null);
-          if (isManagement) {
-            navigation.navigate('ProductEdit', { barcode: scannedBarcode });
-          } else {
-            await createOrUpdate(db, scannedBarcode);
-            Alert.alert(
-              '已记录',
-              `条码 ${scannedBarcode} 已记录，可在管理模式中补充`,
-              [{ text: '确定' }],
-            );
-          }
+          // 统一显示三选项弹窗
+          Alert.alert(
+            '未找到商品',
+            `条码 ${scannedBarcode}`,
+            [
+              {
+                text: '仅记录',
+                style: 'cancel',
+                onPress: async () => {
+                  if (!isManagement) {
+                    await createOrUpdate(db, scannedBarcode);
+                  }
+                },
+              },
+              {
+                text: 'AI 识别',
+                onPress: () => handleAiBarcode(scannedBarcode),
+              },
+              {
+                text: '手动录入',
+                onPress: () => {
+                  navigation.navigate('ProductEdit', { barcode: scannedBarcode });
+                },
+              },
+            ],
+          );
         }
       } catch (e) {
         console.error('ScanScreen: 扫码处理失败', e);
@@ -121,6 +137,43 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
     },
     [db, isManagement, navigation],
   );
+
+  // AI 条码识别：调用 n1-server /api/ai/parse
+  const handleAiBarcode = useCallback(async (barcode: string) => {
+    const serverUrl = useSyncConfigStore.getState().serverUrl;
+    if (!serverUrl) {
+      Alert.alert('提示', '请先配置 N1 服务器地址');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await aiParse(serverUrl, `条码 ${barcode}`);
+      if (result.data && result.data.name) {
+        // AI 解析成功 → 跳转 ProductEdit 并预填 name + spec
+        navigation.navigate('ProductEdit', {
+          barcode,
+          name: result.data.name,
+          spec: [
+            result.data.price ? `¥${result.data.price}` : null,
+            result.data.category || null,
+          ]
+            .filter((p): p is string => p !== null)
+            .join(' · '),
+        });
+      } else {
+        // AI 未识别 → 降级跳转 ProductEdit（仅 barcode）
+        console.warn('ScanScreen: AI 条码解析无结果', result);
+        navigation.navigate('ProductEdit', { barcode });
+      }
+    } catch (e) {
+      console.warn('ScanScreen: AI 条码解析失败', e);
+      // 降级：不弹窗，直接跳转 ProductEdit
+      navigation.navigate('ProductEdit', { barcode });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [navigation]);
 
   // ==================== 加购/忽略 ====================
 
@@ -270,23 +323,39 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
         setMatchedProduct(results[0]);
       } else {
         setMatchedProduct(null);
-        if (isManagement) {
-          navigation.navigate('ProductEdit', { barcode: trimmed });
-        } else {
-          await createOrUpdate(db, trimmed);
-          Alert.alert(
-            '已记录',
-            `条码 ${trimmed} 已记录，可在管理模式中补充`,
-            [{ text: '确定' }],
-          );
-        }
+        // 统一显示三选项弹窗
+        Alert.alert(
+          '未找到商品',
+          `条码 ${trimmed}`,
+          [
+            {
+              text: '仅记录',
+              style: 'cancel',
+              onPress: async () => {
+                if (!isManagement) {
+                  await createOrUpdate(db, trimmed);
+                }
+              },
+            },
+            {
+              text: 'AI 识别',
+              onPress: () => handleAiBarcode(trimmed),
+            },
+            {
+              text: '手动录入',
+              onPress: () => {
+                navigation.navigate('ProductEdit', { barcode: trimmed });
+              },
+            },
+          ],
+        );
       }
     } catch (e) {
       console.error('ScanScreen: 手动输入失败', e);
     } finally {
       setIsLoading(false);
     }
-  }, [barcodeInput, db, isManagement, navigation]);
+  }, [barcodeInput, db, isManagement, navigation, handleAiBarcode]);
 
   // ==================== 渲染 ====================
 
