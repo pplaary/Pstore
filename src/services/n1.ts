@@ -107,3 +107,76 @@ export async function pushProducts(
 ): Promise<{ ok: true; count: number }> {
   return request<{ ok: true; count: number }>(serverUrl, '/api/products/push', { changes });
 }
+
+// ==================== AI 类型 ====================
+
+export interface AiParseResult {
+  name: string;
+  category?: string;
+  location?: string;
+  description?: string;
+  price?: string;
+  acquired_at?: string;
+  warranty_to?: string;
+  barcode?: string;
+  status?: string;
+}
+
+export interface AiQueryResult {
+  data: {
+    answer: string;
+    items: Array<{
+      id: number;
+      name: string;
+      category: string;
+      location: string;
+      description: string;
+      price: number | null;
+      acquired_at: string;
+      warranty_to: string;
+      barcode: string;
+      status: string;
+    }>;
+  };
+}
+
+// ==================== AI API 调用 ====================
+
+const AI_TIMEOUT = 15000;
+
+async function aiRequest<T>(
+  serverUrl: string,
+  path: string,
+  body: object,
+): Promise<T> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), AI_TIMEOUT);
+  try {
+    const res = await fetch(`${serverUrl}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+    return res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function aiParse(
+  serverUrl: string,
+  text: string,
+): Promise<{ data?: AiParseResult; error?: string }> {
+  return aiRequest(serverUrl, '/api/ai/parse', { text });
+}
+
+export async function aiParseImage(
+  serverUrl: string,
+  imageDataUrl: string,
+): Promise<{ data?: AiParseResult; error?: string }> {
+  return aiRequest(serverUrl, '/api/ai/parse-image', { imageDataUrl });
+}

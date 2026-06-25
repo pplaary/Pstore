@@ -16,6 +16,9 @@ import type { ProductEditScreenProps } from '../navigation/types';
 import { CATEGORIES, IN_SHOP, OUT_OF_STOCK, TO_BE_PURCHASED } from '../db/types';
 import type { ProductStatus } from '../db/types';
 import { useTheme } from '../theme/ThemeContext';
+import { aiParse, aiParseImage, type AiParseResult } from '../services/n1';
+import { useSyncConfigStore } from '../store/syncConfig';
+import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 
 // 状态选项
@@ -55,6 +58,11 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
   const [status, setStatus] = useState<ProductStatus>(IN_SHOP);
   const [saving, setSaving] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
+
+  // AI 文字解析状态
+  const [aiText, setAiText] = useState('');
+  const [aiVisible, setAiVisible] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   // 编辑模式：加载现有商品
   // 新增模式且从扫码/识别页来：预填 barcode / name / spec
@@ -107,6 +115,136 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
     }
   }, []);
 
+  // AI 文字解析：将描述性文本回填到表单
+  const handleAiParse = useCallback(async () => {
+    const text = aiText.trim();
+    if (!text) return;
+
+    const serverUrl = useSyncConfigStore.getState().serverUrl;
+    if (!serverUrl) {
+      Alert.alert('提示', '请先在设置中配置 N1 服务器地址');
+      return;
+    }
+
+    setAiLoading(true);
+    try {
+      const result = await aiParse(serverUrl, text);
+      if (result.error || !result.data) {
+        Alert.alert(
+          'AI 解析失败',
+          result.error || '未能识别出商品信息，请重试或手动填写',
+        );
+        return;
+      }
+
+      const data = result.data;
+      // 预览识别结果
+      const preview = [
+        data.name && `名称：${data.name}`,
+        data.price && `价格：${data.price}`,
+        data.category && `分类：${data.category}`,
+        data.location && `位置：${data.location}`,
+        data.description && `描述：${data.description}`,
+      ].filter(Boolean).join('\n');
+
+      Alert.alert(
+        'AI 识别结果',
+        preview || '未识别到关键信息',
+        [
+          { text: '取消', style: 'cancel' },
+          {
+            text: '填入表单',
+            onPress: () => applyAiResult(data),
+          },
+        ],
+      );
+    } catch (e) {
+      Alert.alert('网络错误', 'AI 服务暂不可用，请手动填写');
+    } finally {
+      setAiLoading(false);
+    }
+  }, [aiText]);
+
+  // 将 AI 解析结果写入表单状态
+  const applyAiResult = useCallback((data: AiParseResult) => {
+    if (data.name) setName(data.name);
+    if (data.price) {
+      const num = data.price.replace(/[^0-9.]/g, '');
+      if (num) setPrice(num);
+    }
+    if (data.barcode) setBarcode(data.barcode);
+    // spec 由 location + description 合并
+    const specParts = [data.location, data.description].filter(Boolean);
+    if (specParts.length > 0) setSpec(specParts.join(' - '));
+    // category 匹配 CATEGORIES
+    if (data.category) {
+      const matched = CATEGORIES.find(
+        (c) =>
+          c === data.category ||
+          c.includes(data.category!) ||
+          data.category!.includes(c),
+      );
+      if (matched) setCategory(matched);
+    }
+  }, []);
+
+  // AI 图片识别
+  const handleAiImageParse = useCallback(async () => {
+    if (!imageUri) return;
+
+    const serverUrl = useSyncConfigStore.getState().serverUrl;
+    if (!serverUrl) {
+      Alert.alert('提示', '请先在设置中配置 N1 服务器地址');
+      return;
+    }
+
+    setAiLoading(true);
+    try {
+      // 读取图片文件为 base64
+      const base64 = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // 构造 Data URL
+      const ext = imageUri.split('.').pop()?.toLowerCase() || 'jpeg';
+      const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+      const imageDataUrl = `data:${mimeType};base64,${base64}`;
+
+      const result = await aiParseImage(serverUrl, imageDataUrl);
+      if (result.error || !result.data) {
+        Alert.alert(
+          'AI 图片识别失败',
+          result.error || '无法识别图片中的商品信息',
+        );
+        return;
+      }
+
+      const data = result.data;
+      const preview = [
+        data.name && `名称：${data.name}`,
+        data.price && `价格：${data.price}`,
+        data.category && `分类：${data.category}`,
+        data.barcode && `条码：${data.barcode}`,
+      ].filter(Boolean).join('\n');
+
+      Alert.alert(
+        'AI 图片识别结果',
+        preview || '未识别到关键信息',
+        [
+          { text: '取消', style: 'cancel' },
+          {
+            text: '填入表单',
+            onPress: () => applyAiResult(data),
+          },
+        ],
+      );
+    } catch (e) {
+      Alert.alert('网络错误', 'AI 服务暂不可用，请手动填写');
+    } finally {
+      setAiLoading(false);
+    }
+  }, [imageUri, applyAiResult]);
+
   // 保存
   const handleSave = useCallback(async () => {
     // 校验：名称非空
@@ -153,6 +291,55 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {/* AI 文字解析 */}
+      <TouchableOpacity
+        style={[styles.aiToggle, { borderColor: colors.border.medium }]}
+        onPress={() => setAiVisible(!aiVisible)}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+      >
+        <Text style={[styles.aiToggleText, { color: colors.text.primary }]}>
+          尝试用 AI 快速录入
+        </Text>
+        <Text style={[styles.aiToggleArrow, { color: colors.text.hint }]}>
+          {aiVisible ? '收起 ▲' : '展开 ▲'}
+        </Text>
+      </TouchableOpacity>
+
+      {aiVisible && (
+        <View
+          style={[
+            styles.aiInputContainer,
+            { backgroundColor: colors.bg.card, borderColor: colors.border.light },
+          ]}
+        >
+          <TextInput
+            style={[styles.aiInput, { color: colors.text.primary, backgroundColor: colors.bg.input }]}
+            placeholder="描述这个商品，AI 帮你填写（如：黑色蓝牙耳机 299元 蓝牙 降噪 第五代）"
+            placeholderTextColor={colors.text.hint}
+            value={aiText}
+            onChangeText={setAiText}
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+          />
+          <TouchableOpacity
+            style={[
+              styles.aiSubmit,
+              { backgroundColor: colors.brand.primary },
+            ]}
+            onPress={handleAiParse}
+            disabled={aiLoading || !aiText.trim()}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+          >
+            <Text style={[styles.aiSubmitText, { color: '#fff' }]}>
+              {aiLoading ? '解析中...' : 'AI 解析'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* 名称（必填） */}
       <View style={styles.field}>
         <Text style={styles.fieldLabel}>
@@ -237,6 +424,21 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
             </View>
           )}
         </TouchableOpacity>
+
+        {/* AI 图片识别按钮 */}
+        {imageUri && (
+          <TouchableOpacity
+            style={[styles.aiImageBtn, { borderColor: colors.border.medium }]}
+            onPress={handleAiImageParse}
+            disabled={aiLoading}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+          >
+            <Text style={[styles.aiImageBtnText, { color: colors.brand.primary }]}>
+              {aiLoading ? 'AI 识别中...' : 'AI 识别此图片'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* 条码 */}
@@ -451,6 +653,61 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       fontSize: 16 * scale,
       fontWeight: '600',
       color: colors.text.inverse,
+    },
+    // AI 文字解析样式
+    aiToggle: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 10 * scale,
+      paddingHorizontal: 14 * scale,
+      borderRadius: 8,
+      borderWidth: 1,
+      marginBottom: 16 * scale,
+    },
+    aiToggleText: {
+      fontSize: 14 * scale,
+      flex: 1,
+    },
+    aiToggleArrow: {
+      fontSize: 12 * scale,
+    },
+    aiInputContainer: {
+      borderWidth: 1,
+      borderRadius: 8,
+      padding: 12 * scale,
+      marginBottom: 16 * scale,
+    },
+    aiInput: {
+      borderRadius: 6,
+      padding: 10 * scale,
+      fontSize: 14 * scale,
+      minHeight: 80 * scale,
+      marginBottom: 10 * scale,
+    },
+    aiSubmit: {
+      borderRadius: 6,
+      paddingVertical: 10 * scale,
+      paddingHorizontal: 20 * scale,
+      alignItems: 'center',
+      alignSelf: 'flex-end',
+    },
+    aiSubmitText: {
+      fontSize: 14 * scale,
+      fontWeight: '600',
+    },
+    // AI 图片识别样式
+    aiImageBtn: {
+      borderWidth: 1,
+      borderRadius: 6,
+      paddingVertical: 8 * scale,
+      paddingHorizontal: 14 * scale,
+      alignSelf: 'flex-start',
+      marginTop: 8 * scale,
+    },
+    aiImageBtnText: {
+      fontSize: 13 * scale,
+      fontWeight: '500',
     },
   });
 }

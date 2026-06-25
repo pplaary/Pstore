@@ -42,6 +42,7 @@ export interface ThemeColors {
   };
   border: {
     default: string;
+    medium: string;
     light: string;
   };
 }
@@ -84,6 +85,7 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
     },
     border: {
       default: '#E2E8F0',
+      medium: '#CBD5E1',
       light: '#F1F5F9',
     },
   },
@@ -111,6 +113,7 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
     },
     border: {
       default: '#475569',
+      medium: '#64748B',
       light: '#334155',
     },
   },
@@ -138,6 +141,7 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
     },
     border: {
       default: '#333333',
+      medium: '#666666',
       light: '#E0E0E0',
     },
   },
