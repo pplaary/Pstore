@@ -54,8 +54,8 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
   const [facing, setFacing] = useState<CameraType>('back');
 
   const availableModes = useMemo<ScanMode[]>(
-    () => (aiConfigured ? ['scan', 'photo'] : ['scan']),
-    [aiConfigured],
+    () => (aiConfigured || !!syncConfigServerUrl ? ['scan', 'photo'] : ['scan']),
+    [aiConfigured, syncConfigServerUrl],
   );
 
   // ==================== 权限处理 ====================
@@ -142,6 +142,11 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
   const handleTakePhoto = useCallback(async () => {
     if (!cameraRef.current) return;
 
+    if (!syncConfigServerUrl && (!aiConfig || !aiConfig.apiUrl)) {
+      Alert.alert('提示', '请先配置 AI 服务');
+      return;
+    }
+
     setIsLoading(true);
     let recognized = false;
 
@@ -156,43 +161,47 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
         return;
       }
 
-      // 优先调用 n1-server 的 aiParseImage（返回字段更丰富）
-      if (syncConfigServerUrl) {
-        try {
-          const imageDataUrl = `data:image/jpeg;base64,${photo.base64}`;
-          const result = await aiParseImage(syncConfigServerUrl, imageDataUrl);
-          if (result.data && result.data.name) {
-            const data = result.data;
-            const specParts = [
-              data.price ? `¥${data.price}` : null,
-              data.category || null,
-              data.location || null,
-            ].filter(Boolean);
-            const candidate = {
-              name: data.name,
-              confidence: 0.95, // n1-server 结果置信度高，供 UI 展示
-              spec: specParts.join(' · '),
-            };
-            setCandidates([candidate]);
-            setShowCandidates(true);
-            recognized = true;
-          }
-        } catch (e) {
-          console.warn('ScanScreen: n1-server AI 识别失败，降级到通用视觉', e);
-        }
-      }
+      const imageDataUrl = `data:image/jpeg;base64,${photo.base64}`;
 
-      // 降级：使用现有 recognizeProduct
-      if (!recognized && aiConfig && aiConfig.apiUrl) {
-        try {
-          const result = await recognizeProduct(photo.base64, aiConfig);
-          if (result.candidates.length > 0) {
-            setCandidates(result.candidates);
-            setShowCandidates(true);
-            recognized = true;
+      const n1Promise = syncConfigServerUrl
+        ? aiParseImage(syncConfigServerUrl, imageDataUrl).then(r => ({ source: 'n1' as const, result: r }))
+        : Promise.reject(new Error('no n1 config'));
+
+      const visionPromise = (aiConfig && aiConfig.apiUrl)
+        ? recognizeProduct(photo.base64, aiConfig).then(r => ({ source: 'vision' as const, result: r }))
+        : Promise.reject(new Error('no vision config'));
+
+      const settled = await Promise.allSettled([n1Promise, visionPromise]);
+
+      for (const s of settled) {
+        if (!recognized && s.status === 'fulfilled') {
+          if (s.value.source === 'n1') {
+            const data = s.value.result.data;
+            if (data && data.name) {
+              const specParts = [
+                data.price != null && data.price !== '' ? `¥${data.price}` : null,
+                data.category || null,
+                data.location || null,
+              ].filter((p): p is string => p !== null);
+              setCandidates([{
+                name: data.name,
+                confidence: -1,
+                spec: specParts.join(' · ') || 'N1 AI 识别',
+              }]);
+              setShowCandidates(true);
+              recognized = true;
+            } else {
+              console.warn('ScanScreen: n1-server 返回无效数据', s.value.result);
+            }
+          } else if (s.value.source === 'vision') {
+            if (s.value.result.candidates.length > 0) {
+              setCandidates(s.value.result.candidates);
+              setShowCandidates(true);
+              recognized = true;
+            }
           }
-        } catch (e) {
-          console.error('ScanScreen: 通用视觉识别失败', e);
+        } else if (s.status === 'rejected') {
+          console.warn('ScanScreen: AI 渠道失败', s.reason);
         }
       }
 
@@ -444,9 +453,16 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
                     {item.spec && (
                       <Text style={styles.candidateSpec}>{item.spec}</Text>
                     )}
-                    <Text style={styles.candidateConfidence}>
-                      置信度 {(item.confidence * 100).toFixed(0)}%
-                    </Text>
+                    {item.confidence >= 0 && (
+                      <Text style={styles.candidateConfidence}>
+                        置信度 {(item.confidence * 100).toFixed(0)}%
+                      </Text>
+                    )}
+                    {item.confidence < 0 && (
+                      <Text style={styles.candidateConfidence}>
+                        N/A
+                      </Text>
+                    )}
                   </View>
                   <TouchableOpacity
                     style={styles.candidateAddBtn}
