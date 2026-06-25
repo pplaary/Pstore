@@ -10,9 +10,10 @@ async function request<T>(
   serverUrl: string,
   path: string,
   body: object,
+  timeoutMs: number = DEFAULT_TIMEOUT,
 ): Promise<T> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const res = await fetch(`${serverUrl}${path}`, {
@@ -122,6 +123,7 @@ export interface AiParseResult {
   status?: string;
 }
 
+// 备注：Phase N AI 自然语言查询功能
 export interface AiQueryResult {
   data: {
     answer: string;
@@ -144,39 +146,16 @@ export interface AiQueryResult {
 
 const AI_TIMEOUT = 15000;
 
-async function aiRequest<T>(
-  serverUrl: string,
-  path: string,
-  body: object,
-): Promise<T> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), AI_TIMEOUT);
-  try {
-    const res = await fetch(`${serverUrl}${path}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
-    return res.json();
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 export async function aiParse(
   serverUrl: string,
   text: string,
 ): Promise<{ data?: AiParseResult; error?: string }> {
-  return aiRequest(serverUrl, '/api/ai/parse', { text });
+  return request(serverUrl, '/api/ai/parse', { text }, AI_TIMEOUT);
 }
 
 export async function aiParseImage(
   serverUrl: string,
   imageDataUrl: string,
 ): Promise<{ data?: AiParseResult; error?: string }> {
-  return aiRequest(serverUrl, '/api/ai/parse-image', { imageDataUrl });
+  return request(serverUrl, '/api/ai/parse-image', { imageDataUrl }, AI_TIMEOUT);
 }

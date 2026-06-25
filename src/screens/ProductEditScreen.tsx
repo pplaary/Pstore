@@ -42,6 +42,8 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
   const { colors, scale } = theme;
   const statusColors = getStatusColors(colors);
   const { db } = useStore();
+  const serverUrl = useSyncConfigStore((s) => s.serverUrl);
+  const aiDisabled = !serverUrl;
   const existingId = route.params?.id;
   const nameRef = useRef<TextInput>(null);
   const priceRef = useRef<TextInput>(null);
@@ -62,7 +64,8 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
   // AI 文字解析状态
   const [aiText, setAiText] = useState('');
   const [aiVisible, setAiVisible] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
+  const [aiTextLoading, setAiTextLoading] = useState(false);
+  const [aiImageLoading, setAiImageLoading] = useState(false);
 
   // 编辑模式：加载现有商品
   // 新增模式且从扫码/识别页来：预填 barcode / name / spec
@@ -99,6 +102,10 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
     load();
     return () => {
       cancelled = true;
+      setAiText('');
+      setAiVisible(false);
+      setAiTextLoading(false);
+      setAiImageLoading(false);
     };
   }, [existingId, db, route.params?.barcode]);
 
@@ -115,6 +122,29 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
     }
   }, []);
 
+  // 将 AI 解析结果写入表单状态（稳定函数，其他 handler 依赖它）
+  const applyAiResult = useCallback((data: AiParseResult) => {
+    if (data.name) setName(data.name);
+    if (data.price) {
+      const num = data.price.replace(/[^0-9.]/g, '');
+      if (num) setPrice(num);
+    }
+    if (data.barcode) setBarcode(data.barcode);
+    // spec 由 location + description 合并
+    const specParts = [data.location, data.description].filter(Boolean);
+    if (specParts.length > 0) setSpec(specParts.join(' - '));
+    // category 匹配 CATEGORIES
+    if (data.category) {
+      const matched = CATEGORIES.find(
+        (c) =>
+          c === data.category ||
+          c.includes(data.category!) ||
+          data.category!.includes(c),
+      );
+      if (matched) setCategory(matched);
+    }
+  }, []);
+
   // AI 文字解析：将描述性文本回填到表单
   const handleAiParse = useCallback(async () => {
     const text = aiText.trim();
@@ -126,7 +156,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
       return;
     }
 
-    setAiLoading(true);
+    setAiTextLoading(true);
     try {
       const result = await aiParse(serverUrl, text);
       if (result.error || !result.data) {
@@ -159,34 +189,12 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         ],
       );
     } catch (e) {
+      console.error('ProductEditScreen: AI 文字解析失败', e);
       Alert.alert('网络错误', 'AI 服务暂不可用，请手动填写');
     } finally {
-      setAiLoading(false);
+      setAiTextLoading(false);
     }
-  }, [aiText]);
-
-  // 将 AI 解析结果写入表单状态
-  const applyAiResult = useCallback((data: AiParseResult) => {
-    if (data.name) setName(data.name);
-    if (data.price) {
-      const num = data.price.replace(/[^0-9.]/g, '');
-      if (num) setPrice(num);
-    }
-    if (data.barcode) setBarcode(data.barcode);
-    // spec 由 location + description 合并
-    const specParts = [data.location, data.description].filter(Boolean);
-    if (specParts.length > 0) setSpec(specParts.join(' - '));
-    // category 匹配 CATEGORIES
-    if (data.category) {
-      const matched = CATEGORIES.find(
-        (c) =>
-          c === data.category ||
-          c.includes(data.category!) ||
-          data.category!.includes(c),
-      );
-      if (matched) setCategory(matched);
-    }
-  }, []);
+  }, [aiText, applyAiResult]);
 
   // AI 图片识别
   const handleAiImageParse = useCallback(async () => {
@@ -198,7 +206,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
       return;
     }
 
-    setAiLoading(true);
+    setAiImageLoading(true);
     try {
       // 读取图片文件为 base64
       const base64 = await FileSystem.readAsStringAsync(imageUri, {
@@ -239,9 +247,10 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         ],
       );
     } catch (e) {
+      console.error('ProductEditScreen: AI 图片识别失败', e);
       Alert.alert('网络错误', 'AI 服务暂不可用，请手动填写');
     } finally {
-      setAiLoading(false);
+      setAiImageLoading(false);
     }
   }, [imageUri, applyAiResult]);
 
@@ -292,19 +301,27 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* AI 文字解析 */}
-      <TouchableOpacity
-        style={[styles.aiToggle, { borderColor: colors.border.medium }]}
-        onPress={() => setAiVisible(!aiVisible)}
-        activeOpacity={0.7}
-        accessibilityRole="button"
-      >
-        <Text style={[styles.aiToggleText, { color: colors.text.primary }]}>
-          尝试用 AI 快速录入
-        </Text>
-        <Text style={[styles.aiToggleArrow, { color: colors.text.hint }]}>
-          {aiVisible ? '收起 ▲' : '展开 ▲'}
-        </Text>
-      </TouchableOpacity>
+      {aiDisabled ? (
+        <View style={[styles.aiToggle, { borderColor: colors.border.medium }]}>
+          <Text style={[styles.aiToggleText, { color: colors.text.hint }]}>
+            请先在设置中配置 N1 服务器地址
+          </Text>
+        </View>
+      ) : (
+        <TouchableOpacity
+          style={[styles.aiToggle, { borderColor: colors.border.medium }]}
+          onPress={() => setAiVisible(!aiVisible)}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+        >
+          <Text style={[styles.aiToggleText, { color: colors.text.primary }]}>
+            尝试用 AI 快速录入
+          </Text>
+          <Text style={[styles.aiToggleArrow, { color: colors.text.hint }]}>
+            {aiVisible ? '收起 ▲' : '展开 ▲'}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {aiVisible && (
         <View
@@ -329,12 +346,12 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
               { backgroundColor: colors.brand.primary },
             ]}
             onPress={handleAiParse}
-            disabled={aiLoading || !aiText.trim()}
+            disabled={aiTextLoading || !aiText.trim()}
             activeOpacity={0.7}
             accessibilityRole="button"
           >
             <Text style={[styles.aiSubmitText, { color: '#fff' }]}>
-              {aiLoading ? '解析中...' : 'AI 解析'}
+              {aiTextLoading ? '解析中...' : 'AI 解析'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -430,12 +447,12 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
           <TouchableOpacity
             style={[styles.aiImageBtn, { borderColor: colors.border.medium }]}
             onPress={handleAiImageParse}
-            disabled={aiLoading}
+            disabled={aiImageLoading}
             activeOpacity={0.7}
             accessibilityRole="button"
           >
             <Text style={[styles.aiImageBtnText, { color: colors.brand.primary }]}>
-              {aiLoading ? 'AI 识别中...' : 'AI 识别此图片'}
+              {aiImageLoading ? 'AI 识别中...' : 'AI 识别此图片'}
             </Text>
           </TouchableOpacity>
         )}
