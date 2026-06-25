@@ -194,7 +194,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
     } finally {
       setAiTextLoading(false);
     }
-  }, [aiText, applyAiResult]);
+  }, [aiText, applyAiResult, serverUrl]);
 
   // AI 图片识别
   const handleAiImageParse = useCallback(async () => {
@@ -252,7 +252,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
     } finally {
       setAiImageLoading(false);
     }
-  }, [imageUri, applyAiResult]);
+  }, [imageUri, applyAiResult, serverUrl]);
 
   // 保存
   const handleSave = useCallback(async () => {
