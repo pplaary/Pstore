@@ -101,11 +101,13 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
             .join(' · '),
         });
       } else {
+        console.warn('ScanScreen: AI 条码解析无结果', result);
         Alert.alert('AI 解析无结果', '该条码未识别到商品信息，请手动录入', [
           { text: '手动录入', onPress: () => navigation.navigate('ProductEdit', { barcode }) },
         ]);
       }
     } catch (e) {
+      console.warn('ScanScreen: AI 条码识别失败', e);
       Alert.alert('AI 识别失败', 'AI 服务异常，请手动录入', [
         { text: '手动录入', onPress: () => navigation.navigate('ProductEdit', { barcode }) },
       ]);
@@ -125,8 +127,12 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
           text: '仅记录',
           style: 'cancel',
           onPress: async () => {
-            await createOrUpdate(db, barcode);
-            Alert.alert('已记录', `条码 ${barcode} 已写入，可在管理模式中补充`);
+            try {
+              await createOrUpdate(db, barcode);
+              Alert.alert('已记录', `条码 ${barcode} 已写入，可在管理模式中补充`);
+            } catch {
+              Alert.alert('记录失败', '数据库写入失败，请重试');
+            }
           },
         },
         {
