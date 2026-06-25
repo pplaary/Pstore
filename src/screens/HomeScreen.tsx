@@ -39,7 +39,7 @@ import { ChatManager } from '../services/ai/chat';
 import { AIResponseCache } from '../services/ai/cache';
 import type { AIResponse } from '../services/ai';
 import type { Product, ProductStatus } from '../db/types';
-import type { HomeScreenProps } from '../navigation/types';
+import type { HomeScreenCompositeProps } from '../navigation/types';
 
 // ==================== 常量 ====================
 
@@ -50,7 +50,7 @@ const CART_BAR_HEIGHT = 52;
 
 // ==================== 组件 ====================
 
-export function HomeScreen({ navigation }: HomeScreenProps) {
+export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
   // ========== 全局 Store ==========
   const { db, refreshProducts, products } = useStore();
   const { theme } = useTheme();
@@ -618,7 +618,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       key={item.id}
       style={styles.fallbackItem}
       onPress={() => navigation.navigate('ProductDetail', { id: item.id })}
-      accessibilityLabel={`${item.name}，价格${item.price.toFixed(2)}元`}
+      accessibilityLabel={`${item.name}${item.spec ? ` ${item.spec}` : ''}，${item.price.toFixed(2)}元，${item.status === 'IN_SHOP' ? '在售' : item.status === 'OUT_OF_STOCK' ? '缺货' : '待采'}`}
       accessibilityRole="button"
     >
       <View style={styles.fallbackLeft}>
@@ -944,7 +944,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             <TouchableOpacity style={[styles.batchBtn, styles.batchBtnDanger]} onPress={handleBatchDelete} accessibilityLabel="批量删除">
               <Text style={[styles.batchBtnText, styles.batchBtnDangerText]}>删除</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.batchBtn, styles.batchBtnExit]} onPress={() => { setBatchMode(false); setSelectedIds(new Set()); }} accessibilityLabel="退出批量管理">
+            <TouchableOpacity style={[styles.batchBtn, styles.batchBtnExit]} onPress={() => { setBatchMode(false); setSelectedIds(new Set()); }} accessibilityLabel="退出并清空筛选">
               <Text style={styles.batchBtnExitText}>退出</Text>
             </TouchableOpacity>
           </View>

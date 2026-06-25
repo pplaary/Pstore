@@ -22,7 +22,7 @@ import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import type { AITextConfig } from '../services/ai';
 import { useSyncConfigStore } from '../store/syncConfig';
-import { getConfig } from '../services/n1';
+import { getConfig, type ConfigGetResult } from '../services/n1';
 import { requestAudioPermission } from '../services/stt';
 
 // ==================== 常量 ====================
@@ -53,6 +53,8 @@ export interface AIConfigState {
   lastLatencyMs: number | null;
   /** 麦克风权限是否已授权 */
   micPermissionGranted: boolean;
+  /** 完整的 AI 配置（含 textModel 和 visionModel） */
+  aiConfig: ConfigGetResult | null;
 
   // Derived
   /** 语音按钮是否可用：mode=chat && reachable && micPermissionGranted */
@@ -81,6 +83,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
   lastLatencyMs: null,
   micPermissionGranted: false,
   isVoiceAvailable: false,
+  aiConfig: null as any,
 
   detectReachability: async () => {
     // 第一级：N1 在线 → 拉取 AI 配置 → 检测可达性
@@ -124,6 +127,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
           lastLatencyMs: null,
           micPermissionGranted,
           isVoiceAvailable: computeVoiceAvailable(micPermissionGranted, reachable, reachable ? 'chat' : 'search'),
+          aiConfig: n1Config as any,
         });
         return;
       }
@@ -163,6 +167,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
           lastLatencyMs: null,
           micPermissionGranted,
           isVoiceAvailable: computeVoiceAvailable(micPermissionGranted, reachable, reachable ? 'chat' : 'search'),
+          aiConfig: aiConfig as any,
         });
         return;
       }

@@ -106,7 +106,7 @@ export async function performSync(
           await db.updateProduct(dbInstance, p.id, {
             name: p.name,
             price: p.price,
-            barcode: p.barcode ?? null,
+            barcode: p.barcode ?? undefined,
             category: p.category,
             status: 'IN_SHOP',
           });

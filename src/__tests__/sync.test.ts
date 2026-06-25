@@ -2,7 +2,7 @@
  * 同步引擎测试
  */
 
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('performSync', () => {
   const mockStore = {

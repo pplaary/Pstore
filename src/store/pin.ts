@@ -24,8 +24,8 @@ export const usePinStore = create<PinState>()((set) => ({
     set({ pinHash: hash, isPinSet: true });
   },
 
-  verifyPin: async (input: string) => {
-    const state = usePinStore.getState();
+  verifyPin: async (input: string): Promise<boolean> => {
+    const state: PinState = usePinStore.getState();
     if (!state.pinHash) return false;
     const inputHash = await sha256(input);
     return inputHash === state.pinHash;
@@ -45,6 +45,6 @@ export const usePinStore = create<PinState>()((set) => ({
 
 async function sha256(message: string): Promise<string> {
   // 使用 expo-crypto 的 digestStringAsync
-  const { digestStringAsync, CryptoEncoding } = await import('expo-crypto');
-  return digestStringAsync(message, CryptoEncoding.HEX);
+  const { digestStringAsync, CryptoDigestAlgorithm } = await import('expo-crypto');
+  return digestStringAsync(CryptoDigestAlgorithm.SHA256, message);
 }

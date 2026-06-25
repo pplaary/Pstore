@@ -41,8 +41,8 @@ function MainDrawer() {
         drawerType: 'front',
       }}
     >
-      <Drawer.Screen name="Home" component={HomeScreen} />
-      <Drawer.Screen name="ProductList" component={ProductListScreen} />
+      <Drawer.Screen name="Home" component={HomeScreen as any} />
+      <Drawer.Screen name="ProductList" component={ProductListScreen as any} />
     </Drawer.Navigator>
   );
 }

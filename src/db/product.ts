@@ -7,6 +7,7 @@
  * - 拼音使用 pinyin-pro 库，参数 pattern='first', toneType='none'
  */
 
+import type { SQLiteBindValue } from 'expo-sqlite';
 import * as SQLite from 'expo-sqlite';
 import { randomUUID } from 'expo-crypto';
 import { pinyin } from 'pinyin-pro';
@@ -248,7 +249,7 @@ export async function updateProduct(
     // 1. 更新 product 表
     await db.runAsync(
       `UPDATE product SET ${setClauses.join(', ')} WHERE id = ?`,
-      ...params,
+      ...params as SQLiteBindValue[],
       id,
     );
 

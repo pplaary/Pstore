@@ -31,7 +31,7 @@ vi.mock('../db/search', () => ({
 import { ChatManager } from '../services/ai/chat';
 import { buildRAGContext } from '../services/ai/rag';
 import { AIResponseCache } from '../services/ai/cache';
-import type { AIResponse, AIMessage, RAGContext } from '../services/ai';
+import type { AIResponse, AIMessage } from '../services/ai';
 
 // ==================== 测试工具 ====================
 

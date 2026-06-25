@@ -33,7 +33,12 @@ export function NetworkIndicator(): JSX.Element {
   const color = TIER_COLORS[latencyTier] ?? TIER_COLORS.unknown;
 
   return (
-    <View style={styles.container} testID="network-indicator">
+    <View
+      style={styles.container}
+      testID="network-indicator"
+      accessibilityLabel={`AI延迟${latencyTier === 'unknown' ? '未知' : `${lastLatencyMs}毫秒` + (latencyTier === 'green' ? '，正常' : latencyTier === 'yellow' ? '，较慢' : '，很慢')}`}
+      accessibilityRole="image"
+    >
       <View style={[styles.dot, { backgroundColor: color }]} />
       {lastLatencyMs !== null && (
         <Text style={styles.latencyText}>{lastLatencyMs}ms</Text>

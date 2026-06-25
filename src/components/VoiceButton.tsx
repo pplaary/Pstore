@@ -215,7 +215,7 @@ function RecordingIndicator({ styles }: { styles: Styles }): JSX.Element {
     );
 
     const instances = loops.map((l) => l.start());
-    return () => instances.forEach((inst) => inst.stop());
+    return () => instances.forEach((inst: any) => inst.stop());
   }, []);
 
   return (

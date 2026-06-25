@@ -110,13 +110,13 @@ function parseVisionResponse(content: string): VisionCandidate[] {
     const parsed = JSON.parse(jsonStr);
     if (Array.isArray(parsed)) {
       return parsed
-        .filter((item): item is { name: string; confidence: number } =>
+        .filter((item): item is { name: string; confidence: number; spec?: string } =>
           typeof item.name === 'string' && typeof item.confidence === 'number',
         )
         .map((item) => ({
           name: item.name,
           confidence: Math.max(0, Math.min(1, item.confidence)),
-          spec: item.spec,
+          spec: (item as any).spec,
         }));
     }
   } catch {

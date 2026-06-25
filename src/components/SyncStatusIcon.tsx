@@ -18,6 +18,7 @@ import { useSyncConfigStore } from '../store/syncConfig';
 import { useNetworkDetection } from '../hooks/useNetworkDetection';
 import { NetworkIndicator } from './NetworkIndicator';
 import { useTheme } from '../theme/ThemeContext';
+import { WEBDAV_URL_KEY } from '../services/credential';
 
 export function SyncStatusIcon() {
   const { theme } = useTheme();
@@ -31,7 +32,7 @@ export function SyncStatusIcon() {
   // 每次屏幕获取焦点时重新读取 WebDAV 凭据状态
   useFocusEffect(
     useCallback(() => {
-      SecureStore.getItemAsync('pstore_webdav_url').then((url) => {
+      SecureStore.getItemAsync(WEBDAV_URL_KEY).then((url) => {
         setWebdavConfigured(!!url);
       });
     }, []),

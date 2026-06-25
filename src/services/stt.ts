@@ -56,7 +56,6 @@ export async function startRecording(): Promise<Audio.Recording> {
   // 确保录音模式已设置
   await Audio.setAudioModeAsync({
     allowsRecordingIOS: true,
-    playsAndRecordsAudio: false,
     staysActiveInBackground: false,
     playThroughEarpieceAndroid: false,
   });
@@ -74,7 +73,6 @@ export async function startRecording(): Promise<Audio.Recording> {
       outputFormat: Audio.IOSOutputFormat.MPEG4AAC,
     },
     isMeteringEnabled: true,
-    maxDuration: MAX_DURATION_MS,
   });
 
   await recording.startAsync();

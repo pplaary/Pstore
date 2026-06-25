@@ -6,6 +6,7 @@
  * - 所有查询默认排除 isDeleted 商品
  */
 
+import type { SQLiteBindValue } from 'expo-sqlite';
 import * as SQLite from 'expo-sqlite';
 import { escapeFts5 } from './fts5';
 import type { Product, ProductStatus } from './types';
@@ -129,7 +130,7 @@ export async function searchProducts(
       sql += ` LIMIT ${options.limit}`;
     }
 
-    const rows = await db.getAllAsync<Record<string, unknown>>(sql, ...params);
+    const rows = await db.getAllAsync<Record<string, unknown>>(sql, ...params as SQLiteBindValue[]);
     return rows.map(mapRow);
   }
 
@@ -163,7 +164,7 @@ export async function searchProducts(
     rawQuery,
     rawQuery,
     pinyinUpper,
-    ...params,
+    ...params as SQLiteBindValue[],
   );
   return rows.map(mapRow);
 }
@@ -218,7 +219,7 @@ export async function searchByCategory(
     sql += ` LIMIT ${options.limit}`;
   }
 
-  const rows = await db.getAllAsync<Record<string, unknown>>(sql, ...params);
+  const rows = await db.getAllAsync<Record<string, unknown>>(sql, ...params as SQLiteBindValue[]);
   return rows.map(mapRow);
 }
 
@@ -251,7 +252,7 @@ export async function searchByStatus(
     sql += ` LIMIT ${options.limit}`;
   }
 
-  const rows = await db.getAllAsync<Record<string, unknown>>(sql, ...params);
+  const rows = await db.getAllAsync<Record<string, unknown>>(sql, ...params as SQLiteBindValue[]);
   return rows.map(mapRow);
 }
 

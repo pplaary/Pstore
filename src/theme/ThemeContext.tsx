@@ -36,6 +36,9 @@ export interface ThemeColors {
     success: string;
     danger: string;
     warning: string;
+    inShop: string;
+    outOfStock: string;
+    toBePurchased: string;
   };
   border: {
     default: string;
@@ -75,6 +78,9 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
       success: '#16A34A',
       danger: '#DC2626',
       warning: '#EA580C',
+      inShop: '#2563EB',
+      outOfStock: '#9E9E9E',
+      toBePurchased: '#F59E0B',
     },
     border: {
       default: '#E2E8F0',
@@ -99,6 +105,9 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
       success: '#16A34A',
       danger: '#DC2626',
       warning: '#EA580C',
+      inShop: '#2563EB',
+      outOfStock: '#9E9E9E',
+      toBePurchased: '#F59E0B',
     },
     border: {
       default: '#475569',
@@ -123,6 +132,9 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
       success: '#16A34A',
       danger: '#DC2626',
       warning: '#EA580C',
+      inShop: '#2563EB',
+      outOfStock: '#9E9E9E',
+      toBePurchased: '#F59E0B',
     },
     border: {
       default: '#333333',

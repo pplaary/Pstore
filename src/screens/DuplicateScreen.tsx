@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useStore } from '../context/store';
 import { useModeStore } from '../store/mode';
-import { getAllMergeCandidates, mergeProducts } from '../db/duplicate';
+import { getAllMergeCandidates, mergeProducts, markNotDuplicate } from '../db/duplicate';
 import { useTheme } from '../theme/ThemeContext';
 import type { MergeCandidate } from '../db/types';
 
@@ -91,21 +91,27 @@ export function DuplicateScreen({ navigation }: any) {
   }, [confirmState, db, loadCandidates]);
 
   const handleConfirmNotDuplicate = useCallback(
-    (candidate: MergeCandidate) => {
-      // 标记为已处理（从列表中移除）
-      setCandidates((prev) =>
-        prev.filter(
-          (c) =>
-            !(
-              (c.productA.id === candidate.productA.id &&
-                c.productB.id === candidate.productB.id) ||
-              (c.productA.id === candidate.productB.id &&
-                c.productB.id === candidate.productA.id)
-            ),
-        ),
-      );
+    async (candidate: MergeCandidate) => {
+      // 持久化到 ignored_duplicates 表
+      try {
+        await markNotDuplicate(db, candidate.productA.id, candidate.productB.id);
+        // 从列表中移除（仅在 DB 写入成功后）
+        setCandidates((prev) =>
+          prev.filter(
+            (c) =>
+              !(
+                (c.productA.id === candidate.productA.id &&
+                  c.productB.id === candidate.productB.id) ||
+                (c.productA.id === candidate.productB.id &&
+                  c.productB.id === candidate.productA.id)
+              ),
+          ),
+        );
+      } catch (e) {
+        console.error('DuplicateScreen: 标记非重复失败', e);
+      }
     },
-    [],
+    [db],
   );
 
   const barcodeCandidates = candidates.filter((c) => c.reason === 'barcode');

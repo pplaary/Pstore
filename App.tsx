@@ -5,6 +5,7 @@ import { initDatabase } from './src/db/init';
 import { StoreProvider } from './src/context/store';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ThemeProvider } from './src/theme/ThemeContext';
+import type { SQLiteDatabase } from 'expo-sqlite';
 
 function ErrorUI({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
@@ -20,7 +21,7 @@ function ErrorUI({ message, onRetry }: { message: string; onRetry: () => void })
 }
 
 export default function App() {
-  const [db, setDb] = useState(null);
+  const [db, setDb] = useState<SQLiteDatabase | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

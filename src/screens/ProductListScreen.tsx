@@ -16,12 +16,9 @@ import { searchProducts } from '../db/search';
 import { useTheme } from '../theme/ThemeContext';
 import { CATEGORIES } from '../db/types';
 import type { Product, ProductStatus } from '../db/types';
-import type { DrawerScreenProps } from '@react-navigation/drawer';
-import type { DrawerParamList } from '../navigation/types';
+import type { ProductListScreenCompositeProps } from '../navigation/types';
 
-export type ProductListScreenProps = DrawerScreenProps<DrawerParamList, 'ProductList'>;
-
-export function ProductListScreen({ navigation, route }: ProductListScreenProps) {
+export function ProductListScreen({ navigation, route }: ProductListScreenCompositeProps) {
   const { db, products, refreshProducts } = useStore();
   const { theme } = useTheme();
   const { colors, scale } = theme;
@@ -34,9 +31,9 @@ export function ProductListScreen({ navigation, route }: ProductListScreenProps)
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
 
   const statusColors: Record<string, string> = {
-    IN_SHOP: colors.brand.success,
-    OUT_OF_STOCK: colors.brand.danger,
-    TO_BE_PURCHASED: colors.brand.warning,
+    IN_SHOP: colors.brand.inShop,
+    OUT_OF_STOCK: colors.brand.outOfStock,
+    TO_BE_PURCHASED: colors.brand.toBePurchased,
   };
 
   // 右上角 "+" 按钮（仅管理模式/未过滤已删除时显示）
@@ -231,7 +228,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenProps)
       <View style={styles.bottomBar}>
         <TouchableOpacity
           style={styles.scanButton}
-          onPress={() => navigation.navigate('ScanBarcode')}
+          onPress={() => (navigation as any).navigate('ScanBarcode')}
           accessibilityLabel="扫码识别"
           accessibilityRole="button"
         >
@@ -400,7 +397,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     statusText: {
       fontSize: 11 * scale,
-      color: colors.text.inverse,
+      color: '#FFFFFF',
       fontWeight: '600',
     },
     // 空状态

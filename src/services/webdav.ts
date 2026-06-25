@@ -196,18 +196,18 @@ export async function listBackups(): Promise<
       return [];
     }
 
-    const backups = contents
+    const backups = (contents as unknown as Array<Record<string, unknown>>)
       .filter(
-        (item): item is { basename: string; size: number; lastmod: string; type: string } =>
+        (item): item is Record<string, unknown> =>
           typeof item === 'object' &&
           item.type === 'file' &&
           item.basename != null &&
-          item.basename.endsWith('.db'),
+          (item.basename as string).endsWith('.db'),
       )
       .map((item) => ({
-        name: item.basename,
-        size: item.size ?? 0,
-        lastModified: item.lastmod ?? '',
+        name: item.basename as string,
+        size: (item.size as number) ?? 0,
+        lastModified: (item.lastmod as string) ?? '',
       }))
       .sort((a, b) => b.lastModified.localeCompare(a.lastModified));
 

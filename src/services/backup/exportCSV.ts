@@ -125,10 +125,8 @@ export async function exportPriceHistoryCSV(
   productName: string,
 ): Promise<CSVResult> {
   try {
-    const sqliteDb = db as { getAllAsync: (...params: unknown[]) => Promise<unknown[]> };
-
-    const rawHistory = await sqliteDb.getAllAsync(
-      `SELECT * FROM price_history WHERE productId = ? ORDER BY changedAt DESC`,
+    const rawHistory = await db.getAllAsync<{ id: string; productId: string; oldPrice: number; newPrice: number; changedAt: string }>(
+      `SELECT id, productId, oldPrice, newPrice, changedAt FROM price_history WHERE productId = ? ORDER BY changedAt DESC`,
       productId,
     );
 
@@ -136,16 +134,13 @@ export async function exportPriceHistoryCSV(
       return { ok: false, error: '该商品暂无价格变更记录' };
     }
 
-    const history: PriceHistory[] = rawHistory.map((row: unknown) => {
-      const r = row as Record<string, unknown>;
-      return {
-        id: r.id as string,
-        productId: r.productId as string,
-        oldPrice: r.oldPrice as number,
-        newPrice: r.newPrice as number,
-        changedAt: r.changedAt as string,
-      };
-    });
+    const history: PriceHistory[] = rawHistory.map((row) => ({
+      id: row.id,
+      productId: row.productId,
+      oldPrice: row.oldPrice,
+      newPrice: row.newPrice,
+      changedAt: row.changedAt,
+    }));
 
     const headers = ['时间', '旧价格', '新价格'];
     const headerLine = headers.map(csvEscape).join(',');

@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
+  Image,
   Keyboard,
 } from 'react-native';
 import { useStore } from '../context/store';
@@ -15,6 +16,7 @@ import type { ProductEditScreenProps } from '../navigation/types';
 import { CATEGORIES, IN_SHOP, OUT_OF_STOCK, TO_BE_PURCHASED } from '../db/types';
 import type { ProductStatus } from '../db/types';
 import { useTheme } from '../theme/ThemeContext';
+import * as ImagePicker from 'expo-image-picker';
 
 // 状态选项
 const STATUS_OPTIONS: { value: ProductStatus; label: string }[] = [
@@ -26,9 +28,9 @@ const STATUS_OPTIONS: { value: ProductStatus; label: string }[] = [
 // 状态色标（用于选中态）
 function getStatusColors(colors: ReturnType<typeof useTheme>['theme']['colors']): Record<string, string> {
   return {
-    IN_SHOP: colors.brand.success,
-    OUT_OF_STOCK: colors.brand.danger,
-    TO_BE_PURCHASED: colors.brand.warning,
+    IN_SHOP: colors.brand.inShop,
+    OUT_OF_STOCK: colors.brand.outOfStock,
+    TO_BE_PURCHASED: colors.brand.toBePurchased,
   };
 }
 
@@ -49,9 +51,10 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
   const [spec, setSpec] = useState('');
   const [barcode, setBarcode] = useState('');
   const [aliases, setAliases] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [category, setCategory] = useState<string>(CATEGORIES[0]);
   const [status, setStatus] = useState<ProductStatus>(IN_SHOP);
   const [saving, setSaving] = useState(false);
+  const [imageUri, setImageUri] = useState<string | null>(null);
 
   // 编辑模式：加载现有商品
   // 新增模式且从扫码/识别页来：预填 barcode / name / spec
@@ -83,12 +86,26 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
       setAliases(product.aliases ?? '');
       setCategory((product.category as string) ?? CATEGORIES[0]);
       setStatus(product.status);
+      setImageUri(product.imageUri ?? null);
     };
     load();
     return () => {
       cancelled = true;
     };
   }, [existingId, db, route.params?.barcode]);
+
+  // 选择图片
+  const pickImage = useCallback(async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      setImageUri(result.assets[0].uri);
+    }
+  }, []);
 
   // 保存
   const handleSave = useCallback(async () => {
@@ -111,6 +128,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         name: trimmedName,
         price: priceNum,
         spec: spec.trim() || undefined,
+        imageUri: imageUri || undefined,
         barcode: barcode.trim() || undefined,
         aliases: aliases.trim() || undefined,
         category,
@@ -129,7 +147,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
     } finally {
       setSaving(false);
     }
-  }, [name, price, spec, barcode, aliases, category, status, existingId, db, navigation]);
+  }, [name, price, spec, imageUri, barcode, aliases, category, status, existingId, db, navigation]);
 
   const isEdit = Boolean(existingId);
 
@@ -200,6 +218,25 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
           returnKeyType="next"
           accessibilityLabel="规格"
         />
+      </View>
+
+      {/* 图片 */}
+      <View style={styles.field}>
+        <Text style={styles.fieldLabel}>图片（点击更换）</Text>
+        <TouchableOpacity
+          style={styles.imagePicker}
+          onPress={pickImage}
+          accessibilityLabel="选择商品图片"
+          accessibilityRole="button"
+        >
+          {imageUri ? (
+            <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <Text style={styles.imagePlaceholderText}>点击选择图片</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* 条码 */}
@@ -327,6 +364,32 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       paddingVertical: 10 * scale,
       fontSize: 15 * scale,
       color: colors.text.primary,
+    },
+    imagePicker: {
+      borderRadius: 8 * scale,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: colors.border.default,
+    },
+    imagePreview: {
+      width: '100%',
+      aspectRatio: 1,
+      resizeMode: 'cover',
+    },
+    imagePlaceholder: {
+      width: '100%',
+      aspectRatio: 1,
+      backgroundColor: colors.bg.card,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border.default,
+      borderStyle: 'dashed',
+      borderRadius: 8 * scale,
+    },
+    imagePlaceholderText: {
+      fontSize: 14 * scale,
+      color: colors.text.hint,
     },
     categoryRow: {
       flexDirection: 'row',

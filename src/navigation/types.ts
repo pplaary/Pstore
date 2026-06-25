@@ -2,6 +2,7 @@
  * 导航路由类型定义
  */
 
+import type { CompositeScreenProps } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { DrawerScreenProps as RNDrawerScreenProps } from '@react-navigation/drawer';
 
@@ -25,9 +26,18 @@ export type RootStackScreenProps<T extends keyof RootStackParamList> = NativeSta
 export type DrawerScreenProps<T extends keyof DrawerParamList> = RNDrawerScreenProps<DrawerParamList, T>;
 
 // 便捷类型别名
-export type ProductListScreenProps = RootStackScreenProps<'ProductList'>;
+export type ProductListScreenProps = DrawerScreenProps<'ProductList'>;
 export type ProductDetailScreenProps = RootStackScreenProps<'ProductDetail'>;
 export type ProductEditScreenProps = RootStackScreenProps<'ProductEdit'>;
 export type ScanScreenProps = RootStackScreenProps<'ScanBarcode'>;
+// 复合导航类型：Drawer 页面可导航到 Stack 页面
+export type HomeScreenCompositeProps = CompositeScreenProps<
+  DrawerScreenProps<'Home'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
+export type ProductListScreenCompositeProps = CompositeScreenProps<
+  DrawerScreenProps<'ProductList'>,
+  NativeStackScreenProps<RootStackParamList>
+>;
 export type HomeScreenProps = DrawerScreenProps<'Home'>;
 export type LooseGoodsManageScreenProps = RootStackScreenProps<'LooseGoodsManage'>;

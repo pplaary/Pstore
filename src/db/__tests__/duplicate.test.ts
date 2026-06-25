@@ -10,6 +10,7 @@ import {
   findByNameSimilarity,
   getAllMergeCandidates,
   mergeProducts,
+  markNotDuplicate,
 } from '../duplicate';
 
 // pinyin-pro 的 .mjs 在 Vite SSR 模式下有正则语法问题，必须 mock
@@ -39,8 +40,9 @@ interface Row {
 }
 
 class MockDB {
-  private products: Row[] = [];
+  public products: Row[] = [];
   private nextId = 1;
+  private ignoredDuplicates = new Set<string>();
 
   private genId(): string {
     return `p-${this.nextId++}`;
@@ -61,6 +63,12 @@ class MockDB {
       const row = this.products.find((r) => r.id === id);
       if (row) row.isDeleted = 1;
     }
+    // INSERT OR IGNORE INTO ignored_duplicates
+    if (sql.includes('ignored_duplicates')) {
+      const idA = params[0] as string;
+      const idB = params[1] as string;
+      this.ignoredDuplicates.add(`${idA}|${idB}`);
+    }
     // DELETE/INSERT INTO product_fts — no-op in mock
   }
   async getFirstAsync<T>(sql: string, ...params: unknown[]): Promise<T | null> {
@@ -75,6 +83,16 @@ class MockDB {
     return null;
   }
   async getAllAsync<T>(sql: string, ...params: unknown[]): Promise<T[]> {
+    // markNotDuplicate: SELECT FROM ignored_duplicates
+    if (sql.includes('ignored_duplicates')) {
+      const rows: { id_a: string; id_b: string }[] = [];
+      for (const key of this.ignoredDuplicates) {
+        const [idA, idB] = key.split('|');
+        rows.push({ id_a: idA, id_b: idB });
+      }
+      return rows as T[];
+    }
+
     // findByBarcode: SELECT * FROM product WHERE barcode = ? AND isDeleted = 0
     if (sql.includes('WHERE barcode = ?')) {
       let barcode: string;
@@ -140,7 +158,7 @@ class MockDB {
 // ==================== 测试 ====================
 
 describe('duplicate.ts', () => {
-  let db: MockDB;
+  let db: any;
 
   beforeEach(async () => {
     db = new MockDB();
@@ -260,7 +278,7 @@ describe('duplicate.ts', () => {
 
       await mergeProducts(db, 'p1', 'p2');
 
-      const p2 = db.products.find((r) => r.id === 'p2');
+      const p2 = db.products.find((r: Row) => r.id === 'p2');
       expect(p2?.isDeleted).toBe(1);
     });
 

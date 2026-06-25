@@ -12,11 +12,14 @@ import * as FileSystem from 'expo-file-system';
 import { tokenizeChinese } from './tokenizer';
 import type { Product } from './types';
 import { performRecovery } from '../services/backup/recovery';
+import { migrate as v2 } from './migrations/v2';
+import { migrate as v3 } from './migrations/v3';
+import { migrate as v4 } from './migrations/v4';
 
 // ==================== 常量 ====================
 
 const DB_NAME = 'pstore.db';
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 4;
 
 // ==================== 路径 ====================
 
@@ -128,30 +131,17 @@ async function runVersionMigration(
     case 1:
       await createSchemaV1(db);
       break;
-    default:
-      // 尝试从 migrations/ 目录动态加载
-      await loadMigrationScript(db, version);
+    case 2:
+      await v2(db);
       break;
-  }
-}
-
-async function loadMigrationScript(
-  db: SQLite.SQLiteDatabase,
-  version: number,
-): Promise<void> {
-  try {
-    // 动态导入迁移脚本：src/db/migrations/v{version}.ts
-    const mod = await import(`./migrations/v${version}`);
-    const fn = (mod as { migrate?: unknown }).migrate;
-    if (typeof fn === 'function') {
-      await fn(db);
-    } else {
-      throw new Error(`Migration v${version} 未导出 migrate 函数`);
-    }
-  } catch (err) {
-    throw new Error(
-      `Schema 迁移 v${version} 失败: ${err instanceof Error ? err.message : String(err)}`,
-    );
+    case 3:
+      await v3(db);
+      break;
+    case 4:
+      await v4(db);
+      break;
+    default:
+      throw new Error(`未知的 Schema 版本: ${version}`);
   }
 }
 

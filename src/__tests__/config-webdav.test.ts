@@ -90,7 +90,8 @@ describe('WebDAV 配置 UI 集成', () => {
     it('SyncStatusIcon.tsx 读取 SecureStore 检测 WebDAV', () => {
       const f = path.join(PROJECT_ROOT, 'src', 'components', 'SyncStatusIcon.tsx');
       const content = fs.readFileSync(f, 'utf8');
-      expect(content).toContain("getItemAsync('pstore_webdav_url')");
+      expect(content).toContain('WEBDAV_URL_KEY');
+      expect(content).toContain("from '../services/credential'");
       expect(content).toContain('webdavConfigured');
     });
   });

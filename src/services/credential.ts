@@ -13,6 +13,9 @@ const KEYS = {
   webdavPassword: 'pstore_webdav_password',
 } as const;
 
+/** SecureStore key for WebDAV URL — import this constant wherever the key is needed to keep references consistent. */
+export const WEBDAV_URL_KEY = KEYS.webdavUrl;
+
 export async function getWebDAVCredentials(): Promise<{
   url: string | null;
   username: string | null;

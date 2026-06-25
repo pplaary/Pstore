@@ -31,8 +31,8 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
   const { colors, scale } = theme;
   const { addToCart } = useCartStore();
   const { isManagement } = useModeStore();
-  const aiConfig = useAIConfigStore((s) => s.config);
-  const hasAiConfig = useAIConfigStore((s) => s.hasConfig());
+  const aiConfig = useAIConfigStore((s) => s.aiConfig);
+  const aiConfigured = useAIConfigStore((s) => s.configured);
 
   const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
@@ -47,12 +47,12 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
   const [showCandidates, setShowCandidates] = useState(false);
 
   const lastBarcodeRef = useRef<{ code: string; time: number } | null>(null);
-  const cameraRef = useRef<{ takePicture: (opts: { base64?: boolean }) => Promise<{ base64?: string }> } | null>(null);
+  const cameraRef = useRef<CameraViewRef>(null);
   const [facing, setFacing] = useState<CameraType>('back');
 
   const availableModes = useMemo<ScanMode[]>(
-    () => (hasAiConfig ? ['scan', 'photo'] : ['scan']),
-    [hasAiConfig],
+    () => (aiConfigured ? ['scan', 'photo'] : ['scan']),
+    [aiConfigured],
   );
 
   // ==================== 权限处理 ====================
@@ -94,7 +94,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
       try {
         const results = await findByBarcode(db, scannedBarcode);
 
-        if (results.length > 0) {
+        if (results && Array.isArray(results) && results.length > 0) {
           setMatchedProduct(results[0]);
         } else {
           setMatchedProduct(null);
@@ -139,16 +139,15 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
   const handleTakePhoto = useCallback(async () => {
     if (!cameraRef.current) return;
 
-    if (!aiConfig) {
+    if (!aiConfig || !aiConfig.apiUrl) {
       Alert.alert('提示', '请先配置 AI 服务');
       return;
     }
 
     setIsLoading(true);
     try {
-      const photo = await cameraRef.current!.takePicture({
+      const photo = await (cameraRef.current as any).takePicture({
         base64: true,
-        quality: 0.8,
         skipProcessing: true,
       });
 
@@ -223,7 +222,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
     setIsLoading(true);
     try {
       const results = await findByBarcode(db, trimmed);
-      if (results.length > 0) {
+      if (results && Array.isArray(results) && results.length > 0) {
         setMatchedProduct(results[0]);
       } else {
         setMatchedProduct(null);
@@ -272,7 +271,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
       {/* Camera 预览区 */}
       <View style={styles.cameraContainer}>
         <CameraView
-          ref={cameraRef}
+          ref={cameraRef as any}
           style={styles.camera}
           facing={facing}
           barcodeScannerSettings={{

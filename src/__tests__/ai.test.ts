@@ -221,7 +221,7 @@ describe('parseAIResponse', () => {
       }
       return { count: 0 };
     }),
-  });
+  }) as any;
 
   // 标准有效响应
   const validResponse: AIResponse = {

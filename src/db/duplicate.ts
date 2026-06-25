@@ -6,8 +6,10 @@
  * - 名称相似度 ≥ 90% → 需人工确认
  * - 合并：保留 updatedAt 较新的，旧商品名写入保留商品 aliases，旧商品 isDeleted=1
  * - 同一事务内完成
+ * - 用户标记"非重复"的商品对写入 ignored_duplicates 表，不再出现
  */
 
+import type { SQLiteBindValue } from 'expo-sqlite';
 import * as SQLite from 'expo-sqlite';
 import { normalizedSimilarity } from '../utils/levenshtein';
 import { tokenizeChinese } from './tokenizer';
@@ -34,7 +36,7 @@ export async function findByBarcode(
     params.push(excludeId);
   }
 
-  const rows = await db.getAllAsync<Record<string, unknown>>(sql, ...params);
+  const rows = await db.getAllAsync<Record<string, unknown>>(sql, ...params as SQLiteBindValue[]);
   return rows.map(mapRow);
 }
 
@@ -78,10 +80,29 @@ export async function findByNameSimilarity(
   return candidates;
 }
 
-// ==================== 获取所有重复候选 ====================
+/**
+ * 将商品对标记为"非重复"，写入 ignored_duplicates 表。
+ * 存储时 id_a < id_b（排序），保证 PRIMARY KEY (id_a, id_b) 唯一。
+ */
+export async function markNotDuplicate(
+  db: SQLite.SQLiteDatabase,
+  idA: string,
+  idB: string,
+): Promise<void> {
+  const [sortedA, sortedB] = idA < idB ? [idA, idB] : [idB, idA];
+  await db.runAsync(
+    `INSERT OR IGNORE INTO ignored_duplicates (id_a, id_b, ignored_at) VALUES (?, ?, ?)`,
+    sortedA,
+    sortedB,
+    Date.now(),
+  );
+}
+
+// ==================== 获取所有重复候选 ===================
 
 /**
  * 返回所有重复候选（条码重复 + 名称高度相似）。
+ * 排除在 ignored_duplicates 表中已标记"非重复"的商品对。
  * 遍历所有未删除商品对做 O(n²) 比对。
  */
 export async function getAllMergeCandidates(
@@ -92,6 +113,15 @@ export async function getAllMergeCandidates(
   );
   const products = rows.map(mapRow);
 
+  // 加载已标记"非重复"的商品对（去重）
+  const ignoredRows = await db.getAllAsync<{ id_a: string; id_b: string }>(
+    `SELECT id_a, id_b FROM ignored_duplicates`,
+  );
+  const ignoredSet = new Set<string>();
+  for (const r of ignoredRows) {
+    ignoredSet.add(`${r.id_a}|${r.id_b}`);
+  }
+
   const seen = new Set<string>();
   const candidates: MergeCandidate[] = [];
 
@@ -99,12 +129,15 @@ export async function getAllMergeCandidates(
     for (let j = i + 1; j < products.length; j++) {
       const a = products[i];
       const b = products[j];
+      const pairKey = [a.id, b.id].sort().join('|');
+
+      // 排除已标记"非重复"的商品对
+      if (ignoredSet.has(pairKey)) continue;
 
       // 条码一致
       if (a.barcode && b.barcode && a.barcode === b.barcode) {
-        const key = [a.id, b.id].sort().join('|');
-        if (!seen.has(key)) {
-          seen.add(key);
+        if (!seen.has(pairKey)) {
+          seen.add(pairKey);
           candidates.push({
             productA: a,
             productB: b,
@@ -117,9 +150,8 @@ export async function getAllMergeCandidates(
       // 名称相似度 ≥ 90% + 售价/规格至少一项一致（spec §5.7）
       const sim = normalizedSimilarity(a.name, b.name);
       if (sim >= 0.9 && (a.price === b.price || a.spec === b.spec)) {
-        const key = [a.id, b.id].sort().join('|');
-        if (!seen.has(key)) {
-          seen.add(key);
+        if (!seen.has(pairKey)) {
+          seen.add(pairKey);
           candidates.push({
             productA: a,
             productB: b,
@@ -179,21 +211,21 @@ export async function mergeProducts(
   for (const n of newNames) {
     if (n !== keep.name) aliasSet.add(n);
   }
-  const mergedAliases = aliasSet.size > 0 ? [...aliasSet].join(',') : null;
+  const mergedAliases: string | null = aliasSet.size > 0 ? [...aliasSet].join(',') : null;
 
   // 同一事务：更新 aliases + 重建 FTS + 软删除 mergeId
   await db.withTransactionAsync(async () => {
     // 更新 keepId 的 aliases + updatedAt
     await db.runAsync(
       `UPDATE product SET aliases = ?, updatedAt = ? WHERE id = ?`,
-      mergedAliases,
+      mergedAliases ?? null,
       now,
       keepId,
     );
 
     // 重建 FTS 索引
     const newPinyin = generatePinyinForRow(keep.name);
-    const newSearchText = generateSearchTextForRow(keep.name, mergedAliases);
+    const newSearchText = generateSearchTextForRow(keep.name, mergedAliases ?? undefined);
 
     await db.runAsync(
       `DELETE FROM product_fts WHERE rowid = (SELECT rowid FROM product WHERE id = ?)`,

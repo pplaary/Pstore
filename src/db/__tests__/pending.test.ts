@@ -70,7 +70,7 @@ class MockDB {
 // ==================== 测试 ====================
 
 describe('pending.ts', () => {
-  let db: MockDB;
+  let db: any;
 
   beforeEach(() => {
     db = new MockDB();
