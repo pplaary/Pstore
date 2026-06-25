@@ -19,6 +19,8 @@ import { useAIConfigStore } from '../store/aiConfig';
 import { findByBarcode, createOrUpdate } from '../db/pending';
 import { searchProducts } from '../db/search';
 import { recognizeProduct } from '../services/vision';
+import { aiParseImage } from '../services/n1';
+import { useSyncConfigStore } from '../store/syncConfig';
 import { useTheme } from '../theme/ThemeContext';
 import type { Product } from '../db/types';
 import type { ScanScreenProps } from '../navigation/types';
@@ -33,6 +35,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
   const { isManagement } = useModeStore();
   const aiConfig = useAIConfigStore((s) => s.aiConfig);
   const aiConfigured = useAIConfigStore((s) => s.configured);
+  const syncConfigServerUrl = useSyncConfigStore((s) => s.serverUrl);
 
   const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
@@ -139,12 +142,9 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
   const handleTakePhoto = useCallback(async () => {
     if (!cameraRef.current) return;
 
-    if (!aiConfig || !aiConfig.apiUrl) {
-      Alert.alert('提示', '请先配置 AI 服务');
-      return;
-    }
-
     setIsLoading(true);
+    let recognized = false;
+
     try {
       const photo = await (cameraRef.current as any).takePicture({
         base64: true,
@@ -156,13 +156,48 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
         return;
       }
 
-      const result = await recognizeProduct(photo.base64, aiConfig);
+      // 优先调用 n1-server 的 aiParseImage（返回字段更丰富）
+      if (syncConfigServerUrl) {
+        try {
+          const imageDataUrl = `data:image/jpeg;base64,${photo.base64}`;
+          const result = await aiParseImage(syncConfigServerUrl, imageDataUrl);
+          if (result.data && result.data.name) {
+            const data = result.data;
+            const specParts = [
+              data.price ? `¥${data.price}` : null,
+              data.category || null,
+              data.location || null,
+            ].filter(Boolean);
+            const candidate = {
+              name: data.name,
+              confidence: 0.95, // n1-server 结果置信度高，供 UI 展示
+              spec: specParts.join(' · '),
+            };
+            setCandidates([candidate]);
+            setShowCandidates(true);
+            recognized = true;
+          }
+        } catch (e) {
+          console.warn('ScanScreen: n1-server AI 识别失败，降级到通用视觉', e);
+        }
+      }
 
-      if (result.candidates.length === 0) {
+      // 降级：使用现有 recognizeProduct
+      if (!recognized && aiConfig && aiConfig.apiUrl) {
+        try {
+          const result = await recognizeProduct(photo.base64, aiConfig);
+          if (result.candidates.length > 0) {
+            setCandidates(result.candidates);
+            setShowCandidates(true);
+            recognized = true;
+          }
+        } catch (e) {
+          console.error('ScanScreen: 通用视觉识别失败', e);
+        }
+      }
+
+      if (!recognized) {
         Alert.alert('识别结果', '未识别到商品');
-      } else {
-        setCandidates(result.candidates);
-        setShowCandidates(true);
       }
     } catch (e) {
       console.error('ScanScreen: 拍照识别失败', e);
@@ -170,7 +205,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [aiConfig]);
+  }, [aiConfig, syncConfigServerUrl]);
 
   // ==================== 候选列表加购 ====================
 
