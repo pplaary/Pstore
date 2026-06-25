@@ -38,7 +38,16 @@ export async function exportSnapshot(
     // 2. 使用 VACUUM INTO 创建独立副本
     //    VACUUM INTO 直接从 SQLite 内部写入目标文件，
     //    无需知道源数据库的物理文件路径
-    await db.execAsync(`VACUUM INTO '${targetPath.replace(/'/g, "''")}'`);
+    const escapedTarget = targetPath.replace(/'/g, "''");
+    // P0-3: 优先尝试参数化（部分 expo-sqlite 版本支持），降级为转义字符串拼接
+    let vacuumOk = false;
+    try {
+      await db.runAsync(`VACUUM INTO ?`, targetPath);
+      vacuumOk = true;
+    } catch {
+      // 降级：使用转义后的字符串拼接（避免 SQL 注入）
+      await db.execAsync(`VACUUM INTO '${escapedTarget}'`);
+    }
 
     // 3. 关闭数据库连接
     await db.closeAsync();

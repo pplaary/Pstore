@@ -31,7 +31,13 @@ export async function getWebDAVCredentials(): Promise<{
 }
 
 function normalizeUrl(raw: string): string {
-  return raw.replace(/\/+$/, '');
+  const trimmed = raw.trim().replace(/\/+$/, '');
+  // P0-5: 校验 URL 格式并强制 HTTPS
+  const parsed = new URL(trimmed);
+  if (parsed.protocol !== 'https:') {
+    throw new Error('WebDAV 地址必须以 https:// 开头');
+  }
+  return trimmed;
 }
 
 export async function setWebDAVCredentials(

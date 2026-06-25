@@ -19,11 +19,17 @@ const REQUIRED_TABLES = ['product', 'price_history', 'pending_items'] as const;
  * @param filePath 待校验的 SQLite 数据库文件绝对路径
  * @returns ok=false 表示备份无效，不应使用
  */
+export interface BackupValidationError {
+  code: 'FILE_CORRUPTED' | 'MISSING_TABLE' | 'EMPTY_DB' | 'UNKNOWN';
+  message: string;
+  details?: string;
+}
+
 export async function validateBackup(
   filePath: string,
 ): Promise<{
   ok: boolean;
-  error?: string;
+  error?: BackupValidationError;
   tableCount?: number;
   productCount?: number;
 }> {
@@ -34,13 +40,18 @@ export async function validateBackup(
     db = await SQLite.openDatabaseAsync(filePath);
 
     // 2. PRAGMA integrity_check — 必须返回 "ok"
+    // P1-6: 错误信息不暴露原始路径，避免信息泄露
     const integrityRow = await db.getFirstAsync<{ integrity_check: string }>(
       'PRAGMA integrity_check',
     );
     if (!integrityRow || integrityRow.integrity_check !== 'ok') {
       return {
         ok: false,
-        error: `数据库完整性校验失败: ${integrityRow?.integrity_check ?? '未知错误'}`,
+        error: {
+          code: 'FILE_CORRUPTED' as const,
+          message: '数据库文件已损坏，无法使用此备份',
+          details: integrityRow?.integrity_check ?? '未知错误',
+        },
       };
     }
 
@@ -54,7 +65,10 @@ export async function validateBackup(
       if (!existingTables.has(required)) {
         return {
           ok: false,
-          error: `缺少核心表: ${required}`,
+          error: {
+            code: 'MISSING_TABLE' as const,
+            message: `缺少核心表: ${required}`,
+          },
         };
       }
     }
@@ -62,15 +76,19 @@ export async function validateBackup(
     const tableCount = existingTables.size;
 
     // 4. 检查 product 表行数（> 0 才算有效备份）
+    // P1-5: COUNT 必须过滤 isDeleted = 0
     const countRow = await db.getFirstAsync<{ cnt: number }>(
-      'SELECT COUNT(*) AS cnt FROM product',
+      'SELECT COUNT(*) AS cnt FROM product WHERE isDeleted = 0',
     );
     const productCount = countRow?.cnt ?? 0;
 
     if (productCount === 0) {
       return {
         ok: false,
-        error: '备份为空库（product 表无数据）',
+        error: {
+          code: 'EMPTY_DB' as const,
+          message: '备份为空库（product 表无数据）',
+        },
         tableCount,
         productCount: 0,
       };
@@ -81,7 +99,10 @@ export async function validateBackup(
   } catch (e) {
     return {
       ok: false,
-      error: e instanceof Error ? e.message : String(e),
+      error: {
+        code: 'UNKNOWN' as const,
+        message: e instanceof Error ? e.message : String(e),
+      },
     };
   } finally {
     // 关闭连接

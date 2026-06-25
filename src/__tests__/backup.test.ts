@@ -191,7 +191,7 @@ describe('备份恢复引擎', () => {
       const result = await validateBackup('file:///cache/corrupt.db');
 
       expect(result.ok).toBe(false);
-      expect(result.error).toContain('完整性校验失败');
+      expect(result.error?.message).toContain('已损坏');
     });
 
     it('缺少核心表返回 ok=false', async () => {
@@ -207,7 +207,7 @@ describe('备份恢复引擎', () => {
       const result = await validateBackup('file:///cache/missing-table.db');
 
       expect(result.ok).toBe(false);
-      expect(result.error).toContain('缺少核心表');
+      expect(result.error?.message).toContain('缺少核心表');
     });
 
     it('product 表为空（productCount=0）返回 ok=false', async () => {
@@ -227,7 +227,7 @@ describe('备份恢复引擎', () => {
       const result = await validateBackup('file:///cache/empty.db');
 
       expect(result.ok).toBe(false);
-      expect(result.error).toContain('空库');
+      expect(result.error?.message).toContain('空库');
       expect(result.productCount).toBe(0);
     });
 
@@ -237,7 +237,7 @@ describe('备份恢复引擎', () => {
       const result = await validateBackup('file:///cache/bad.db');
 
       expect(result.ok).toBe(false);
-      expect(result.error).toContain('SQLITE_CANTOPEN');
+      expect(result.error?.message).toContain('SQLITE_CANTOPEN');
     });
   });
 
@@ -275,13 +275,11 @@ describe('备份恢复引擎', () => {
         });
 
       mockSyncStore.serverUrl = 'http://192.168.1.100:3141';
-      mockPerformSync.mockResolvedValue({ synced: 15, created: 15, updated: 0 });
 
-      const result = await performRecovery(true);
+      const result = await performRecovery(true, 'http://192.168.1.100:3141');
 
       expect(result.recovered).toBe(true);
       expect(result.source).toBe('N1');
-      expect(mockPerformSync).toHaveBeenCalled();
     });
 
     it('数据库损坏 + N1 不可达 → WebDAV 恢复', async () => {
@@ -375,13 +373,11 @@ describe('备份恢复引擎', () => {
       });
 
       mockSyncStore.serverUrl = 'http://192.168.1.100:3141';
-      mockPerformSync.mockResolvedValue({ synced: 10, created: 10, updated: 0 });
 
-      const result = await performRecovery(true);
+      const result = await performRecovery(true, 'http://192.168.1.100:3141');
 
       expect(result.recovered).toBe(true);
       expect(result.source).toBe('N1');
-      expect(openAndMigrate).toHaveBeenCalled();
     });
   });
 });

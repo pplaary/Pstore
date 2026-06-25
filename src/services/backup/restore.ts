@@ -13,6 +13,7 @@ import { downloadBackup, listBackups } from '../webdav';
 import { validateBackup } from './validate';
 import { getDatabasePath, getDatabaseFilePath } from '../../db/init';
 import { getWebDAVCredentials } from '../credential';
+import { showToast } from '../../utils/toast';
 
 export interface RestoreResult {
   ok: boolean;
@@ -29,8 +30,13 @@ export interface RestoreResult {
  * 2. 若不指定 remoteFileName，列出所有备份并取最近一份
  * 3. 下载到本地临时目录
  * 4. 校验备份完整性
- * 5. 校验通过 → 关闭当前数据库 → 覆盖本地数据库文件
+ * 5. 校验通过 → 关闭当前数据库 → 删除旧 DB 及 WAL/SHM → 覆盖本地数据库文件
  * 6. 清理临时下载文件
+ *
+ * P1-2: 检查 WebDAV 凭据后才决定是否删除旧 DB
+ * P0-2: copyAsync 前删除 -wal/-shm 文件
+ * P1-7: closeAsync 失败时等待 500ms 重试
+ * P1-8: WAL 启用失败时 Toast 通知
  *
  * @param remoteFileName 可选，指定要恢复的远程文件名；不传则取最近备份
  * @param db            可选，当前打开的数据库实例（关闭后由调用方重新打开）
@@ -42,7 +48,7 @@ export async function restoreFromWebDAV(
   let downloadedPath: string | undefined;
 
   try {
-    // 0. 检查凭据是否已配置
+    // P1-2: 检查凭据是否已配置（避免下载后才删除 DB 导致凭据问题无法恢复）
     const creds = await getWebDAVCredentials();
     if (!creds.url || !creds.username || !creds.password) {
       return { ok: false, error: '请先在配置中心填写 WebDAV 凭据' };
@@ -78,7 +84,7 @@ export async function restoreFromWebDAV(
       } catch { /* ignore */ }
       return {
         ok: false,
-        error: validation.error ?? '备份校验失败',
+        error: validation.error?.message ?? '备份校验失败',
       };
     }
 
@@ -87,12 +93,26 @@ export async function restoreFromWebDAV(
       try {
         await db.closeAsync();
       } catch {
-        console.warn('关闭当前数据库连接失败，继续覆盖');
+        // P1-7: closeAsync 失败时等待 500ms 重试
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        try {
+          await db.closeAsync();
+        } catch {
+          console.warn('关闭当前数据库连接失败，继续覆盖');
+        }
       }
     }
 
-    // 5. 覆盖本地数据库文件
+    // P0-2: 删除 WAL/SHM 伴生文件（避免 copy 时文件冲突）
     const fullDbPath = getDatabaseFilePath();
+    await FileSystem.deleteAsync(fullDbPath + '-wal', { idempotent: true }).catch(
+      () => {},
+    );
+    await FileSystem.deleteAsync(fullDbPath + '-shm', { idempotent: true }).catch(
+      () => {},
+    );
+
+    // 5. 覆盖本地数据库文件
     await FileSystem.copyAsync({
       from: downloadedPath,
       to: fullDbPath,
@@ -103,8 +123,9 @@ export async function restoreFromWebDAV(
       const restoredDb = await SQLite.openDatabaseAsync(getDatabasePath());
       await restoredDb.execAsync('PRAGMA journal_mode = WAL');
       await restoredDb.closeAsync();
-    } catch {
-      console.warn('恢复后启用 WAL 模式失败，将在下次启动时自动设置');
+    } catch (err) {
+      // P1-8: WAL 启用失败时 Toast 通知用户
+      showToast('WAL 模式恢复失败，将在下次启动时自动设置', 'LONG');
     }
 
     // 7. 清理临时下载文件
@@ -147,7 +168,7 @@ export async function restoreFromLocal(
     if (!validation.ok) {
       return {
         ok: false,
-        error: validation.error ?? '本地快照校验失败',
+        error: validation.error?.message ?? '本地快照校验失败',
       };
     }
 
@@ -156,12 +177,26 @@ export async function restoreFromLocal(
       try {
         await db.closeAsync();
       } catch {
-        console.warn('关闭当前数据库连接失败，继续覆盖');
+        // P1-7: closeAsync 失败时等待 500ms 重试
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        try {
+          await db.closeAsync();
+        } catch {
+          console.warn('关闭当前数据库连接失败，继续覆盖');
+        }
       }
     }
 
-    // 3. 覆盖本地数据库文件
+    // P0-2: 删除 WAL/SHM 伴生文件（避免覆盖时文件冲突）
     const fullDbPath = getDatabaseFilePath();
+    await FileSystem.deleteAsync(fullDbPath + '-wal', { idempotent: true }).catch(
+      () => {},
+    );
+    await FileSystem.deleteAsync(fullDbPath + '-shm', { idempotent: true }).catch(
+      () => {},
+    );
+
+    // 3. 覆盖本地数据库文件
     await FileSystem.copyAsync({
       from: filePath,
       to: fullDbPath,
@@ -173,7 +208,8 @@ export async function restoreFromLocal(
       await restoredDb.execAsync('PRAGMA journal_mode = WAL');
       await restoredDb.closeAsync();
     } catch {
-      console.warn('恢复后启用 WAL 模式失败，将在下次启动时自动设置');
+      // P1-8: WAL 启用失败时 Toast 通知用户
+      showToast('WAL 模式恢复失败，将在下次启动时自动设置', 'LONG');
     }
 
     return {

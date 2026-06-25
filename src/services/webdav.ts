@@ -116,15 +116,16 @@ export async function uploadBackup(
 
     const remotePath = `${BACKUP_DIR}/${remoteFileName}`;
 
-    // 读取本地文件内容（React Native 仅支持 Base64 编码传输二进制）
-    const content = await FileSystem.readAsStringAsync(localPath, {
+    // P1-10: 设置正确的 contentLength（避免分块上传问题）
+    const base64Content = await FileSystem.readAsStringAsync(localPath, {
       encoding: FileSystem.EncodingType.Base64,
     });
+    const contentLength = Math.ceil(base64Content.length * 3 / 4);
 
     // 上传（webdav v5 的 putFileContents 接受 string | Buffer | Stream）
     await withTimeout(
-      client.putFileContents(remotePath, content, {
-        contentLength: false,
+      client.putFileContents(remotePath, base64Content, {
+        contentLength,
       }),
       TIMEOUT_MS,
       '上传备份',
@@ -142,6 +143,8 @@ export async function uploadBackup(
 /**
  * 从 WebDAV 下载备份文件到本地临时目录。
  *
+ * P0-4: 使用 binary 格式 + arraybuffer 避免文本格式导致的二进制文件损坏。
+ *
  * @param remoteFileName 远程文件名
  */
 export async function downloadBackup(
@@ -153,15 +156,16 @@ export async function downloadBackup(
     const remotePath = `${BACKUP_DIR}/${remoteFileName}`;
     const localPath = `${FileSystem.cacheDirectory}${remoteFileName}`;
 
-    // 下载文件内容（webdav v5 的 getFileContents 返回 string）
+    // P0-4: 使用 binary 格式下载，避免 text 格式对二进制文件（SQLite）的损坏
     const content = await withTimeout(
-      client.getFileContents(remotePath, { format: 'text' }),
+      client.getFileContents(remotePath, { format: 'binary' }),
       TIMEOUT_MS,
       '下载备份',
     );
 
-    // 写入本地临时目录
-    await FileSystem.writeAsStringAsync(localPath, content as string, {
+    // 将 ArrayBuffer 转换为 Base64 字符串后写入文件
+    const base64 = arrayBufferToBase64(content as ArrayBuffer);
+    await FileSystem.writeAsStringAsync(localPath, base64, {
       encoding: FileSystem.EncodingType.Base64,
     });
 
@@ -178,6 +182,18 @@ export async function downloadBackup(
       error: e instanceof Error ? e.message : String(e),
     };
   }
+}
+
+/**
+ * 将 ArrayBuffer 转换为 Base64 字符串。
+ */
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }
 
 /**

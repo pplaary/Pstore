@@ -28,7 +28,12 @@ export interface ClearResult {
  */
 export async function clearAllProducts(db: SQLite.SQLiteDatabase): Promise<ClearResult> {
   try {
-    const result = await db.runAsync('UPDATE product SET isDeleted = 1 WHERE isDeleted = 0');
+    // P1-12: 软删除时设置 updatedAt
+    const now = new Date().toISOString();
+    const result = await db.runAsync(
+      'UPDATE product SET isDeleted = 1, updatedAt = ? WHERE isDeleted = 0',
+      now,
+    );
     const affectedRows = (result as { changes: number }).changes;
 
     // 重建 FTS 索引（空库，不索引任何商品）
