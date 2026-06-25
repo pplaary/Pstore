@@ -12,11 +12,15 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { useModeStore } from '../store/mode';
 import { useStore } from '../context/store';
+import { useSyncConfigStore } from '../store/syncConfig';
 import { searchProducts } from '../db/search';
+import { aiQuery } from '../services/n1';
+import type { AiQueryResult } from '../services/n1';
 import { useTheme } from '../theme/ThemeContext';
 import { CATEGORIES } from '../db/types';
 import type { Product, ProductStatus } from '../db/types';
 import type { ProductListScreenCompositeProps } from '../navigation/types';
+import { showToast } from '../utils/toast';
 
 export function ProductListScreen({ navigation, route }: ProductListScreenCompositeProps) {
   const { db, products, refreshProducts } = useStore();
@@ -25,10 +29,17 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
   const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
   const filter = route.params?.filter;
   const isManagement = useModeStore(s => s.isManagement);
+  const syncConfigServerUrl = useSyncConfigStore((s) => s.serverUrl);
+  const isNLSearchAvailable = !!syncConfigServerUrl;
 
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+
+  // ========== NL 搜索模式状态 ==========
+  const [isNLSearch, setIsNLSearch] = useState(false);
+  const [isNLLoading, setIsNLLoading] = useState(false);
+  const [nlResult, setNlResult] = useState<AiQueryResult | null>(null);
 
   const statusColors: Record<string, string> = {
     IN_SHOP: colors.brand.inShop,
@@ -74,10 +85,46 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
     }
   }, [db, query, selectedCategory, filter]);
 
+  // ========== NL 搜索 ==========
+  const doNLSearch = useCallback(async (question: string) => {
+    if (!question.trim() || !syncConfigServerUrl) return;
+    setIsNLLoading(true);
+    try {
+      const res = await aiQuery(syncConfigServerUrl, question);
+      if (res.error) {
+        setNlResult(null);
+        setFilteredProducts([]);
+        showToast('AI 搜索失败，请稍后重试');
+        return;
+      }
+      setNlResult(res.data || null);
+      if (res.data?.items?.length) {
+        const names = res.data.items.map((i) => i.name);
+        const localResults = (await Promise.all(
+          names.map((name) => searchProducts(db, name, { sortBy: 'relevance' })),
+        )).flat();
+        setFilteredProducts(localResults);
+      } else {
+        setFilteredProducts([]);
+      }
+    } catch (e) {
+      console.error('ProductListScreen: NL 搜索失败', e);
+      setFilteredProducts([]);
+      setNlResult(null);
+      showToast('AI 搜索失败，请稍后重试');
+    } finally {
+      setIsNLLoading(false);
+    }
+  }, [db, syncConfigServerUrl]);
+
   // 搜索词或分类变化时实时搜索
   React.useEffect(() => {
-    doSearch();
-  }, [doSearch]);
+    if (isNLSearch) {
+      doNLSearch(query);
+    } else {
+      doSearch();
+    }
+  }, [doSearch, doNLSearch, isNLSearch]);
 
   // 页面聚焦时刷新全局商品列表
   useFocusEffect(
@@ -152,14 +199,26 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
         <Text style={styles.searchIcon}>&#x1F50D;</Text>
         <TextInput
           style={styles.searchInput}
-          placeholder="搜索商品名称、拼音或条码"
+          placeholder={isNLSearch ? '用自然语言描述你需要的商品...' : '搜索商品名称、拼音或条码'}
           placeholderTextColor={colors.text.hint}
           value={query}
           onChangeText={setQuery}
           returnKeyType="search"
           autoCorrect={false}
-          accessibilityLabel="搜索商品"
+          accessibilityLabel={isNLSearch ? 'AI 自然语言搜索' : '搜索商品'}
         />
+        {isNLSearchAvailable && (
+          <TouchableOpacity
+            style={styles.nlToggleBtn}
+            onPress={() => { setIsNLSearch(!isNLSearch); setQuery(''); setFilteredProducts([]); setNlResult(null); }}
+            accessibilityLabel={isNLSearch ? '切换到关键词搜索' : '切换到 AI 搜索'}
+            accessibilityRole="button"
+          >
+            <Text style={[styles.nlToggleText, isNLSearch && styles.nlToggleTextActive]}>
+              {isNLSearch ? 'KW' : 'NL'}
+            </Text>
+          </TouchableOpacity>
+        )}
         {query.length > 0 && (
           <TouchableOpacity
             style={styles.clearButton}
@@ -169,6 +228,9 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
           >
             <Text style={styles.clearButtonText}>✕</Text>
           </TouchableOpacity>
+        )}
+        {isNLLoading && (
+          <Text style={styles.nlLoadingText}>AI...</Text>
         )}
       </View>
 
@@ -206,13 +268,35 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
       {/* 列表 */}
       {isEmpty ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>&#x1F50E;</Text>
-          <Text style={styles.emptyText}>未找到商品</Text>
-          <Text style={styles.emptySubText}>
-            {query.trim()
-              ? `没有与「${query.trim()}」匹配的商品`
-              : '请添加商品或调整筛选条件'}
-          </Text>
+          {isNLSearch ? (
+            <>
+              <Text style={styles.emptyIcon}>&#x1F50E;</Text>
+              <Text style={styles.emptyText}>AI 搜索未找到匹配商品</Text>
+              {nlResult?.answer && (
+                <Text style={styles.emptySubText}>{nlResult.answer}</Text>
+              )}
+            </>
+          ) : (
+            <>
+              <Text style={styles.emptyIcon}>&#x1F50E;</Text>
+              <Text style={styles.emptyText}>未找到商品</Text>
+              <Text style={styles.emptySubText}>
+                {query.trim()
+                  ? `没有与「${query.trim()}」匹配的商品`
+                  : '请添加商品或调整筛选条件'}
+              </Text>
+              {!isNLSearch && isNLSearchAvailable && (
+                <TouchableOpacity
+                  style={styles.emptyAiBtn}
+                  onPress={() => setIsNLSearch(true)}
+                  accessibilityLabel="用 AI 搜索"
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.emptyAiBtnText}>AI 智能搜索</Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
         </View>
       ) : (
         <FlatList
@@ -306,6 +390,29 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     clearButtonText: {
       fontSize: 14 * scale,
       color: colors.text.hint,
+    },
+    nlToggleBtn: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: colors.border.default,
+      marginLeft: 4,
+    },
+    nlToggleText: {
+      fontSize: 11 * scale,
+      fontWeight: '700',
+      color: colors.text.hint,
+      letterSpacing: 0.5,
+    },
+    nlToggleTextActive: {
+      color: colors.brand.primary,
+    },
+    nlLoadingText: {
+      fontSize: 12 * scale,
+      color: colors.brand.primary,
+      fontWeight: '600',
+      marginLeft: 6,
     },
     // 分类筛选条
     categoryBar: {
@@ -420,6 +527,20 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     emptySubText: {
       fontSize: 14 * scale,
       color: colors.text.hint,
+    },
+    emptyAiBtn: {
+      marginTop: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 8,
+      backgroundColor: colors.brand.primary + '15',
+      borderWidth: 1,
+      borderColor: colors.brand.primary + '40',
+    },
+    emptyAiBtnText: {
+      fontSize: 14 * scale,
+      color: colors.brand.primary,
+      fontWeight: '600',
     },
     // 底部扫码
     bottomBar: {

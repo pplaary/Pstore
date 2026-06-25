@@ -38,7 +38,11 @@ describe('搜索模式 UI', () => {
   const content = readHomeScreen();
 
   it('搜索模式显示搜索栏', () => {
-    expect(content).toContain('placeholder="搜索商品名称、拼音或条码"');
+    // placeholder 现在是动态的（isNLSearch 条件），检查搜索栏结构
+    expect(content).toContain('searchBar');
+    expect(content).toContain('searchInput');
+    // 默认 KW 模式 placeholder 包含搜索文本
+    expect(content).toContain('搜索商品名称、拼音或条码');
   });
 
   it('搜索模式使用 searchArea 区域', () => {
@@ -113,8 +117,8 @@ describe('聊天模式 UI', () => {
     expect(content).toContain('说"可乐多少钱"');
   });
 
-  it('搜索模式 placeholder 为"搜索商品名称、拼音或条码"', () => {
-    expect(content).toContain('placeholder="搜索商品名称、拼音或条码"');
+  it('搜索模式 placeholder 包含"搜索商品名称、拼音或条码"', () => {
+    expect(content).toContain('搜索商品名称、拼音或条码');
   });
 
   it('聊天模式输入栏存在', () => {

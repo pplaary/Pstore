@@ -34,12 +34,15 @@ import {
   parseAIResponse,
 } from '../services/ai';
 import { buildRAGContext } from '../services/ai/rag';
+import { aiQuery } from '../services/n1';
+import type { AiQueryResult } from '../services/n1';
 import { showToast } from '../utils/toast';
 import { ChatManager } from '../services/ai/chat';
 import { AIResponseCache } from '../services/ai/cache';
 import type { AIResponse } from '../services/ai';
 import type { Product, ProductStatus } from '../db/types';
 import type { HomeScreenCompositeProps } from '../navigation/types';
+import { useSyncConfigStore } from '../store/syncConfig';
 
 // ==================== 常量 ====================
 
@@ -61,6 +64,8 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
   const { isManagement, exitManagement } = useModeStore();
   const aiMode = useAIConfigStore((s) => s.mode);
   const isChatMode = aiMode === 'chat';
+  const syncConfigServerUrl = useSyncConfigStore((s) => s.serverUrl);
+  const isNLSearchAvailable = !!syncConfigServerUrl;
 
   // ========== 散装标签状态 ==========
   const [looseGoodsLabels, setLooseGoodsLabels] = useState<Array<{ id: string; label: string }>>([]);
@@ -69,6 +74,11 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+
+  // ========== NL 搜索模式状态 ==========
+  const [isNLSearch, setIsNLSearch] = useState(false);
+  const [isNLLoading, setIsNLLoading] = useState(false);
+  const [nlResult, setNlResult] = useState<AiQueryResult | null>(null);
 
   // ========== 聊天模式状态 ==========
   const [chatMessages, setChatMessages] = useState<
@@ -153,6 +163,38 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
     }
   }, [db, query, selectedCategory]);
 
+  // ========== NL 搜索 ==========
+  const doNLSearch = useCallback(async (question: string) => {
+    if (!question.trim() || !syncConfigServerUrl) return;
+    setIsNLLoading(true);
+    try {
+      const res = await aiQuery(syncConfigServerUrl, question);
+      if (res.error) {
+        setNlResult(null);
+        setFilteredProducts([]);
+        showToast('AI 搜索失败，请稍后重试');
+        return;
+      }
+      setNlResult(res.data || null);
+      if (res.data?.items?.length) {
+        const names = res.data.items.map((i) => i.name);
+        const localResults = (await Promise.all(
+          names.map((name) => searchProducts(db, name, { sortBy: 'relevance' })),
+        )).flat();
+        setFilteredProducts(localResults);
+      } else {
+        setFilteredProducts([]);
+      }
+    } catch (e) {
+      console.error('HomeScreen: NL 搜索失败', e);
+      setFilteredProducts([]);
+      setNlResult(null);
+      showToast('AI 搜索失败，请稍后重试');
+    } finally {
+      setIsNLLoading(false);
+    }
+  }, [db, syncConfigServerUrl]);
+
   // ========== 散装标签 ==========
   const loadLooseGoodsLabels = useCallback(async () => {
     try {
@@ -164,8 +206,14 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
   }, [db]);
 
   React.useEffect(() => {
-    if (!isChatMode) doSearch();
-  }, [doSearch, isChatMode]);
+    if (!isChatMode) {
+      if (isNLSearch) {
+        doNLSearch(query);
+      } else {
+        doSearch();
+      }
+    }
+  }, [doSearch, doNLSearch, isChatMode, isNLSearch]);
 
   useFocusEffect(
     useCallback(() => {
@@ -644,14 +692,26 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="搜索商品名称、拼音或条码"
+            placeholder={isNLSearch ? '用自然语言描述你需要的商品...' : '搜索商品名称、拼音或条码'}
             placeholderTextColor={colors.text.hint}
             value={query}
             onChangeText={setQuery}
             returnKeyType="search"
             autoCorrect={false}
-            accessibilityLabel="搜索商品"
+            accessibilityLabel={isNLSearch ? 'AI 自然语言搜索' : '搜索商品'}
           />
+          {isNLSearchAvailable && (
+            <TouchableOpacity
+              style={styles.nlToggleBtn}
+              onPress={() => { setIsNLSearch(!isNLSearch); setQuery(''); setFilteredProducts([]); setNlResult(null); }}
+              accessibilityLabel={isNLSearch ? '切换到关键词搜索' : '切换到 AI 搜索'}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.nlToggleText, isNLSearch && styles.nlToggleTextActive]}>
+                {isNLSearch ? 'KW' : 'NL'}
+              </Text>
+            </TouchableOpacity>
+          )}
           {query.length > 0 && (
             <TouchableOpacity
               style={styles.clearBtn}
@@ -661,6 +721,9 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
             >
               <Text style={styles.clearBtnText}>✕</Text>
             </TouchableOpacity>
+          )}
+          {isNLLoading && (
+            <Text style={styles.nlLoadingText}>AI...</Text>
           )}
         </View>
       )}
@@ -756,7 +819,28 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
             </View>
           ) : isEmpty ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>未找到商品</Text>
+              {isNLSearch ? (
+                <>
+                  <Text style={styles.emptyText}>AI 搜索未找到匹配商品</Text>
+                  {nlResult?.answer && (
+                    <Text style={styles.emptyHint}>{nlResult.answer}</Text>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Text style={styles.emptyText}>未找到商品</Text>
+                  {isNLSearchAvailable && (
+                    <TouchableOpacity
+                      style={styles.emptyAiBtn}
+                      onPress={() => setIsNLSearch(true)}
+                      accessibilityLabel="用 AI 搜索"
+                      accessibilityRole="button"
+                    >
+                      <Text style={styles.emptyAiBtnText}>AI 智能搜索</Text>
+                    </TouchableOpacity>
+                  )}
+                </>
+              )}
             </View>
           ) : (
             <FlatList
@@ -983,6 +1067,29 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     searchInput: { flex: 1, fontSize: 15 * scale, color: colors.text.primary, padding: 0 },
     clearBtn: { padding: 4, marginLeft: 4 },
     clearBtnText: { fontSize: 14 * scale, color: colors.text.hint },
+    nlToggleBtn: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: colors.border.default,
+      marginLeft: 4,
+    },
+    nlToggleText: {
+      fontSize: 11 * scale,
+      fontWeight: '700',
+      color: colors.text.hint,
+      letterSpacing: 0.5,
+    },
+    nlToggleTextActive: {
+      color: colors.brand.primary,
+    },
+    nlLoadingText: {
+      fontSize: 12 * scale,
+      color: colors.brand.primary,
+      fontWeight: '600',
+      marginLeft: 6,
+    },
 
     // -- 搜索模式内容 --
     searchArea: { flex: 1 },
@@ -1221,6 +1328,20 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 80 },
     emptyText: { fontSize: 16 * scale, color: colors.text.hint },
     emptyHint: { fontSize: 13 * scale, color: colors.text.hint, marginTop: 6 },
+    emptyAiBtn: {
+      marginTop: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 8,
+      backgroundColor: colors.brand.primary + '15',
+      borderWidth: 1,
+      borderColor: colors.brand.primary + '40',
+    },
+    emptyAiBtnText: {
+      fontSize: 14 * scale,
+      color: colors.brand.primary,
+      fontWeight: '600',
+    },
 
     // -- 批量管理工具栏（固定深色，不受主题影响） --
     batchToolbar: {

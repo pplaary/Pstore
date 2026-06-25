@@ -125,21 +125,19 @@ export interface AiParseResult {
 
 // 备注：Phase N AI 自然语言查询功能
 export interface AiQueryResult {
-  data: {
-    answer: string;
-    items: Array<{
-      id: number;
-      name: string;
-      category: string;
-      location: string;
-      description: string;
-      price: number | null;
-      acquired_at: string;
-      warranty_to: string;
-      barcode: string;
-      status: string;
-    }>;
-  };
+  answer: string;
+  items: Array<{
+    id: number;
+    name: string;
+    category: string;
+    location: string;
+    description: string;
+    price: number | null;
+    acquired_at: string;
+    warranty_to: string;
+    barcode: string;
+    status: string;
+  }>;
 }
 
 // ==================== AI API 调用 ====================
@@ -158,4 +156,22 @@ export async function aiParseImage(
   imageDataUrl: string,
 ): Promise<{ data?: AiParseResult; error?: string }> {
   return request(serverUrl, '/api/ai/parse-image', { imageDataUrl }, AI_TIMEOUT);
+}
+
+export async function aiQuery(
+  serverUrl: string,
+  question: string,
+): Promise<{ data?: AiQueryResult; error?: string }> {
+  const result = await request<{ data?: any; error?: string }>(
+    serverUrl,
+    '/api/ai/query',
+    { question },
+    AI_TIMEOUT,
+  );
+  // 归一化：API 可能返回 { data: { data: { answer, items } } }（双重嵌套），
+  // 扁化为 { data: { answer, items } } 以匹配 AiQueryResult 类型
+  if (result.data?.data && typeof result.data.data.answer === 'string') {
+    result.data = result.data.data;
+  }
+  return result;
 }
