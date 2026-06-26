@@ -256,7 +256,7 @@ describe('备份恢复引擎', () => {
       expect(result.source).toBe('none');
     });
 
-    it('数据库损坏 + N1 可用 → 全量拉取恢复', async () => {
+    it('数据库损坏 + N1 可用但备份 API 未实现 → 降级到空库', async () => {
       mockSQLite.openDatabaseAsync
         // 第一次：完整性校验
         .mockResolvedValueOnce({
@@ -279,7 +279,7 @@ describe('备份恢复引擎', () => {
       const result = await performRecovery(true, 'http://192.168.1.100:3141');
 
       expect(result.recovered).toBe(true);
-      expect(result.source).toBe('N1');
+      expect(result.source).toBe('empty');
     });
 
     it('数据库损坏 + N1 不可达 → WebDAV 恢复', async () => {
@@ -377,7 +377,7 @@ describe('备份恢复引擎', () => {
       const result = await performRecovery(true, 'http://192.168.1.100:3141');
 
       expect(result.recovered).toBe(true);
-      expect(result.source).toBe('N1');
+      expect(result.source).toBe('empty');
     });
   });
 });

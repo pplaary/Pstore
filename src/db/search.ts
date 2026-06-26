@@ -33,6 +33,22 @@ export interface SearchOptions {
 // ==================== 辅助函数 ====================
 
 /**
+ * 校验并清洗 limit 参数：必须为正整数且不超过 200。
+ * expo-sqlite 的 LIMIT 不支持参数化绑定（? 占位符），
+ * 因此需白名单校验后拼接，校验失败抛异常以阻断非法输入。
+ */
+function sanitizeLimit(limit: unknown): number {
+  if (typeof limit !== 'number' || !Number.isFinite(limit)) {
+    throw new Error(`search: invalid limit type: ${typeof limit}`);
+  }
+  const n = Math.floor(limit);
+  if (n < 1 || n > 200) {
+    throw new Error(`search: limit must be 1..200, got ${n}`);
+  }
+  return n;
+}
+
+/**
  * 将数据库行映射为 Product 对象。
  */
 function mapRow(row: Record<string, unknown>): Product {
@@ -127,7 +143,7 @@ export async function searchProducts(
                ORDER BY ${orderBy}`;
 
     if (options?.limit !== undefined) {
-      sql += ` LIMIT ${options.limit}`;
+      sql += ` LIMIT ${sanitizeLimit(options.limit)}`;
     }
 
     const rows = await db.getAllAsync<Record<string, unknown>>(sql, ...params as SQLiteBindValue[]);
@@ -155,7 +171,7 @@ export async function searchProducts(
                p.name ASC`;
 
   if (options?.limit !== undefined) {
-    sql += ` LIMIT ${options.limit}`;
+    sql += ` LIMIT ${sanitizeLimit(options.limit)}`;
   }
 
   const rows = await db.getAllAsync<Record<string, unknown>>(
@@ -216,7 +232,7 @@ export async function searchByCategory(
              ORDER BY ${orderBy}`;
 
   if (options?.limit !== undefined) {
-    sql += ` LIMIT ${options.limit}`;
+    sql += ` LIMIT ${sanitizeLimit(options.limit)}`;
   }
 
   const rows = await db.getAllAsync<Record<string, unknown>>(sql, ...params as SQLiteBindValue[]);
@@ -249,7 +265,7 @@ export async function searchByStatus(
              ORDER BY ${orderBy}`;
 
   if (options?.limit !== undefined) {
-    sql += ` LIMIT ${options.limit}`;
+    sql += ` LIMIT ${sanitizeLimit(options.limit)}`;
   }
 
   const rows = await db.getAllAsync<Record<string, unknown>>(sql, ...params as SQLiteBindValue[]);

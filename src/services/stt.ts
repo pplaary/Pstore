@@ -187,14 +187,23 @@ export async function recordAndTranscribe(
     onStatusChange('recording');
     recordingRef = await startRecording();
 
-    // 3. 轮询等待录音完成（maxDuration 到期自动停止）
+    // 3. 轮询等待录音完成（maxDuration 到期自动停止），30s 超时保护
     let durationMillis = 0;
+    const pollStartMs = Date.now();
+    const POLL_TIMEOUT_MS = 30_000;
     while (true) {
       await new Promise<void>((resolve) => setTimeout(resolve, 200));
       const status = await recordingRef.getStatusAsync();
       if (status.isDoneRecording) {
         durationMillis = status.durationMillis ?? 0;
         break;
+      }
+      // 超时保护：maxDuration 设了 15s，30s 仍未 isDoneRecording 视为异常
+      if (Date.now() - pollStartMs > POLL_TIMEOUT_MS) {
+        console.warn('[stt] polling timeout after 30s, force stopping');
+        await recordingRef.stopAndUnloadAsync();
+        recordingRef = null;
+        return null;
       }
     }
 

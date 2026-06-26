@@ -83,12 +83,16 @@ export async function performRecovery(
 
   // 2. 按优先级恢复（不打开数据库）
   // 路径 A：N1 全量拉取恢复
+  // TODO(Phase N): N1 当前仅有 syncProducts 增量同步 API（需要先有本地数据库），
+  // 未见全量数据库备份下载端点（如 GET /api/backup/latest）。
+  // 完整实现需要：
+  //   1. N1 服务端新增全量数据库备份导出端点
+  //   2. 客户端在此路径中调用下载并覆盖本地 DB 文件
+  //   3. 覆盖后由 initDatabase 重新执行 openAndMigrate()
+  // 当前为占位实现：直接降级到 WebDAV 恢复路径。
   if (n1Available && serverUrl) {
-    return {
-      recovered: true,
-      source: 'N1',
-      message: '准备从 N1 同步恢复',
-    };
+    console.log('[recovery] N1 available but full-db-backup API not yet implemented, falling through to WebDAV.');
+    // 不 return，继续尝试 WebDAV 路径
   }
 
   // 路径 B：从 WebDAV 最近备份恢复
