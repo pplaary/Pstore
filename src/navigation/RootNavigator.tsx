@@ -11,8 +11,6 @@
  *   └─ ScanBarcode → 扫码页（推入）
  */
 
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { HomeScreen } from '../screens/HomeScreen';
@@ -25,7 +23,6 @@ import { DuplicateScreen } from '../screens/DuplicateScreen';
 import { ConfigScreen } from '../screens/ConfigScreen';
 import { LooseGoodsManageScreen } from '../screens/LooseGoodsManageScreen';
 import DrawerContent from '../components/DrawerContent';
-import { SyncStatusIcon } from '../components/SyncStatusIcon';
 import type { RootStackParamList } from './types';
 import type { DrawerParamList } from './types';
 

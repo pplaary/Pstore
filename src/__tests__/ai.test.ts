@@ -5,7 +5,7 @@
  * spec-v4.5 §7、§7.4、§14.2
  */
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 // ==================== Mock 模块 ====================
 

@@ -11,7 +11,6 @@
  *   未知  → 灰色  #9E9E9E
  */
 
-import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useAIConfigStore } from '../store/aiConfig';
 

@@ -7,7 +7,7 @@
  * 运行：npx vitest run src/__tests__/stt.test.ts
  */
 
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 // ==================== Mock 模块 ====================
 

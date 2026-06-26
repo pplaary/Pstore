@@ -11,7 +11,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useColorScheme, Dimensions } from 'react-native';
+import { useColorScheme } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 // ─── 持久化 key ────────────────────────────────────────────

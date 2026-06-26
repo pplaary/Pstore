@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useMemo } from 'react';
-import { Alert } from 'react-native';
 import * as SQLite from 'expo-sqlite';
 import type { Product } from '../db/types';
 import { getAllProducts } from '../db/product';

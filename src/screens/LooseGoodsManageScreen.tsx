@@ -17,7 +17,6 @@ import {
   Keyboard,
 } from 'react-native';
 import { useStore } from '../context/store';
-import { useModeStore } from '../store/mode';
 import { getAllLabels, addLabel, updateLabel, deleteLabel, reorderLabels } from '../db/looseGoods';
 import { useTheme } from '../theme/ThemeContext';
 import type { LooseGoodsManageScreenProps } from '../navigation/types';

@@ -9,7 +9,6 @@ import {
   Modal,
 } from 'react-native';
 import { useStore } from '../context/store';
-import { useModeStore } from '../store/mode';
 import { getAllMergeCandidates, mergeProducts, markNotDuplicate } from '../db/duplicate';
 import { useTheme } from '../theme/ThemeContext';
 import type { MergeCandidate } from '../db/types';

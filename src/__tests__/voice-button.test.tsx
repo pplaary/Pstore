@@ -11,7 +11,7 @@
  * 本测试在 node 环境下通过 vi.mock 模拟 react-native 核心模块。
  */
 
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 // ==================== react-native mock ====================
 // VoiceButton 使用 PanResponder、Animated、StyleSheet、Platform 等。

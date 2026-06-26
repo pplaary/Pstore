@@ -227,4 +227,127 @@ describe('N1 API 客户端', () => {
       await expect(N1.getConfig(mockServerUrl)).rejects.toThrow('HTTP 500');
     });
   });
+
+  describe('AI API 调用', () => {
+    describe('aiParse', () => {
+      it('成功返回 data', async () => {
+        const mockData: N1.AiParseResult = {
+          name: '测试物品',
+          category: '电子产品',
+          price: '99.00',
+        };
+        (globalThis.fetch as any).mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ data: mockData }),
+        });
+
+        const result = await N1.aiParse(mockServerUrl, '一个99元的电子产品');
+
+        expect(result.data).toEqual(mockData);
+        expect(result.data?.name).toBe('测试物品');
+        expect(result.data?.category).toBe('电子产品');
+      });
+
+      it('非 200 响应抛出错误', async () => {
+        (globalThis.fetch as any).mockResolvedValueOnce({
+          ok: false,
+          status: 502,
+        });
+
+        await expect(N1.aiParse(mockServerUrl, '测试文本')).rejects.toThrow('HTTP 502');
+      });
+    });
+
+    describe('aiParseImage', () => {
+      it('成功返回 data', async () => {
+        const mockData: N1.AiParseResult = {
+          name: '照片物品',
+          category: '家居',
+          location: '客厅',
+        };
+        (globalThis.fetch as any).mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ data: mockData }),
+        });
+
+        const result = await N1.aiParseImage(mockServerUrl, 'data:image/png;base64,...');
+
+        expect(result.data).toEqual(mockData);
+        expect(result.data?.location).toBe('客厅');
+      });
+
+      it('非 200 响应抛出错误', async () => {
+        (globalThis.fetch as any).mockResolvedValueOnce({
+          ok: false,
+          status: 503,
+        });
+
+        await expect(
+          N1.aiParseImage(mockServerUrl, 'data:image/png;base64,...'),
+        ).rejects.toThrow('HTTP 503');
+      });
+    });
+
+    describe('aiQuery', () => {
+      it('单层 data 直接返回', async () => {
+        const mockData: N1.AiQueryResult = {
+          answer: '您有3件电子产品',
+          items: [],
+        };
+        (globalThis.fetch as any).mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ data: mockData }),
+        });
+
+        const result = await N1.aiQuery(mockServerUrl, '我有多少电子产品');
+
+        expect(result.data).toEqual(mockData);
+        expect(result.data?.answer).toBe('您有3件电子产品');
+      });
+
+      it('双层 data 归一化（验证 answer 字段被扁平化）', async () => {
+        const innerData = {
+          answer: '已为您找到2件商品',
+          items: [
+            {
+              id: 1,
+              name: '沙发',
+              category: '家具',
+              location: '客厅',
+              description: '',
+              price: 2999,
+              acquired_at: '',
+              warranty_to: '',
+              barcode: '',
+              status: 'IN_SHOP',
+            },
+          ],
+        };
+        (globalThis.fetch as any).mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ data: { data: innerData } }),
+        });
+
+        const result = await N1.aiQuery(mockServerUrl, '找一下沙发');
+
+        expect(result.data).toEqual(innerData);
+        expect((result.data as any)?.data).toBeUndefined();
+        expect(result.data?.answer).toBe('已为您找到2件商品');
+        expect(result.data?.items).toHaveLength(1);
+      });
+
+      it('无 data 字段时原样返回', async () => {
+        const rawResponse = { error: '服务暂不可用' };
+        (globalThis.fetch as any).mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(rawResponse),
+        });
+
+        const result = await N1.aiQuery(mockServerUrl, '任意问题');
+
+        expect(result).toEqual(rawResponse);
+        expect((result as any).data).toBeUndefined();
+      });
+    });
+  });
 });
