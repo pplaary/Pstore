@@ -1,0 +1,1173 @@
+> Task :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors
+> Task :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors
+> Task :gradle-plugin:shared:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:shared:compileJava NO-SOURCE
+> Task :gradle-plugin:shared:processResources NO-SOURCE
+> Task :gradle-plugin:shared:classes UP-TO-DATE
+> Task :gradle-plugin:shared:jar UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:jar UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors
+> Task :gradle-plugin:react-native-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:react-native-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:jar UP-TO-DATE
+
+> Configure project :expo
+
+Using expo modules
+  - [32mexpo-asset[0m (11.0.5)
+  - [32mexpo-av[0m (15.0.2)
+  - [32mexpo-camera[0m (16.0.18)
+  - [32mexpo-constants[0m (17.0.8)
+  - [32mexpo-crypto[0m (13.0.2)
+  - [32mexpo-file-system[0m (18.0.12)
+  - [32mexpo-font[0m (13.0.4)
+  - [32mexpo-image-loader[0m (5.0.0)
+  - [32mexpo-image-picker[0m (16.0.6)
+  - [32mexpo-modules-core[0m (2.2.3)
+  - [32mexpo-secure-store[0m (14.0.1)
+  - [32mexpo-sharing[0m (13.0.1)
+  - [32mexpo-sqlite[0m (14.0.6)
+
+
+> Configure project :react-native-reanimated
+Android gradle plugin: 8.6.0
+Gradle: 8.10.2
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:generateAutolinkingPackageList UP-TO-DATE
+> Task :app:generateCodegenSchemaFromJavaScript SKIPPED
+> Task :app:generateCodegenArtifactsFromSchema SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo:generateExpoModulesPackageListTask UP-TO-DATE
+> Task :expo:preBuild UP-TO-DATE
+> Task :expo:preReleaseBuild UP-TO-DATE
+> Task :expo:writeReleaseAarMetadata UP-TO-DATE
+> Task :expo-asset:preBuild UP-TO-DATE
+> Task :expo-asset:preReleaseBuild UP-TO-DATE
+> Task :expo-asset:writeReleaseAarMetadata UP-TO-DATE
+> Task :expo-av:preBuild UP-TO-DATE
+> Task :expo-av:preReleaseBuild UP-TO-DATE
+> Task :expo-av:writeReleaseAarMetadata UP-TO-DATE
+> Task :expo-camera:preBuild UP-TO-DATE
+> Task :expo-camera:preReleaseBuild UP-TO-DATE
+> Task :expo-camera:writeReleaseAarMetadata UP-TO-DATE
+
+> Task :expo-constants:createExpoConfig
+The NODE_ENV environment variable is required but was not specified. Ensure the project is bundled with Expo CLI or NODE_ENV is set.
+Proceeding without mode-specific .env
+
+> Task :expo-constants:preBuild
+> Task :expo-constants:preReleaseBuild
+> Task :expo-constants:writeReleaseAarMetadata UP-TO-DATE
+> Task :expo-crypto:preBuild UP-TO-DATE
+> Task :expo-crypto:preReleaseBuild UP-TO-DATE
+> Task :expo-crypto:writeReleaseAarMetadata UP-TO-DATE
+> Task :expo-file-system:preBuild UP-TO-DATE
+> Task :expo-file-system:preReleaseBuild UP-TO-DATE
+> Task :expo-file-system:writeReleaseAarMetadata UP-TO-DATE
+> Task :expo-font:preBuild UP-TO-DATE
+> Task :expo-font:preReleaseBuild UP-TO-DATE
+> Task :expo-font:writeReleaseAarMetadata UP-TO-DATE
+> Task :expo-image-loader:preBuild UP-TO-DATE
+> Task :expo-image-loader:preReleaseBuild UP-TO-DATE
+> Task :expo-image-loader:writeReleaseAarMetadata UP-TO-DATE
+> Task :expo-image-picker:preBuild UP-TO-DATE
+> Task :expo-image-picker:preReleaseBuild UP-TO-DATE
+> Task :expo-image-picker:writeReleaseAarMetadata UP-TO-DATE
+> Task :expo-modules-core:preBuild UP-TO-DATE
+> Task :expo-modules-core:preReleaseBuild UP-TO-DATE
+> Task :expo-modules-core:writeReleaseAarMetadata UP-TO-DATE
+> Task :expo-secure-store:preBuild UP-TO-DATE
+> Task :expo-secure-store:preReleaseBuild UP-TO-DATE
+> Task :expo-secure-store:writeReleaseAarMetadata UP-TO-DATE
+> Task :expo-sharing:preBuild UP-TO-DATE
+> Task :expo-sharing:preReleaseBuild UP-TO-DATE
+> Task :expo-sharing:writeReleaseAarMetadata UP-TO-DATE
+> Task :expo-sqlite:preBuild UP-TO-DATE
+> Task :expo-sqlite:preReleaseBuild UP-TO-DATE
+> Task :expo-sqlite:writeReleaseAarMetadata UP-TO-DATE
+> Task :react-native-gesture-handler:preBuild UP-TO-DATE
+> Task :react-native-gesture-handler:preReleaseBuild UP-TO-DATE
+> Task :react-native-gesture-handler:writeReleaseAarMetadata UP-TO-DATE
+> Task :react-native-reanimated:assertLatestReactNativeWithNewArchitectureTask SKIPPED
+> Task :react-native-reanimated:assertMinimalReactNativeVersionTask SKIPPED
+> Task :react-native-reanimated:prepareReanimatedHeadersForPrefabs UP-TO-DATE
+> Task :react-native-reanimated:prepareWorkletsHeadersForPrefabs UP-TO-DATE
+> Task :react-native-reanimated:preBuild UP-TO-DATE
+> Task :react-native-reanimated:preReleaseBuild UP-TO-DATE
+> Task :react-native-reanimated:writeReleaseAarMetadata UP-TO-DATE
+> Task :react-native-safe-area-context:preBuild UP-TO-DATE
+> Task :react-native-safe-area-context:preReleaseBuild UP-TO-DATE
+> Task :react-native-safe-area-context:writeReleaseAarMetadata UP-TO-DATE
+> Task :react-native-screens:preBuild UP-TO-DATE
+> Task :react-native-screens:preReleaseBuild UP-TO-DATE
+> Task :react-native-screens:writeReleaseAarMetadata UP-TO-DATE
+> Task :app:checkReleaseAarMetadata UP-TO-DATE
+
+> Task :app:createBundleReleaseJsAndAssets
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Android Bundled 17696ms index.ts (1238 modules)
+Writing bundle output to: android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle
+Writing sourcemap output to: android\app\build\intermediates\sourcemaps\react\release\index.android.bundle.packager.map
+Copying 42 asset files
+Done writing bundle output
+Done writing sourcemap output
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:3974:16: warning: the variable "SharedArrayBuffer" was not declared in function "from"
+    if (typeof SharedArrayBuffer !== 'undefined' && (isInstance(value, Shared...
+               ^~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:7862:23: warning: the variable "DebuggerInternal" was not declared in function "__shouldPauseOnThrow"
+        return typeof DebuggerInternal !== 'undefined' && DebuggerInternal.sh...
+                      ^~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:18217:7: warning: the variable "setTimeout" was not declared in function "logCapturedError"
+      setTimeout(function () {
+      ^~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:16451:31: warning: the variable "nativeFabricUIManager" was not declared in anonymous function " 391#"
+  var _nativeFabricUIManage = nativeFabricUIManager,
+                              ^~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:16479:21: warning: the variable "clearTimeout" was not declared in anonymous function " 391#"
+    cancelTimeout = clearTimeout;
+                    ^~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:16492:51: warning: the variable "RN$enableMicrotasksInReact" was not declared in anonymous function " 391#"
+... "undefined" !== typeof RN$enableMicrotasksInReact && !!RN$enableMicrotask...
+                           ^~~~~~~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:16493:47: warning: the variable "queueMicrotask" was not declared in anonymous function " 391#"
+...otask = "function" === typeof queueMicrotask ? queueMicrotask : scheduleTi...
+                                 ^~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:20914:30: warning: the variable "__REACT_DEVTOOLS_GLOBAL_HOOK__" was not declared in anonymous function " 391#"
+  if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
+                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:22348:5: warning: the variable "setImmediate" was not declared in function "handleResolved"
+    setImmediate(function () {
+    ^~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:25611:5: warning: the variable "fetch" was not declared in anonymous function " 614#"
+    fetch,
+    ^~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:25612:5: warning: the variable "Headers" was not declared in anonymous function " 614#"
+    Headers,
+    ^~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:25613:5: warning: the variable "Request" was not declared in anonymous function " 614#"
+    Request,
+    ^~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:25614:5: warning: the variable "Response" was not declared in anonymous function " 614#"
+    Response
+    ^~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:25771:24: warning: the variable "FileReader" was not declared in function "readBlobAsArrayBuffer"
+      var reader = new FileReader();
+                       ^~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:25826:44: warning: the variable "URLSearchParams" was not declared in anonymous function " 625#"
+...e if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body...
+                                 ^~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:25945:26: warning: the variable "AbortController" was not declared in anonymous function " 631#"
+          var ctrl = new AbortController();
+                         ^~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:26079:23: warning: the variable "XMLHttpRequest" was not declared in anonymous function " 635#"
+        var xhr = new XMLHttpRequest();
+                      ^~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:25624:71: warning: the variable "self" was not declared in anonymous function " 617#"
+...undefined' && globalThis || typeof self !== 'undefined' && self ||
+                                      ^~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:28466:26: warning: the variable "navigator" was not declared in anonymous function " 794#"
+  "undefined" !== typeof navigator && undefined !== navigator.scheduling && u...
+                         ^~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:28576:37: warning: the variable "MessageChannel" was not declared in anonymous function " 794#"
+  };else if ("undefined" !== typeof MessageChannel) {
+                                    ^~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:28591:34: warning: the variable "nativeRuntimeScheduler" was not declared in anonymous function " 794#"
+... = "undefined" !== typeof nativeRuntimeScheduler ? nativeRuntimeScheduler....
+                             ^~~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:38440:34: warning: the variable "requestAnimationFrame" was not declared in function "start 9#"
+...    this._animationFrame = requestAnimationFrame(this.onUpdate.bind(this));
+                              ^~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:55558:38: warning: the variable "document" was not declared in anonymous function " 1754#"
+...r useClientLayoutEffect = typeof document !== 'undefined' || typeof naviga...
+                                    ^~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:61480:9: warning: the variable "REACT_NAVIGATION_DEVTOOLS" was not declared in anonymous arrow function " 2115#"
+        REACT_NAVIGATION_DEVTOOLS.set(refContainer.current, {
+        ^~~~~~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:68759:7: warning: the property "euro" was set multiple times in the object definition.
+      euro: "â‚?",
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:68757:7: note: The first definition was here.
+      euro: "â‚?",
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:88117:16: warning: the variable "requestIdleCallback" was not declared in anonymous arrow function " 2994#"
+      var id = requestIdleCallback(() => {
+               ^~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:88120:20: warning: the variable "cancelIdleCallback" was not declared in anonymous arrow function " 2996#"
+      return () => cancelIdleCallback(id);
+                   ^~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:93552:11: warning: the variable "_WORKLET" was not declared in function "assertEasingIsWorklet"
+      if (_WORKLET) {
+          ^~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:95335:94: warning: the variable "location" was not declared in function "registerSensor 1#"
+...(0, _PlatformChecker.isWeb)() && location.protocol !== 'https:' ? ' Make s...
+                                    ^~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:95797:12: warning: the variable "__reanimatedLoggerConfig" was not declared in function "replaceLoggerImplementation"
+        ...__reanimatedLoggerConfig,
+           ^~~~~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:96398:26: warning: Direct call to eval(), but lexical scope is not supported.
+            workletFun = eval('(' + initData.code + '\n)');
+                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:96421:112: warning: the variable "_toString" was not declared in function "valueUnpacker"
+...recognized by value unpacker: "${_toString(objectToUnpack)}".`);
+                                    ^~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:113391:26: warning: the variable "structuredClone" was not declared in function "createAnimationWithInitialValues"
+    var animationStyle = structuredClone(_config.AnimationsData[animationName...
+                         ^~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:113806:27: warning: the variable "HTMLElement" was not declared in function "findDescendantWithExitingAnimation"
+    if (!(node instanceof HTMLElement)) {
+                          ^~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:113832:24: warning: the variable "MutationObserver" was not declared in function "addHTMLMutationObserver"
+    var observer = new MutationObserver(mutationsList => {
+                       ^~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:113877:41: warning: the variable "getComputedStyle" was not declared in function "fixElementPosition"
+...entBorderTopValue = parseInt(getComputedStyle(parent).borderTopWidth);
+                                ^~~~~~~~~~~~~~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:117849:5: warning: the variable "jest" was not declared in arrow function "beforeTest"
+    jest.useFakeTimers();
+    ^~~~
+android\app\build\generated\assets\createBundleReleaseJsAndAssets\index.android.bundle:118425:26: warning: the variable "_getAnimationTimestamp" was not declared in function "computeEasingProgress"
+      var elapsedTime = (_getAnimationTimestamp() - startingTimestamp) / 1000;
+                         ^~~~~~~~~~~~~~~~~~~~~~
+
+> Task :app:generateReleaseResValues UP-TO-DATE
+> Task :expo:generateReleaseResValues UP-TO-DATE
+> Task :expo:generateReleaseResources UP-TO-DATE
+> Task :expo:packageReleaseResources UP-TO-DATE
+> Task :expo-asset:generateReleaseResValues UP-TO-DATE
+> Task :expo-asset:generateReleaseResources UP-TO-DATE
+> Task :expo-asset:packageReleaseResources UP-TO-DATE
+> Task :expo-av:generateReleaseResValues UP-TO-DATE
+> Task :expo-av:generateReleaseResources UP-TO-DATE
+> Task :expo-av:packageReleaseResources UP-TO-DATE
+> Task :expo-camera:generateReleaseResValues UP-TO-DATE
+> Task :expo-camera:generateReleaseResources UP-TO-DATE
+> Task :expo-camera:packageReleaseResources UP-TO-DATE
+> Task :expo-constants:generateReleaseResValues UP-TO-DATE
+> Task :expo-constants:generateReleaseResources UP-TO-DATE
+> Task :expo-constants:packageReleaseResources UP-TO-DATE
+> Task :expo-crypto:generateReleaseResValues UP-TO-DATE
+> Task :expo-crypto:generateReleaseResources UP-TO-DATE
+> Task :expo-crypto:packageReleaseResources UP-TO-DATE
+> Task :expo-file-system:generateReleaseResValues UP-TO-DATE
+> Task :expo-file-system:generateReleaseResources UP-TO-DATE
+> Task :expo-file-system:packageReleaseResources UP-TO-DATE
+> Task :expo-font:generateReleaseResValues UP-TO-DATE
+> Task :expo-font:generateReleaseResources UP-TO-DATE
+> Task :expo-font:packageReleaseResources UP-TO-DATE
+> Task :expo-image-loader:generateReleaseResValues UP-TO-DATE
+> Task :expo-image-loader:generateReleaseResources UP-TO-DATE
+> Task :expo-image-loader:packageReleaseResources UP-TO-DATE
+> Task :expo-image-picker:generateReleaseResValues UP-TO-DATE
+> Task :expo-image-picker:generateReleaseResources UP-TO-DATE
+> Task :expo-image-picker:packageReleaseResources UP-TO-DATE
+> Task :expo-modules-core:generateReleaseResValues UP-TO-DATE
+> Task :expo-modules-core:generateReleaseResources UP-TO-DATE
+> Task :expo-modules-core:packageReleaseResources UP-TO-DATE
+> Task :expo-secure-store:generateReleaseResValues UP-TO-DATE
+> Task :expo-secure-store:generateReleaseResources UP-TO-DATE
+> Task :expo-secure-store:packageReleaseResources UP-TO-DATE
+> Task :expo-sharing:generateReleaseResValues UP-TO-DATE
+> Task :expo-sharing:generateReleaseResources UP-TO-DATE
+> Task :expo-sharing:packageReleaseResources UP-TO-DATE
+> Task :expo-sqlite:generateReleaseResValues UP-TO-DATE
+> Task :expo-sqlite:generateReleaseResources UP-TO-DATE
+> Task :expo-sqlite:packageReleaseResources UP-TO-DATE
+> Task :react-native-gesture-handler:generateReleaseResValues UP-TO-DATE
+> Task :react-native-gesture-handler:generateReleaseResources UP-TO-DATE
+> Task :react-native-gesture-handler:packageReleaseResources UP-TO-DATE
+> Task :react-native-reanimated:generateReleaseResValues UP-TO-DATE
+> Task :react-native-reanimated:generateReleaseResources UP-TO-DATE
+> Task :react-native-reanimated:packageReleaseResources UP-TO-DATE
+> Task :react-native-safe-area-context:generateReleaseResValues UP-TO-DATE
+> Task :react-native-safe-area-context:generateReleaseResources UP-TO-DATE
+> Task :react-native-safe-area-context:packageReleaseResources UP-TO-DATE
+> Task :react-native-screens:generateReleaseResValues UP-TO-DATE
+> Task :react-native-screens:generateReleaseResources UP-TO-DATE
+> Task :react-native-screens:packageReleaseResources UP-TO-DATE
+> Task :app:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :app:generateReleaseResources UP-TO-DATE
+> Task :app:mergeReleaseResources UP-TO-DATE
+> Task :app:packageReleaseResources UP-TO-DATE
+> Task :app:parseReleaseLocalResources UP-TO-DATE
+> Task :app:createReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksRelease UP-TO-DATE
+> Task :expo:extractDeepLinksRelease UP-TO-DATE
+> Task :expo:processReleaseManifest UP-TO-DATE
+> Task :expo-asset:extractDeepLinksRelease UP-TO-DATE
+> Task :expo-asset:processReleaseManifest UP-TO-DATE
+> Task :expo-av:extractDeepLinksRelease UP-TO-DATE
+> Task :expo-av:processReleaseManifest UP-TO-DATE
+> Task :expo-camera:extractDeepLinksRelease UP-TO-DATE
+> Task :expo-camera:processReleaseManifest UP-TO-DATE
+> Task :expo-constants:extractDeepLinksRelease UP-TO-DATE
+> Task :expo-constants:processReleaseManifest UP-TO-DATE
+> Task :expo-crypto:extractDeepLinksRelease UP-TO-DATE
+> Task :expo-crypto:processReleaseManifest UP-TO-DATE
+> Task :expo-file-system:extractDeepLinksRelease UP-TO-DATE
+> Task :expo-file-system:processReleaseManifest UP-TO-DATE
+> Task :expo-font:extractDeepLinksRelease UP-TO-DATE
+> Task :expo-font:processReleaseManifest UP-TO-DATE
+> Task :expo-image-loader:extractDeepLinksRelease UP-TO-DATE
+> Task :expo-image-loader:processReleaseManifest UP-TO-DATE
+> Task :expo-image-picker:extractDeepLinksRelease UP-TO-DATE
+> Task :expo-image-picker:processReleaseManifest UP-TO-DATE
+> Task :expo-modules-core:extractDeepLinksRelease UP-TO-DATE
+> Task :expo-modules-core:processReleaseManifest UP-TO-DATE
+> Task :expo-secure-store:extractDeepLinksRelease UP-TO-DATE
+> Task :expo-secure-store:processReleaseManifest UP-TO-DATE
+> Task :expo-sharing:extractDeepLinksRelease UP-TO-DATE
+> Task :expo-sharing:processReleaseManifest UP-TO-DATE
+> Task :expo-sqlite:extractDeepLinksRelease UP-TO-DATE
+> Task :expo-sqlite:processReleaseManifest UP-TO-DATE
+> Task :react-native-gesture-handler:extractDeepLinksRelease UP-TO-DATE
+> Task :react-native-gesture-handler:processReleaseManifest UP-TO-DATE
+> Task :react-native-reanimated:extractDeepLinksRelease UP-TO-DATE
+> Task :react-native-reanimated:processReleaseManifest UP-TO-DATE
+> Task :react-native-safe-area-context:extractDeepLinksRelease UP-TO-DATE
+> Task :react-native-safe-area-context:processReleaseManifest UP-TO-DATE
+> Task :react-native-screens:extractDeepLinksRelease UP-TO-DATE
+> Task :react-native-screens:processReleaseManifest UP-TO-DATE
+> Task :app:processReleaseMainManifest UP-TO-DATE
+> Task :app:processReleaseManifest UP-TO-DATE
+> Task :app:processReleaseManifestForPackage UP-TO-DATE
+> Task :expo:compileReleaseLibraryResources UP-TO-DATE
+> Task :expo:parseReleaseLocalResources UP-TO-DATE
+> Task :expo:generateReleaseRFile UP-TO-DATE
+> Task :expo-asset:compileReleaseLibraryResources UP-TO-DATE
+> Task :expo-asset:parseReleaseLocalResources UP-TO-DATE
+> Task :expo-asset:generateReleaseRFile UP-TO-DATE
+> Task :expo-av:compileReleaseLibraryResources UP-TO-DATE
+> Task :expo-av:parseReleaseLocalResources UP-TO-DATE
+> Task :expo-av:generateReleaseRFile UP-TO-DATE
+> Task :expo-camera:compileReleaseLibraryResources UP-TO-DATE
+> Task :expo-camera:parseReleaseLocalResources UP-TO-DATE
+> Task :expo-camera:generateReleaseRFile UP-TO-DATE
+> Task :expo-constants:compileReleaseLibraryResources UP-TO-DATE
+> Task :expo-constants:parseReleaseLocalResources UP-TO-DATE
+> Task :expo-constants:generateReleaseRFile UP-TO-DATE
+> Task :expo-crypto:compileReleaseLibraryResources UP-TO-DATE
+> Task :expo-crypto:parseReleaseLocalResources UP-TO-DATE
+> Task :expo-crypto:generateReleaseRFile UP-TO-DATE
+> Task :expo-file-system:compileReleaseLibraryResources UP-TO-DATE
+> Task :expo-file-system:parseReleaseLocalResources UP-TO-DATE
+> Task :expo-file-system:generateReleaseRFile UP-TO-DATE
+> Task :expo-font:compileReleaseLibraryResources UP-TO-DATE
+> Task :expo-font:parseReleaseLocalResources UP-TO-DATE
+> Task :expo-font:generateReleaseRFile UP-TO-DATE
+> Task :expo-image-loader:compileReleaseLibraryResources UP-TO-DATE
+> Task :expo-image-loader:parseReleaseLocalResources UP-TO-DATE
+> Task :expo-image-loader:generateReleaseRFile UP-TO-DATE
+> Task :expo-image-picker:compileReleaseLibraryResources UP-TO-DATE
+> Task :expo-image-picker:parseReleaseLocalResources UP-TO-DATE
+> Task :expo-image-picker:generateReleaseRFile UP-TO-DATE
+> Task :expo-modules-core:compileReleaseLibraryResources UP-TO-DATE
+> Task :expo-modules-core:parseReleaseLocalResources UP-TO-DATE
+> Task :expo-modules-core:generateReleaseRFile UP-TO-DATE
+> Task :expo-secure-store:compileReleaseLibraryResources UP-TO-DATE
+> Task :expo-secure-store:parseReleaseLocalResources UP-TO-DATE
+> Task :expo-secure-store:generateReleaseRFile UP-TO-DATE
+> Task :expo-sharing:compileReleaseLibraryResources UP-TO-DATE
+> Task :expo-sharing:parseReleaseLocalResources UP-TO-DATE
+> Task :expo-sharing:generateReleaseRFile UP-TO-DATE
+> Task :expo-sqlite:compileReleaseLibraryResources UP-TO-DATE
+> Task :expo-sqlite:parseReleaseLocalResources UP-TO-DATE
+> Task :expo-sqlite:generateReleaseRFile UP-TO-DATE
+> Task :react-native-gesture-handler:compileReleaseLibraryResources UP-TO-DATE
+> Task :react-native-gesture-handler:parseReleaseLocalResources UP-TO-DATE
+> Task :react-native-gesture-handler:generateReleaseRFile UP-TO-DATE
+> Task :react-native-reanimated:compileReleaseLibraryResources UP-TO-DATE
+> Task :react-native-reanimated:parseReleaseLocalResources UP-TO-DATE
+> Task :react-native-reanimated:generateReleaseRFile UP-TO-DATE
+> Task :react-native-safe-area-context:compileReleaseLibraryResources UP-TO-DATE
+> Task :react-native-safe-area-context:parseReleaseLocalResources UP-TO-DATE
+> Task :react-native-safe-area-context:generateReleaseRFile UP-TO-DATE
+> Task :react-native-screens:compileReleaseLibraryResources UP-TO-DATE
+> Task :react-native-screens:parseReleaseLocalResources UP-TO-DATE
+> Task :react-native-screens:generateReleaseRFile UP-TO-DATE
+> Task :app:processReleaseResources UP-TO-DATE
+> Task :expo:checkKotlinGradlePluginConfigurationErrors
+> Task :expo:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo-asset:checkKotlinGradlePluginConfigurationErrors
+> Task :expo-asset:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo-modules-core:checkKotlinGradlePluginConfigurationErrors
+> Task :expo-modules-core:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo-modules-core:compileReleaseKotlin UP-TO-DATE
+> Task :expo-modules-core:javaPreCompileRelease UP-TO-DATE
+> Task :expo-modules-core:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :expo-modules-core:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :expo-asset:compileReleaseKotlin UP-TO-DATE
+> Task :expo-asset:javaPreCompileRelease UP-TO-DATE
+> Task :expo-asset:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :expo-asset:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :expo-av:checkKotlinGradlePluginConfigurationErrors
+> Task :expo-av:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo-av:compileReleaseKotlin UP-TO-DATE
+> Task :expo-av:javaPreCompileRelease UP-TO-DATE
+> Task :expo-av:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :expo-av:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :expo-camera:checkKotlinGradlePluginConfigurationErrors
+> Task :expo-camera:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo-camera:compileReleaseKotlin UP-TO-DATE
+> Task :expo-camera:javaPreCompileRelease UP-TO-DATE
+> Task :expo-camera:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :expo-camera:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :expo-constants:checkKotlinGradlePluginConfigurationErrors
+> Task :expo-constants:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo-constants:compileReleaseKotlin UP-TO-DATE
+> Task :expo-constants:javaPreCompileRelease UP-TO-DATE
+> Task :expo-constants:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :expo-constants:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :expo-crypto:checkKotlinGradlePluginConfigurationErrors
+> Task :expo-crypto:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo-crypto:compileReleaseKotlin UP-TO-DATE
+> Task :expo-crypto:javaPreCompileRelease UP-TO-DATE
+> Task :expo-crypto:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :expo-crypto:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :expo-file-system:checkKotlinGradlePluginConfigurationErrors
+> Task :expo-file-system:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo-file-system:compileReleaseKotlin UP-TO-DATE
+> Task :expo-file-system:javaPreCompileRelease UP-TO-DATE
+> Task :expo-file-system:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :expo-file-system:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :expo-font:checkKotlinGradlePluginConfigurationErrors
+> Task :expo-font:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo-font:compileReleaseKotlin UP-TO-DATE
+> Task :expo-font:javaPreCompileRelease UP-TO-DATE
+> Task :expo-font:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :expo-font:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :expo-image-loader:checkKotlinGradlePluginConfigurationErrors
+> Task :expo-image-loader:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo-image-loader:compileReleaseKotlin UP-TO-DATE
+> Task :expo-image-loader:javaPreCompileRelease UP-TO-DATE
+> Task :expo-image-loader:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :expo-image-loader:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :expo-image-picker:checkKotlinGradlePluginConfigurationErrors
+> Task :expo-image-picker:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo-image-picker:compileReleaseKotlin UP-TO-DATE
+> Task :expo-image-picker:javaPreCompileRelease UP-TO-DATE
+> Task :expo-image-picker:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :expo-image-picker:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :expo-secure-store:checkKotlinGradlePluginConfigurationErrors
+> Task :expo-secure-store:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo-secure-store:compileReleaseKotlin UP-TO-DATE
+> Task :expo-secure-store:javaPreCompileRelease UP-TO-DATE
+> Task :expo-secure-store:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :expo-secure-store:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :expo-sharing:checkKotlinGradlePluginConfigurationErrors
+> Task :expo-sharing:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo-sharing:compileReleaseKotlin UP-TO-DATE
+> Task :expo-sharing:javaPreCompileRelease UP-TO-DATE
+> Task :expo-sharing:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :expo-sharing:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :expo-sqlite:checkKotlinGradlePluginConfigurationErrors
+> Task :expo-sqlite:generateReleaseBuildConfig UP-TO-DATE
+> Task :expo-sqlite:compileReleaseKotlin UP-TO-DATE
+> Task :expo-sqlite:javaPreCompileRelease UP-TO-DATE
+> Task :expo-sqlite:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :expo-sqlite:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :expo:compileReleaseKotlin UP-TO-DATE
+> Task :expo:javaPreCompileRelease UP-TO-DATE
+> Task :expo:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :expo:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :react-native-gesture-handler:checkKotlinGradlePluginConfigurationErrors
+> Task :react-native-gesture-handler:generateReleaseBuildConfig UP-TO-DATE
+> Task :react-native-reanimated:generateReleaseBuildConfig UP-TO-DATE
+> Task :react-native-reanimated:javaPreCompileRelease UP-TO-DATE
+> Task :react-native-reanimated:packageNdkLibs NO-SOURCE
+> Task :react-native-reanimated:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :react-native-reanimated:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :react-native-gesture-handler:compileReleaseKotlin UP-TO-DATE
+> Task :react-native-gesture-handler:javaPreCompileRelease UP-TO-DATE
+> Task :react-native-gesture-handler:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :react-native-gesture-handler:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :react-native-safe-area-context:checkKotlinGradlePluginConfigurationErrors
+> Task :react-native-safe-area-context:generateReleaseBuildConfig UP-TO-DATE
+> Task :react-native-safe-area-context:compileReleaseKotlin UP-TO-DATE
+> Task :react-native-safe-area-context:javaPreCompileRelease UP-TO-DATE
+> Task :react-native-safe-area-context:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :react-native-safe-area-context:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :react-native-screens:checkKotlinGradlePluginConfigurationErrors
+> Task :react-native-screens:generateReleaseBuildConfig UP-TO-DATE
+> Task :react-native-screens:compileReleaseKotlin UP-TO-DATE
+> Task :react-native-screens:javaPreCompileRelease UP-TO-DATE
+> Task :react-native-screens:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :react-native-screens:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :app:compileReleaseKotlin UP-TO-DATE
+> Task :app:buildKotlinToolingMetadata UP-TO-DATE
+> Task :app:javaPreCompileRelease UP-TO-DATE
+> Task :app:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :expo:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :expo:processReleaseJavaRes UP-TO-DATE
+> Task :expo:createFullJarRelease UP-TO-DATE
+> Task :expo:extractProguardFiles UP-TO-DATE
+> Task :expo-asset:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :expo-asset:processReleaseJavaRes UP-TO-DATE
+> Task :expo-asset:createFullJarRelease UP-TO-DATE
+> Task :expo-asset:extractProguardFiles UP-TO-DATE
+> Task :expo-modules-core:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :expo-modules-core:processReleaseJavaRes UP-TO-DATE
+> Task :expo-modules-core:createFullJarRelease UP-TO-DATE
+> Task :expo-modules-core:extractProguardFiles UP-TO-DATE
+> Task :expo-modules-core:generateReleaseLintModel UP-TO-DATE
+> Task :expo-modules-core:prepareLintJarForPublish UP-TO-DATE
+> Task :expo-asset:generateReleaseLintModel UP-TO-DATE
+> Task :expo-asset:prepareLintJarForPublish UP-TO-DATE
+> Task :expo-av:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :expo-av:processReleaseJavaRes UP-TO-DATE
+> Task :expo-av:createFullJarRelease UP-TO-DATE
+> Task :expo-av:extractProguardFiles UP-TO-DATE
+> Task :expo-av:generateReleaseLintModel UP-TO-DATE
+> Task :expo-av:prepareLintJarForPublish UP-TO-DATE
+> Task :expo-camera:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :expo-camera:processReleaseJavaRes UP-TO-DATE
+> Task :expo-camera:createFullJarRelease UP-TO-DATE
+> Task :expo-camera:extractProguardFiles UP-TO-DATE
+> Task :expo-camera:generateReleaseLintModel UP-TO-DATE
+> Task :expo-camera:prepareLintJarForPublish UP-TO-DATE
+> Task :expo-constants:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :expo-constants:processReleaseJavaRes UP-TO-DATE
+> Task :expo-constants:createFullJarRelease UP-TO-DATE
+> Task :expo-constants:extractProguardFiles UP-TO-DATE
+> Task :expo-constants:generateReleaseLintModel UP-TO-DATE
+> Task :expo-constants:prepareLintJarForPublish UP-TO-DATE
+> Task :expo-crypto:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :expo-crypto:processReleaseJavaRes UP-TO-DATE
+> Task :expo-crypto:createFullJarRelease UP-TO-DATE
+> Task :expo-crypto:extractProguardFiles UP-TO-DATE
+> Task :expo-crypto:generateReleaseLintModel UP-TO-DATE
+> Task :expo-crypto:prepareLintJarForPublish UP-TO-DATE
+> Task :expo-file-system:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :expo-file-system:processReleaseJavaRes UP-TO-DATE
+> Task :expo-file-system:createFullJarRelease UP-TO-DATE
+> Task :expo-file-system:extractProguardFiles UP-TO-DATE
+> Task :expo-file-system:generateReleaseLintModel UP-TO-DATE
+> Task :expo-file-system:prepareLintJarForPublish UP-TO-DATE
+> Task :expo-font:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :expo-font:processReleaseJavaRes UP-TO-DATE
+> Task :expo-font:createFullJarRelease UP-TO-DATE
+> Task :expo-font:extractProguardFiles UP-TO-DATE
+> Task :expo-font:generateReleaseLintModel UP-TO-DATE
+> Task :expo-font:prepareLintJarForPublish UP-TO-DATE
+> Task :expo-image-loader:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :expo-image-loader:processReleaseJavaRes UP-TO-DATE
+> Task :expo-image-loader:createFullJarRelease UP-TO-DATE
+> Task :expo-image-loader:extractProguardFiles UP-TO-DATE
+> Task :expo-image-loader:generateReleaseLintModel UP-TO-DATE
+> Task :expo-image-loader:prepareLintJarForPublish UP-TO-DATE
+> Task :expo-image-picker:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :expo-image-picker:processReleaseJavaRes UP-TO-DATE
+> Task :expo-image-picker:createFullJarRelease UP-TO-DATE
+> Task :expo-image-picker:extractProguardFiles UP-TO-DATE
+> Task :expo-image-picker:generateReleaseLintModel UP-TO-DATE
+> Task :expo-image-picker:prepareLintJarForPublish UP-TO-DATE
+> Task :expo-secure-store:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :expo-secure-store:processReleaseJavaRes UP-TO-DATE
+> Task :expo-secure-store:createFullJarRelease UP-TO-DATE
+> Task :expo-secure-store:extractProguardFiles UP-TO-DATE
+> Task :expo-secure-store:generateReleaseLintModel UP-TO-DATE
+> Task :expo-secure-store:prepareLintJarForPublish UP-TO-DATE
+> Task :expo-sharing:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :expo-sharing:processReleaseJavaRes UP-TO-DATE
+> Task :expo-sharing:createFullJarRelease UP-TO-DATE
+> Task :expo-sharing:extractProguardFiles UP-TO-DATE
+> Task :expo-sharing:generateReleaseLintModel UP-TO-DATE
+> Task :expo-sharing:prepareLintJarForPublish UP-TO-DATE
+> Task :expo-sqlite:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :expo-sqlite:processReleaseJavaRes UP-TO-DATE
+> Task :expo-sqlite:createFullJarRelease UP-TO-DATE
+> Task :expo-sqlite:extractProguardFiles UP-TO-DATE
+> Task :expo-sqlite:generateReleaseLintModel UP-TO-DATE
+> Task :expo-sqlite:prepareLintJarForPublish UP-TO-DATE
+> Task :expo:generateReleaseLintModel UP-TO-DATE
+> Task :expo:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-gesture-handler:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :react-native-gesture-handler:processReleaseJavaRes UP-TO-DATE
+> Task :react-native-gesture-handler:createFullJarRelease UP-TO-DATE
+> Task :react-native-gesture-handler:extractProguardFiles UP-TO-DATE
+> Task :react-native-reanimated:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :react-native-reanimated:processReleaseJavaRes NO-SOURCE
+> Task :react-native-reanimated:createFullJarRelease UP-TO-DATE
+> Task :react-native-reanimated:extractProguardFiles UP-TO-DATE
+> Task :react-native-reanimated:generateReleaseLintModel UP-TO-DATE
+> Task :react-native-reanimated:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-gesture-handler:generateReleaseLintModel UP-TO-DATE
+> Task :react-native-gesture-handler:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-safe-area-context:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :react-native-safe-area-context:processReleaseJavaRes UP-TO-DATE
+> Task :react-native-safe-area-context:createFullJarRelease UP-TO-DATE
+> Task :react-native-safe-area-context:extractProguardFiles UP-TO-DATE
+> Task :react-native-safe-area-context:generateReleaseLintModel UP-TO-DATE
+> Task :react-native-safe-area-context:prepareLintJarForPublish UP-TO-DATE
+> Task :react-native-screens:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :react-native-screens:processReleaseJavaRes UP-TO-DATE
+> Task :react-native-screens:createFullJarRelease UP-TO-DATE
+> Task :react-native-screens:extractProguardFiles UP-TO-DATE
+> Task :react-native-screens:generateReleaseLintModel UP-TO-DATE
+> Task :react-native-screens:prepareLintJarForPublish UP-TO-DATE
+> Task :app:generateReleaseLintVitalReportModel UP-TO-DATE
+> Task :expo:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :expo:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :expo:extractReleaseAnnotations UP-TO-DATE
+> Task :expo:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :expo:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :expo:mergeReleaseShaders UP-TO-DATE
+> Task :expo:compileReleaseShaders NO-SOURCE
+> Task :expo:generateReleaseAssets UP-TO-DATE
+> Task :expo:packageReleaseAssets UP-TO-DATE
+> Task :expo:prepareReleaseArtProfile UP-TO-DATE
+> Task :expo:mergeReleaseJavaResource UP-TO-DATE
+> Task :expo:syncReleaseLibJars UP-TO-DATE
+> Task :expo:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :react-native-gesture-handler:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :react-native-gesture-handler:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-gesture-handler:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-gesture-handler:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :react-native-gesture-handler:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-gesture-handler:extractReleaseAnnotations UP-TO-DATE
+> Task :react-native-gesture-handler:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-gesture-handler:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :react-native-gesture-handler:mergeReleaseShaders UP-TO-DATE
+> Task :react-native-gesture-handler:compileReleaseShaders NO-SOURCE
+> Task :react-native-gesture-handler:generateReleaseAssets UP-TO-DATE
+> Task :react-native-gesture-handler:packageReleaseAssets UP-TO-DATE
+> Task :react-native-gesture-handler:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-gesture-handler:mergeReleaseJavaResource UP-TO-DATE
+> Task :react-native-gesture-handler:syncReleaseLibJars UP-TO-DATE
+> Task :react-native-gesture-handler:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :react-native-safe-area-context:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :react-native-safe-area-context:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-safe-area-context:stripReleaseDebugSymbols NO-SOURCE
+> Task :react-native-safe-area-context:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :react-native-safe-area-context:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-safe-area-context:extractReleaseAnnotations UP-TO-DATE
+> Task :react-native-safe-area-context:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-safe-area-context:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :react-native-safe-area-context:mergeReleaseShaders UP-TO-DATE
+> Task :react-native-safe-area-context:compileReleaseShaders NO-SOURCE
+> Task :react-native-safe-area-context:generateReleaseAssets UP-TO-DATE
+> Task :react-native-safe-area-context:packageReleaseAssets UP-TO-DATE
+> Task :react-native-safe-area-context:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-safe-area-context:mergeReleaseJavaResource UP-TO-DATE
+> Task :react-native-safe-area-context:syncReleaseLibJars UP-TO-DATE
+> Task :react-native-safe-area-context:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :react-native-screens:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-screens:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-screens:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-screens:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-screens:configureCMakeRelWithDebInfo[x86]
+> Task :react-native-screens:buildCMakeRelWithDebInfo[x86]
+> Task :react-native-screens:configureCMakeRelWithDebInfo[x86_64]
+> Task :react-native-screens:buildCMakeRelWithDebInfo[x86_64]
+> Task :react-native-screens:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :react-native-screens:mergeReleaseNativeLibs UP-TO-DATE
+> Task :react-native-screens:stripReleaseDebugSymbols UP-TO-DATE
+> Task :react-native-screens:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :react-native-screens:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-screens:extractReleaseAnnotations UP-TO-DATE
+> Task :react-native-screens:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-screens:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :react-native-screens:mergeReleaseShaders UP-TO-DATE
+> Task :react-native-screens:compileReleaseShaders NO-SOURCE
+> Task :react-native-screens:generateReleaseAssets UP-TO-DATE
+> Task :react-native-screens:packageReleaseAssets UP-TO-DATE
+> Task :react-native-screens:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-screens:mergeReleaseJavaResource UP-TO-DATE
+> Task :react-native-screens:syncReleaseLibJars UP-TO-DATE
+> Task :react-native-screens:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[x86]
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[x86]
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[x86_64]
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[x86_64]
+> Task :react-native-reanimated:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :react-native-reanimated:mergeReleaseNativeLibs UP-TO-DATE
+> Task :react-native-reanimated:stripReleaseDebugSymbols UP-TO-DATE
+> Task :react-native-reanimated:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :react-native-reanimated:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :react-native-reanimated:extractReleaseAnnotations UP-TO-DATE
+> Task :react-native-reanimated:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :react-native-reanimated:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :react-native-reanimated:mergeReleaseShaders UP-TO-DATE
+> Task :react-native-reanimated:compileReleaseShaders NO-SOURCE
+> Task :react-native-reanimated:generateReleaseAssets UP-TO-DATE
+> Task :react-native-reanimated:packageReleaseAssets UP-TO-DATE
+> Task :react-native-reanimated:externalNativeBuildRelease
+> Task :react-native-reanimated:generateJsonModelRelease
+> Task :react-native-reanimated:prefabReleaseConfigurePackage UP-TO-DATE
+> Task :react-native-reanimated:prefabReleasePackage UP-TO-DATE
+> Task :react-native-reanimated:prepareReleaseArtProfile UP-TO-DATE
+> Task :react-native-reanimated:mergeReleaseJavaResource UP-TO-DATE
+> Task :react-native-reanimated:syncReleaseLibJars UP-TO-DATE
+> Task :react-native-reanimated:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :expo-asset:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo-asset:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-asset:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo-asset:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :expo-asset:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :expo-asset:extractReleaseAnnotations UP-TO-DATE
+> Task :expo-asset:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :expo-asset:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :expo-asset:mergeReleaseShaders UP-TO-DATE
+> Task :expo-asset:compileReleaseShaders NO-SOURCE
+> Task :expo-asset:generateReleaseAssets UP-TO-DATE
+> Task :expo-asset:packageReleaseAssets UP-TO-DATE
+> Task :expo-asset:prepareReleaseArtProfile UP-TO-DATE
+> Task :expo-asset:mergeReleaseJavaResource UP-TO-DATE
+> Task :expo-asset:syncReleaseLibJars UP-TO-DATE
+> Task :expo-asset:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :expo-av:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :expo-av:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :expo-av:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :expo-av:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :expo-av:configureCMakeRelWithDebInfo[x86]
+> Task :expo-av:buildCMakeRelWithDebInfo[x86]
+> Task :expo-av:configureCMakeRelWithDebInfo[x86_64]
+> Task :expo-av:buildCMakeRelWithDebInfo[x86_64]
+> Task :expo-av:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo-av:mergeReleaseNativeLibs UP-TO-DATE
+> Task :expo-av:stripReleaseDebugSymbols UP-TO-DATE
+> Task :expo-av:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :expo-av:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :expo-av:extractReleaseAnnotations UP-TO-DATE
+> Task :expo-av:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :expo-av:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :expo-av:mergeReleaseShaders UP-TO-DATE
+> Task :expo-av:compileReleaseShaders NO-SOURCE
+> Task :expo-av:generateReleaseAssets UP-TO-DATE
+> Task :expo-av:packageReleaseAssets UP-TO-DATE
+> Task :expo-av:prepareReleaseArtProfile UP-TO-DATE
+> Task :expo-av:mergeReleaseJavaResource UP-TO-DATE
+> Task :expo-av:syncReleaseLibJars UP-TO-DATE
+> Task :expo-av:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :expo-camera:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo-camera:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-camera:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo-camera:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :expo-camera:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :expo-camera:extractReleaseAnnotations UP-TO-DATE
+> Task :expo-camera:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :expo-camera:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :expo-camera:mergeReleaseShaders UP-TO-DATE
+> Task :expo-camera:compileReleaseShaders NO-SOURCE
+> Task :expo-camera:generateReleaseAssets UP-TO-DATE
+> Task :expo-camera:packageReleaseAssets UP-TO-DATE
+> Task :expo-camera:prepareReleaseArtProfile UP-TO-DATE
+> Task :expo-camera:mergeReleaseJavaResource UP-TO-DATE
+> Task :expo-camera:syncReleaseLibJars UP-TO-DATE
+> Task :expo-camera:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :expo-constants:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo-constants:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-constants:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo-constants:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :expo-constants:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :expo-constants:extractReleaseAnnotations UP-TO-DATE
+> Task :expo-constants:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :expo-constants:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :expo-constants:mergeReleaseShaders UP-TO-DATE
+> Task :expo-constants:compileReleaseShaders NO-SOURCE
+> Task :expo-constants:generateReleaseAssets UP-TO-DATE
+> Task :expo-constants:packageReleaseAssets UP-TO-DATE
+> Task :expo-constants:prepareReleaseArtProfile UP-TO-DATE
+> Task :expo-constants:mergeReleaseJavaResource UP-TO-DATE
+> Task :expo-constants:syncReleaseLibJars UP-TO-DATE
+> Task :expo-constants:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :expo-crypto:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo-crypto:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-crypto:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo-crypto:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :expo-crypto:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :expo-crypto:extractReleaseAnnotations UP-TO-DATE
+> Task :expo-crypto:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :expo-crypto:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :expo-crypto:mergeReleaseShaders UP-TO-DATE
+> Task :expo-crypto:compileReleaseShaders NO-SOURCE
+> Task :expo-crypto:generateReleaseAssets UP-TO-DATE
+> Task :expo-crypto:packageReleaseAssets UP-TO-DATE
+> Task :expo-crypto:prepareReleaseArtProfile UP-TO-DATE
+> Task :expo-crypto:mergeReleaseJavaResource UP-TO-DATE
+> Task :expo-crypto:syncReleaseLibJars UP-TO-DATE
+> Task :expo-crypto:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :expo-file-system:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo-file-system:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-file-system:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo-file-system:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :expo-file-system:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :expo-file-system:extractReleaseAnnotations UP-TO-DATE
+> Task :expo-file-system:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :expo-file-system:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :expo-file-system:mergeReleaseShaders UP-TO-DATE
+> Task :expo-file-system:compileReleaseShaders NO-SOURCE
+> Task :expo-file-system:generateReleaseAssets UP-TO-DATE
+> Task :expo-file-system:packageReleaseAssets UP-TO-DATE
+> Task :expo-file-system:prepareReleaseArtProfile UP-TO-DATE
+> Task :expo-file-system:mergeReleaseJavaResource UP-TO-DATE
+> Task :expo-file-system:syncReleaseLibJars UP-TO-DATE
+> Task :expo-file-system:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :expo-font:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo-font:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-font:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo-font:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :expo-font:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :expo-font:extractReleaseAnnotations UP-TO-DATE
+> Task :expo-font:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :expo-font:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :expo-font:mergeReleaseShaders UP-TO-DATE
+> Task :expo-font:compileReleaseShaders NO-SOURCE
+> Task :expo-font:generateReleaseAssets UP-TO-DATE
+> Task :expo-font:packageReleaseAssets UP-TO-DATE
+> Task :expo-font:prepareReleaseArtProfile UP-TO-DATE
+> Task :expo-font:mergeReleaseJavaResource UP-TO-DATE
+> Task :expo-font:syncReleaseLibJars UP-TO-DATE
+> Task :expo-font:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :expo-image-loader:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo-image-loader:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-image-loader:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo-image-loader:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :expo-image-loader:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :expo-image-loader:extractReleaseAnnotations UP-TO-DATE
+> Task :expo-image-loader:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :expo-image-loader:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :expo-image-loader:mergeReleaseShaders UP-TO-DATE
+> Task :expo-image-loader:compileReleaseShaders NO-SOURCE
+> Task :expo-image-loader:generateReleaseAssets UP-TO-DATE
+> Task :expo-image-loader:packageReleaseAssets UP-TO-DATE
+> Task :expo-image-loader:prepareReleaseArtProfile UP-TO-DATE
+> Task :expo-image-loader:mergeReleaseJavaResource UP-TO-DATE
+> Task :expo-image-loader:syncReleaseLibJars UP-TO-DATE
+> Task :expo-image-loader:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :expo-image-picker:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo-image-picker:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-image-picker:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo-image-picker:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :expo-image-picker:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :expo-image-picker:extractReleaseAnnotations UP-TO-DATE
+> Task :expo-image-picker:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :expo-image-picker:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :expo-image-picker:mergeReleaseShaders UP-TO-DATE
+> Task :expo-image-picker:compileReleaseShaders NO-SOURCE
+> Task :expo-image-picker:generateReleaseAssets UP-TO-DATE
+> Task :expo-image-picker:packageReleaseAssets UP-TO-DATE
+> Task :expo-image-picker:prepareReleaseArtProfile UP-TO-DATE
+> Task :expo-image-picker:mergeReleaseJavaResource UP-TO-DATE
+> Task :expo-image-picker:syncReleaseLibJars UP-TO-DATE
+> Task :expo-image-picker:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :expo-secure-store:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo-secure-store:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-secure-store:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo-secure-store:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :expo-secure-store:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :expo-secure-store:extractReleaseAnnotations UP-TO-DATE
+> Task :expo-secure-store:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :expo-secure-store:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :expo-secure-store:mergeReleaseShaders UP-TO-DATE
+> Task :expo-secure-store:compileReleaseShaders NO-SOURCE
+> Task :expo-secure-store:generateReleaseAssets UP-TO-DATE
+> Task :expo-secure-store:packageReleaseAssets UP-TO-DATE
+> Task :expo-secure-store:prepareReleaseArtProfile UP-TO-DATE
+> Task :expo-secure-store:mergeReleaseJavaResource UP-TO-DATE
+> Task :expo-secure-store:syncReleaseLibJars UP-TO-DATE
+> Task :expo-secure-store:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :expo-sharing:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo-sharing:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-sharing:stripReleaseDebugSymbols NO-SOURCE
+> Task :expo-sharing:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :expo-sharing:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :expo-sharing:extractReleaseAnnotations UP-TO-DATE
+> Task :expo-sharing:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :expo-sharing:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :expo-sharing:mergeReleaseShaders UP-TO-DATE
+> Task :expo-sharing:compileReleaseShaders NO-SOURCE
+> Task :expo-sharing:generateReleaseAssets UP-TO-DATE
+> Task :expo-sharing:packageReleaseAssets UP-TO-DATE
+> Task :expo-sharing:prepareReleaseArtProfile UP-TO-DATE
+> Task :expo-sharing:mergeReleaseJavaResource UP-TO-DATE
+> Task :expo-sharing:syncReleaseLibJars UP-TO-DATE
+> Task :expo-sharing:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :expo-sqlite:createNativeDepsDirectories UP-TO-DATE
+
+> Task :expo-sqlite:downloadSQLite UP-TO-DATE
+Download https://www.sqlite.org/2024/sqlite-amalgamation-3450300.zip
+
+> Task :expo-sqlite:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo-sqlite:prepareSQLite UP-TO-DATE
+> Task :expo-sqlite:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :expo-sqlite:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :expo-sqlite:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :expo-sqlite:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :expo-sqlite:configureCMakeRelWithDebInfo[x86]
+> Task :expo-sqlite:buildCMakeRelWithDebInfo[x86]
+> Task :expo-sqlite:configureCMakeRelWithDebInfo[x86_64]
+> Task :expo-sqlite:buildCMakeRelWithDebInfo[x86_64]
+> Task :expo-sqlite:mergeReleaseNativeLibs UP-TO-DATE
+> Task :expo-sqlite:stripReleaseDebugSymbols UP-TO-DATE
+> Task :expo-sqlite:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :expo-sqlite:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :expo-sqlite:extractReleaseAnnotations UP-TO-DATE
+> Task :expo-sqlite:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :expo-sqlite:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :expo-sqlite:mergeReleaseShaders UP-TO-DATE
+> Task :expo-sqlite:compileReleaseShaders NO-SOURCE
+> Task :expo-sqlite:generateReleaseAssets UP-TO-DATE
+> Task :expo-sqlite:packageReleaseAssets UP-TO-DATE
+> Task :expo-sqlite:prepareReleaseArtProfile UP-TO-DATE
+> Task :expo-sqlite:mergeReleaseJavaResource UP-TO-DATE
+> Task :expo-sqlite:syncReleaseLibJars UP-TO-DATE
+> Task :expo-sqlite:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :expo-modules-core:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :expo-modules-core:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :expo-modules-core:configureCMakeRelWithDebInfo[armeabi-v7a]
+> Task :expo-modules-core:buildCMakeRelWithDebInfo[armeabi-v7a]
+> Task :expo-modules-core:configureCMakeRelWithDebInfo[x86]
+> Task :expo-modules-core:buildCMakeRelWithDebInfo[x86]
+> Task :expo-modules-core:configureCMakeRelWithDebInfo[x86_64]
+> Task :expo-modules-core:buildCMakeRelWithDebInfo[x86_64]
+> Task :expo-modules-core:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo-modules-core:mergeReleaseNativeLibs UP-TO-DATE
+> Task :expo-modules-core:stripReleaseDebugSymbols UP-TO-DATE
+> Task :expo-modules-core:copyReleaseJniLibsProjectAndLocalJars UP-TO-DATE
+> Task :expo-modules-core:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :expo-modules-core:extractReleaseAnnotations UP-TO-DATE
+> Task :expo-modules-core:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :expo-modules-core:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :expo-modules-core:mergeReleaseShaders UP-TO-DATE
+> Task :expo-modules-core:compileReleaseShaders NO-SOURCE
+> Task :expo-modules-core:generateReleaseAssets UP-TO-DATE
+> Task :expo-modules-core:packageReleaseAssets UP-TO-DATE
+> Task :expo-modules-core:prepareReleaseArtProfile UP-TO-DATE
+> Task :expo-modules-core:mergeReleaseJavaResource UP-TO-DATE
+> Task :expo-modules-core:syncReleaseLibJars UP-TO-DATE
+> Task :expo-modules-core:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :expo-asset:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :expo-av:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :expo-camera:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :expo-constants:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :expo-crypto:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :expo-file-system:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :expo-font:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :expo-image-loader:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :expo-image-picker:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :expo-modules-core:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :expo-secure-store:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :expo-sharing:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :expo-sqlite:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :expo:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :expo:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :expo-asset:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :expo-av:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :expo-camera:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :expo-constants:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :expo-crypto:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :expo-file-system:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :expo-font:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :expo-image-loader:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :expo-image-picker:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :expo-modules-core:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :expo-secure-store:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :expo-sharing:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :expo-sqlite:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :react-native-reanimated:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :react-native-gesture-handler:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :react-native-gesture-handler:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :react-native-reanimated:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :react-native-safe-area-context:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :react-native-safe-area-context:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :react-native-screens:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :react-native-screens:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :app:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :expo:generateReleaseLintVitalModel UP-TO-DATE
+> Task :expo-asset:generateReleaseLintVitalModel UP-TO-DATE
+> Task :expo-av:generateReleaseLintVitalModel UP-TO-DATE
+> Task :expo-camera:generateReleaseLintVitalModel UP-TO-DATE
+> Task :expo-constants:generateReleaseLintVitalModel UP-TO-DATE
+> Task :expo-crypto:generateReleaseLintVitalModel UP-TO-DATE
+> Task :expo-file-system:generateReleaseLintVitalModel UP-TO-DATE
+> Task :expo-font:generateReleaseLintVitalModel UP-TO-DATE
+> Task :expo-image-loader:generateReleaseLintVitalModel UP-TO-DATE
+> Task :expo-image-picker:generateReleaseLintVitalModel UP-TO-DATE
+> Task :expo-modules-core:generateReleaseLintVitalModel UP-TO-DATE
+> Task :expo-secure-store:generateReleaseLintVitalModel UP-TO-DATE
+> Task :expo-sharing:generateReleaseLintVitalModel UP-TO-DATE
+> Task :expo-sqlite:generateReleaseLintVitalModel UP-TO-DATE
+> Task :react-native-gesture-handler:generateReleaseLintVitalModel UP-TO-DATE
+> Task :react-native-reanimated:generateReleaseLintVitalModel UP-TO-DATE
+> Task :react-native-safe-area-context:generateReleaseLintVitalModel UP-TO-DATE
+> Task :react-native-screens:generateReleaseLintVitalModel UP-TO-DATE
+> Task :app:lintVitalReportRelease UP-TO-DATE
+> Task :app:lintVitalRelease
+> Task :app:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :expo:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :expo-asset:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :expo-av:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :expo-camera:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :expo-constants:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :expo-crypto:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :expo-file-system:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :expo-font:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :expo-image-loader:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :expo-image-picker:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :expo-modules-core:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :expo-secure-store:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :expo-sharing:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :expo-sqlite:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-gesture-handler:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-reanimated:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-safe-area-context:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :react-native-screens:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :app:mergeReleaseNativeLibs UP-TO-DATE
+> Task :app:stripReleaseDebugSymbols UP-TO-DATE
+> Task :app:extractReleaseNativeSymbolTables UP-TO-DATE
+> Task :app:mergeReleaseNativeDebugMetadata UP-TO-DATE
+> Task :expo:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :react-native-gesture-handler:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :react-native-safe-area-context:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :react-native-screens:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :react-native-reanimated:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :expo-asset:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :expo-av:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :expo-camera:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :expo-constants:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :expo-crypto:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :expo-file-system:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :expo-font:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :expo-image-loader:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :expo-image-picker:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :expo-secure-store:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :expo-sharing:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :expo-sqlite:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :expo-modules-core:bundleLibRuntimeToDirRelease UP-TO-DATE
+> Task :app:checkReleaseDuplicateClasses UP-TO-DATE
+> Task :app:dexBuilderRelease UP-TO-DATE
+> Task :app:desugarReleaseFileDependencies UP-TO-DATE
+> Task :app:mergeReleaseStartupProfile UP-TO-DATE
+> Task :app:mergeExtDexRelease UP-TO-DATE
+> Task :app:mergeDexRelease UP-TO-DATE
+> Task :app:mergeReleaseArtProfile UP-TO-DATE
+> Task :app:mergeReleaseGlobalSynthetics UP-TO-DATE
+> Task :app:compileReleaseArtProfile UP-TO-DATE
+> Task :app:mergeReleaseShaders UP-TO-DATE
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:extractReleaseVersionControlInfo UP-TO-DATE
+> Task :app:processReleaseJavaRes UP-TO-DATE
+> Task :app:mergeReleaseJavaResource UP-TO-DATE
+> Task :app:optimizeReleaseResources UP-TO-DATE
+> Task :app:collectReleaseDependencies UP-TO-DATE
+> Task :app:sdkReleaseDependencyData UP-TO-DATE
+> Task :app:validateSigningRelease UP-TO-DATE
+> Task :app:writeReleaseAppMetadata UP-TO-DATE
+> Task :app:writeReleaseSigningConfigVersions UP-TO-DATE
+> Task :expo:bundleReleaseAar UP-TO-DATE
+> Task :expo:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :expo:mergeReleaseResources UP-TO-DATE
+> Task :expo:verifyReleaseResources UP-TO-DATE
+> Task :expo:assembleRelease UP-TO-DATE
+> Task :expo-asset:bundleReleaseAar UP-TO-DATE
+> Task :expo-asset:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :expo-asset:mergeReleaseResources UP-TO-DATE
+> Task :expo-asset:verifyReleaseResources UP-TO-DATE
+> Task :expo-asset:assembleRelease UP-TO-DATE
+> Task :expo-av:bundleReleaseAar UP-TO-DATE
+> Task :expo-av:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :app:compressReleaseAssets
+> Task :expo-av:mergeReleaseResources UP-TO-DATE
+> Task :expo-av:verifyReleaseResources UP-TO-DATE
+> Task :expo-av:assembleRelease UP-TO-DATE
+> Task :expo-camera:bundleReleaseAar UP-TO-DATE
+> Task :expo-camera:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :expo-camera:mergeReleaseResources UP-TO-DATE
+> Task :expo-camera:verifyReleaseResources UP-TO-DATE
+> Task :expo-camera:assembleRelease UP-TO-DATE
+> Task :expo-constants:bundleReleaseAar UP-TO-DATE
+> Task :expo-constants:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :expo-constants:mergeReleaseResources UP-TO-DATE
+> Task :expo-constants:verifyReleaseResources UP-TO-DATE
+> Task :expo-constants:assembleRelease UP-TO-DATE
+> Task :expo-crypto:bundleReleaseAar UP-TO-DATE
+> Task :expo-crypto:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :expo-crypto:mergeReleaseResources UP-TO-DATE
+> Task :expo-crypto:verifyReleaseResources UP-TO-DATE
+> Task :expo-crypto:assembleRelease UP-TO-DATE
+> Task :expo-file-system:bundleReleaseAar UP-TO-DATE
+> Task :expo-file-system:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :expo-file-system:mergeReleaseResources UP-TO-DATE
+> Task :expo-file-system:verifyReleaseResources UP-TO-DATE
+> Task :expo-file-system:assembleRelease UP-TO-DATE
+> Task :expo-font:bundleReleaseAar UP-TO-DATE
+> Task :expo-font:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :expo-font:mergeReleaseResources UP-TO-DATE
+> Task :expo-font:verifyReleaseResources UP-TO-DATE
+> Task :expo-font:assembleRelease UP-TO-DATE
+> Task :expo-image-loader:bundleReleaseAar UP-TO-DATE
+> Task :expo-image-loader:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :expo-image-loader:mergeReleaseResources UP-TO-DATE
+> Task :expo-image-loader:verifyReleaseResources UP-TO-DATE
+> Task :expo-image-loader:assembleRelease UP-TO-DATE
+> Task :expo-image-picker:bundleReleaseAar UP-TO-DATE
+> Task :expo-image-picker:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :expo-image-picker:mergeReleaseResources UP-TO-DATE
+> Task :expo-image-picker:verifyReleaseResources UP-TO-DATE
+> Task :expo-image-picker:assembleRelease UP-TO-DATE
+> Task :expo-modules-core:bundleReleaseAar UP-TO-DATE
+> Task :expo-modules-core:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :expo-modules-core:mergeReleaseResources UP-TO-DATE
+> Task :expo-modules-core:verifyReleaseResources UP-TO-DATE
+> Task :expo-modules-core:assembleRelease UP-TO-DATE
+> Task :expo-secure-store:bundleReleaseAar UP-TO-DATE
+> Task :expo-secure-store:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :expo-secure-store:mergeReleaseResources UP-TO-DATE
+> Task :expo-secure-store:verifyReleaseResources UP-TO-DATE
+> Task :expo-secure-store:assembleRelease UP-TO-DATE
+> Task :expo-sharing:bundleReleaseAar UP-TO-DATE
+> Task :expo-sharing:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :expo-sharing:mergeReleaseResources UP-TO-DATE
+> Task :expo-sharing:verifyReleaseResources UP-TO-DATE
+> Task :expo-sharing:assembleRelease UP-TO-DATE
+> Task :expo-sqlite:bundleReleaseAar UP-TO-DATE
+> Task :expo-sqlite:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :expo-sqlite:mergeReleaseResources UP-TO-DATE
+> Task :expo-sqlite:verifyReleaseResources UP-TO-DATE
+> Task :expo-sqlite:assembleRelease UP-TO-DATE
+> Task :react-native-gesture-handler:bundleReleaseAar UP-TO-DATE
+> Task :react-native-gesture-handler:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :react-native-gesture-handler:mergeReleaseResources UP-TO-DATE
+> Task :react-native-gesture-handler:verifyReleaseResources UP-TO-DATE
+> Task :react-native-gesture-handler:assembleRelease UP-TO-DATE
+> Task :react-native-reanimated:bundleReleaseAar UP-TO-DATE
+> Task :react-native-reanimated:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :react-native-reanimated:mergeReleaseResources UP-TO-DATE
+> Task :react-native-reanimated:verifyReleaseResources UP-TO-DATE
+> Task :react-native-reanimated:assembleRelease UP-TO-DATE
+> Task :react-native-safe-area-context:bundleReleaseAar UP-TO-DATE
+> Task :react-native-safe-area-context:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :react-native-safe-area-context:mergeReleaseResources UP-TO-DATE
+> Task :react-native-safe-area-context:verifyReleaseResources UP-TO-DATE
+> Task :react-native-safe-area-context:assembleRelease UP-TO-DATE
+> Task :react-native-screens:bundleReleaseAar UP-TO-DATE
+> Task :react-native-screens:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :react-native-screens:mergeReleaseResources UP-TO-DATE
+> Task :react-native-screens:verifyReleaseResources UP-TO-DATE
+> Task :react-native-screens:assembleRelease UP-TO-DATE
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleRelease
+
+BUILD SUCCESSFUL in 1m 15s
+879 actionable tasks: 68 executed, 811 up-to-date

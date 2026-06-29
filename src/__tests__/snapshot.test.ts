@@ -30,7 +30,7 @@ describe('exportSnapshot', () => {
     vi.clearAllMocks();
     mockDb.execAsync.mockResolvedValue(undefined);
     mockDb.closeAsync.mockResolvedValue(undefined);
-    vi.mocked(FileSystem.getInfoAsync).mockResolvedValue({ exists: true, size: 4096 });
+    vi.mocked(FileSystem.getInfoAsync).mockResolvedValue({ exists: true, size: 4096, uri: 'file:///snapshot.db', isDirectory: false, modificationTime: 0 } as any);
   });
 
   it('happy-path: VACUUM INTO 成功 → 返回 ok=true + snapshotPath', async () => {

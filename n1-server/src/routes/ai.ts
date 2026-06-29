@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { db } from '../db.js';
 import { buildChatCompletionsUrl, callAiJson, callAiText, getStreamChunkText, readAiErrorDetail } from '../ai/client';
 import { isRecord, parseAiJsonResponse } from '../ai/json-utils';
 import {
@@ -31,18 +32,37 @@ import type { ChatMessage } from '../ai/types';
 const aiRouter = Router();
 
 // ---------------------------------------------------------------------------
+// AI config helper — database first, env vars as fallback
+// ---------------------------------------------------------------------------
+function getAiConfig() {
+  const row = db.prepare('SELECT key, value FROM config WHERE key IN (?, ?, ?)')
+    .all('apiUrl', 'apiKey', 'textModel') as { key: string; value: string }[];
+
+  const dbConfig: Record<string, string> = {};
+  for (const { key, value } of row) {
+    dbConfig[key] = value;
+  }
+
+  return {
+    apiKey: dbConfig.apiKey || process.env.AI_API_KEY || '',
+    baseUrl: dbConfig.apiUrl || process.env.AI_BASE_URL || 'https://api.openai.com',
+    model: dbConfig.textModel || process.env.AI_MODEL || 'gpt-4o-mini',
+  };
+}
+
+// ---------------------------------------------------------------------------
 // AI config status
 // ---------------------------------------------------------------------------
 
 aiRouter.get('/config-status', (_req: Request, res: Response) => {
-  const hasServerAiConfig =
-    typeof process.env.AI_API_KEY === 'string' && process.env.AI_API_KEY.trim().length > 0;
+  const config = getAiConfig();
+  const hasServerAiConfig = config.apiKey.trim().length > 0;
 
   res.json({
     data: {
       hasServerAiConfig,
-      defaultBaseUrl: process.env.AI_BASE_URL || 'https://api.openai.com',
-      defaultModel: process.env.AI_MODEL || 'gpt-4o-mini',
+      defaultBaseUrl: config.baseUrl,
+      defaultModel: config.model,
     },
   });
 });
@@ -60,9 +80,7 @@ aiRouter.post('/parse', async (req: Request, res: Response) => {
       return;
     }
 
-    const apiKey = String(process.env.AI_API_KEY || '');
-    const baseUrl = String(process.env.AI_BASE_URL || 'https://api.openai.com');
-    const model = String(process.env.AI_MODEL || 'gpt-4o-mini');
+    const { apiKey, baseUrl, model } = getAiConfig();
 
     const result = await parseItemText(apiKey, baseUrl, model, text);
 
@@ -93,9 +111,7 @@ aiRouter.post('/parse-image', async (req: Request, res: Response) => {
       return;
     }
 
-    const apiKey = String(process.env.AI_API_KEY || '');
-    const baseUrl = String(process.env.AI_BASE_URL || 'https://api.openai.com');
-    const model = String(process.env.AI_MODEL || 'gpt-4o-mini');
+    const { apiKey, baseUrl, model } = getAiConfig();
 
     const result = await parseItemImage(apiKey, baseUrl, model, validated.dataUrl);
 
@@ -135,9 +151,7 @@ aiRouter.post('/parse-batch', async (req: Request, res: Response) => {
       return;
     }
 
-    const apiKey = String(process.env.AI_API_KEY || '');
-    const baseUrl = String(process.env.AI_BASE_URL || 'https://api.openai.com');
-    const model = String(process.env.AI_MODEL || 'gpt-4o-mini');
+    const { apiKey, baseUrl, model } = getAiConfig();
 
     const settled = await Promise.allSettled(
       items.map((item: string) => parseItemText(apiKey, baseUrl, model, item)),
@@ -216,9 +230,7 @@ aiRouter.post('/query', async (req: Request, res: Response) => {
       return;
     }
 
-    const apiKey = String(process.env.AI_API_KEY || '');
-    const baseUrl = String(process.env.AI_BASE_URL || 'https://api.openai.com');
-    const model = String(process.env.AI_MODEL || 'gpt-4o-mini');
+    const { apiKey, baseUrl, model } = getAiConfig();
 
     const raw = await callAiText(
       apiKey,
@@ -291,9 +303,7 @@ aiRouter.post('/query-stream', async (req: Request, res: Response) => {
       return;
     }
 
-    const apiKey = String(process.env.AI_API_KEY || '');
-    const baseUrl = String(process.env.AI_BASE_URL || 'https://api.openai.com');
-    const model = String(process.env.AI_MODEL || 'gpt-4o-mini');
+    const { apiKey, baseUrl, model } = getAiConfig();
 
     const upstreamResponse = await fetch(buildChatCompletionsUrl(baseUrl), {
       method: 'POST',
@@ -422,9 +432,7 @@ aiRouter.post('/query-stream', async (req: Request, res: Response) => {
 
 aiRouter.post('/test', async (req: Request, res: Response) => {
   try {
-    const apiKey = String(process.env.AI_API_KEY || '');
-    const baseUrl = String(process.env.AI_BASE_URL || 'https://api.openai.com');
-    const model = String(process.env.AI_MODEL || 'gpt-4o-mini');
+    const { apiKey, baseUrl, model } = getAiConfig();
 
     const { parsed, raw } = await callAiJson<{
       ok?: boolean;

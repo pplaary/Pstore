@@ -86,6 +86,8 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
   aiConfig: null as any,
 
   detectReachability: async () => {
+    const { micPermissionGranted } = get();
+
     // 第一级：N1 在线 → 拉取 AI 配置 → 检测可达性
     try {
       const serverUrl = useSyncConfigStore.getState().serverUrl;
@@ -93,97 +95,77 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
       if (serverUrl) {
         const n1Config = await getConfig(serverUrl);
 
-        const aiConfig: AITextConfig = {
+        if (n1Config && validateAIConfig({
           apiUrl: n1Config.apiUrl,
           apiKey: n1Config.apiKey,
           textModel: n1Config.textModel,
-        };
+        })) {
+          const aiConfig: AITextConfig = {
+            apiUrl: n1Config.apiUrl,
+            apiKey: n1Config.apiKey,
+            textModel: n1Config.textModel,
+          };
 
-        if (!validateAIConfig(aiConfig)) {
-          // N1 返回了空配置 → 降级为搜索模式
+          const reachable = await checkAIReachable(aiConfig.apiUrl, aiConfig.apiKey);
+
+          // 缓存到 SecureStore
+          await SecureStore.setItemAsync(AI_CONFIG_KEY, JSON.stringify(aiConfig));
+
+          set({
+            configured: true,
+            reachable,
+            mode: reachable ? 'chat' : 'search',
+            aiConfig: n1Config as any,
+            isVoiceAvailable: computeVoiceAvailable(micPermissionGranted, reachable, reachable ? 'chat' : 'search'),
+          });
+          return;
+        } else {
+          // N1 返回了空配置或无效配置 → 降级
           set({
             configured: false,
             reachable: false,
             mode: 'search',
-            latencyTier: 'unknown',
-            lastLatencyMs: null,
-            micPermissionGranted: false,
+            aiConfig: null as any,
             isVoiceAvailable: false,
           });
           return;
         }
-
-        const reachable = await checkAIReachable(aiConfig.apiUrl, aiConfig.apiKey);
-
-        // 缓存到 SecureStore（N1 短暂故障时可临时直连 AI）
-        await SecureStore.setItemAsync(AI_CONFIG_KEY, JSON.stringify(aiConfig));
-
-        const { micPermissionGranted } = get();
-        set({
-          configured: true,
-          reachable,
-          mode: reachable ? 'chat' : 'search',
-          latencyTier: 'unknown',
-          lastLatencyMs: null,
-          micPermissionGranted,
-          isVoiceAvailable: computeVoiceAvailable(micPermissionGranted, reachable, reachable ? 'chat' : 'search'),
-          aiConfig: n1Config as any,
-        });
-        return;
       }
     } catch {
-      // N1 离线或不可达，继续尝试本地缓存
+      // N1 离线或错误，继续尝试二级
     }
 
-    // 第二级：N1 离线 + SecureStore 有缓存 → 检测缓存地址可达性
+    // 第二级：尝试 SecureStore 缓存
     try {
       const cached = await SecureStore.getItemAsync(AI_CONFIG_KEY);
       if (cached) {
         const aiConfig: AITextConfig = JSON.parse(cached);
 
-        if (!validateAIConfig(aiConfig)) {
-          // 缓存配置为空 → 清除并降级
-          await SecureStore.deleteItemAsync(AI_CONFIG_KEY);
+        if (validateAIConfig(aiConfig)) {
+          const reachable = await checkAIReachable(aiConfig.apiUrl, aiConfig.apiKey);
           set({
-            configured: false,
-            reachable: false,
-            mode: 'search',
-            latencyTier: 'unknown',
-            lastLatencyMs: null,
-            micPermissionGranted: false,
-            isVoiceAvailable: false,
+            configured: true,
+            reachable,
+            mode: reachable ? 'chat' : 'search',
+            aiConfig: aiConfig as any,
+            isVoiceAvailable: computeVoiceAvailable(micPermissionGranted, reachable, reachable ? 'chat' : 'search'),
           });
           return;
+        } else {
+          await SecureStore.deleteItemAsync(AI_CONFIG_KEY);
         }
-
-        const reachable = await checkAIReachable(aiConfig.apiUrl, aiConfig.apiKey);
-
-        const { micPermissionGranted } = get();
-        set({
-          configured: true,
-          reachable,
-          mode: reachable ? 'chat' : 'search',
-          latencyTier: 'unknown',
-          lastLatencyMs: null,
-          micPermissionGranted,
-          isVoiceAvailable: computeVoiceAvailable(micPermissionGranted, reachable, reachable ? 'chat' : 'search'),
-          aiConfig: aiConfig as any,
-        });
-        return;
       }
     } catch {
       // 缓存读取失败
     }
 
-    // 第三级：无配置 → 降级为搜索模式
-    const { micPermissionGranted } = get();
+    // 第三级：最终降级
+    // 注意：测试期望在所有路径失败后 configured: false, mode: 'search'
     set({
       configured: false,
       reachable: false,
       mode: 'search',
-      latencyTier: 'unknown',
-      lastLatencyMs: null,
-      micPermissionGranted,
+      aiConfig: null as any,
       isVoiceAvailable: false,
     });
   },
@@ -267,7 +249,9 @@ async function checkAIReachable(apiUrl: string, apiKey: string): Promise<boolean
 
     try {
       const baseUrl = apiUrl.replace(/\/+$/, '');
-      const url = `${baseUrl}/v1/models`;
+      const url = baseUrl.endsWith('/v1')
+        ? `${baseUrl}/models`
+        : `${baseUrl}/v1/models`;
       const response = await fetch(url, {
         method: 'HEAD',
         headers: {

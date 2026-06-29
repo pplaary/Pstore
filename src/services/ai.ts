@@ -35,7 +35,7 @@ export interface AIMessage {
 
 // ==================== 常量 ====================
 
-const TIMEOUT_MS = 10_000; // spec §14.2: AI API 超时 10s
+const TIMEOUT_MS = 60_000; // spec §14.2: AI API 超时 60s (backend latency ~25s)
 
 /** spec §7.2 System Prompt 核心指令块 */
 const SYSTEM_PROMPT_CORE = `你是 PStore 商品查价助手。
@@ -90,7 +90,8 @@ export async function callAI(
     const controller = new AbortController();
     timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-    const url = `${config.apiUrl}/chat/completions`;
+    const base = config.apiUrl.replace(/\/+$/, '');
+    const url = `${base}/chat/completions`;
 
     const response = await fetch(url, {
       method: 'POST',

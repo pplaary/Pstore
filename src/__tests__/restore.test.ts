@@ -74,7 +74,7 @@ describe('restoreFromLocal', () => {
   });
 
   it('error-path: 路径为空时返回 ok=false', async () => {
-    vi.mocked(validateBackup).mockResolvedValueOnce({ ok: false, error: new Error('empty') });
+    vi.mocked(validateBackup).mockResolvedValueOnce({ ok: false, error: { code: 'EMPTY_DB' as const, message: 'empty' } });
     const result = await restoreFromLocal('');
     expect(result.ok).toBe(false);
   });

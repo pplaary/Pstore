@@ -5,6 +5,7 @@
  */
 
 const DEFAULT_TIMEOUT = 5000;
+const SYNC_TIMEOUT = 10000;
 
 async function request<T>(
   serverUrl: string,
@@ -99,14 +100,14 @@ export async function syncProducts(
   serverUrl: string,
   after?: string,
 ): Promise<SyncResult> {
-  return request<SyncResult>(serverUrl, '/api/products/sync', after ? { after } : {});
+  return request<SyncResult>(serverUrl, '/api/products/sync', after ? { after } : {}, SYNC_TIMEOUT);
 }
 
 export async function pushProducts(
   serverUrl: string,
   changes: PushChange[],
 ): Promise<{ ok: true; count: number }> {
-  return request<{ ok: true; count: number }>(serverUrl, '/api/products/push', { changes });
+  return request<{ ok: true; count: number }>(serverUrl, '/api/products/push', { changes }, SYNC_TIMEOUT);
 }
 
 // ==================== AI 类型 ====================

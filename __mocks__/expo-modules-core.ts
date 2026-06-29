@@ -1,0 +1,12 @@
+export const requireNativeModule = () => ({});
+export const requireNativeViewManager = () => {};
+export const EventEmitter = class {};
+export const NativeModule = class {};
+export const SharedObject = class {};
+export const SharedRef = class {};
+export const CodedError = class extends Error {};
+export const UnavailabilityError = class extends Error {};
+export const Platform = { OS: 'ios', Version: '17.0' };
+export const NativeModulesProxy = {};
+export const LegacyEventEmitter = class {};
+export const uuid = { v4: () => '00000000-0000-0000-0000-000000000000' };

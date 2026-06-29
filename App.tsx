@@ -5,7 +5,15 @@ import { initDatabase } from './src/db/init';
 import { StoreProvider } from './src/context/store';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { ThemeProvider } from './src/theme/ThemeContext';
+import { useAIConfigStore } from './src/store/aiConfig';
 import type { SQLiteDatabase } from 'expo-sqlite';
+
+function AIInit() {
+  useEffect(() => {
+    useAIConfigStore.getState().detectReachability();
+  }, []);
+  return null;
+}
 
 function ErrorUI({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
@@ -59,6 +67,7 @@ export default function App() {
   return (
     <StoreProvider db={db}>
       <ThemeProvider>
+        <AIInit />
         <NavigationContainer>
           <RootNavigator />
         </NavigationContainer>

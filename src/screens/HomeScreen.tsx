@@ -165,10 +165,14 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
 
   // ========== NL 搜索 ==========
   const doNLSearch = useCallback(async (question: string) => {
-    if (!question.trim() || !syncConfigServerUrl) return;
+    const trimmedQuestion = question.trim();
+    if (!trimmedQuestion || !syncConfigServerUrl) {
+      return;
+    }
+
     setIsNLLoading(true);
     try {
-      const res = await aiQuery(syncConfigServerUrl, question);
+      const res = await aiQuery(syncConfigServerUrl, trimmedQuestion);
       if (res.error) {
         setNlResult(null);
         setFilteredProducts([]);
@@ -251,7 +255,7 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
           accessibilityLabel="打开菜单"
           accessibilityRole="button"
         >
-          <Text style={styles.headerMenuText}>☰</Text>
+          <Text style={styles.headerMenuText}>{"☰"}</Text>
         </TouchableOpacity>
       ),
       headerTitle: () => (

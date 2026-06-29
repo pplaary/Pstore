@@ -4,7 +4,8 @@
     "slug": "pstore",
     "version": "1.0.0",
     "platforms": [
-      "android"
+      "android",
+      "web"
     ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",

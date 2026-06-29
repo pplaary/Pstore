@@ -34,7 +34,7 @@ function MainDrawer() {
     <Drawer.Navigator
       drawerContent={(props) => <DrawerContent {...props} />}
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
         drawerType: 'front',
       }}
     >
