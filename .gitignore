@@ -27,16 +27,9 @@ coverage/
 # Misc
 *.log
 npm-debug.log*
-# Project temp/planning/docs
-temp/
-tasks/
-docs/
 
-# Plan/review files (generated during development)
-plan-*.md
-review-*.md
-gap-analysis-*.md
-CLAUDE.md
+# Project temp/scratch
+temp/
 
 # Runtime data
 n1-server/data/
