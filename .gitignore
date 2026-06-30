@@ -41,5 +41,10 @@ CLAUDE.md
 # Runtime data
 n1-server/data/
 
+# Android build artifacts
+android/app/src/main/assets/index.android.bundle
+android/app/src/main/res/raw/node_modules_expo_vectoricons_*
+android/app/src/main/res/drawable-*/node_modules_reactnavigation_*
+
 # Test artifacts
 test-*.txt
