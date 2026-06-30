@@ -31,6 +31,10 @@ npm-debug.log*
 # Project temp/scratch
 temp/
 
+# Android build/scratch artifacts
+android/*.txt
+android/*.py
+
 # Runtime data
 n1-server/data/
 
