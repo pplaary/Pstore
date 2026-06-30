@@ -102,13 +102,23 @@ export async function performSync(
       if (!local || new Date(p.updatedAt) > new Date(local.updatedAt)) {
         if (p.isDeleted) {
           await db.softDeleteProduct(dbInstance, p.id);
-        } else {
+        } else if (local) {
           await db.updateProduct(dbInstance, p.id, {
             name: p.name,
             price: p.price,
             barcode: p.barcode ?? undefined,
             category: p.category,
             status: 'IN_SHOP',
+          });
+        } else {
+          // 本地不存在（如 AI 生成的临时 ID），创建新商品
+          await db.addProduct(dbInstance, {
+            name: p.name,
+            price: p.price,
+            barcode: p.barcode ?? undefined,
+            category: p.category,
+            status: 'IN_SHOP',
+            aliases: p.name,
           });
         }
         synced++;

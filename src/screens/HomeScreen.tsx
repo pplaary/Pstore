@@ -12,6 +12,7 @@ import {
   Animated,
   Easing,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { useStore } from '../context/store';
@@ -105,6 +106,24 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
   // ========== 语音输入状态 ==========
   const isVoiceAvailable = useAIConfigStore((s) => s.isVoiceAvailable);
   const [isVoiceRecording, setIsVoiceRecording] = useState(false);
+
+  // ========== 模型切换状态 ==========
+  const [modelSelectorVisible, setModelSelectorVisible] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<string>('');
+  const aiConfig = useAIConfigStore((s) => s.aiConfig);
+
+  const availableModels = useMemo(() => {
+    if (!aiConfig) return [];
+    return [
+      { id: aiConfig.textModel, label: aiConfig.textModel },
+      { id: aiConfig.visionModel, label: `${aiConfig.visionModel} (视觉)` },
+    ];
+  }, [aiConfig]);
+
+  const handleModelSelect = useCallback((modelId: string) => {
+    setSelectedModel(modelId);
+    setModelSelectorVisible(false);
+  }, []);
 
   // ========== Refs ==========
   const tapCountRef = useRef(0);
@@ -248,14 +267,22 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
   // ========== 顶部栏 ==========
   useLayoutEffect(() => {
     navigation.setOptions({
+      headerStyle: {
+        backgroundColor: '#FFFFFF',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 0.5 },
+        shadowOpacity: 0.06,
+        shadowRadius: 1,
+        elevation: 1,
+      },
       headerLeft: () => (
         <TouchableOpacity
           onPress={() => navigation.openDrawer()}
-          style={styles.headerMenuBtn}
+          style={styles.headerIconContainer}
           accessibilityLabel="打开菜单"
           accessibilityRole="button"
         >
-          <Text style={styles.headerMenuText}>{"☰"}</Text>
+          <Text style={styles.headerIconText}>{"☰"}</Text>
         </TouchableOpacity>
       ),
       headerTitle: () => (
@@ -271,9 +298,14 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
         </TouchableOpacity>
       ),
       headerRight: () => (
-        <View style={styles.headerRight}>
-          <SyncStatusIcon />
-        </View>
+        <TouchableOpacity
+          style={styles.headerIconContainer}
+          onPress={() => navigation.navigate('Config')}
+          accessibilityLabel="配置"
+          accessibilityRole="button"
+        >
+          <Ionicons name="cloud-outline" size={18} color={colors.text.primary} />
+        </TouchableOpacity>
       ),
     });
   }, [navigation, isManagement, handleTitlePress]);
@@ -868,7 +900,7 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
           />
           <TextInput
             style={styles.chatInput}
-            placeholder={isVoiceRecording ? '正在聆听...' : '说"可乐多少钱"'}
+            placeholder={isVoiceRecording ? '正在聆听...' : '说"可乐多少钱"或搜索商品...'}
             placeholderTextColor={colors.text.hint}
             value={chatInput}
             onChangeText={setChatInput}
@@ -885,7 +917,16 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
             accessibilityLabel="扫码"
             accessibilityRole="button"
           >
-            <Text style={styles.cameraBtnText}>📷</Text>
+            <Ionicons name="camera" size={20} color={colors.text.secondary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.modelBtn}
+            onPress={() => setModelSelectorVisible(true)}
+            accessibilityLabel="切换AI模型"
+            accessibilityRole="button"
+          >
+            <Ionicons name="sparkles" size={16} color={colors.text.secondary} />
+            <Text style={styles.modelBtnText} numberOfLines={1}>{selectedModel || 'AI'}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -1038,6 +1079,46 @@ export function HomeScreen({ navigation }: HomeScreenCompositeProps) {
           </View>
         </View>
       )}
+      {/* ===== 模型切换弹窗 ===== */}
+      <Modal
+        visible={modelSelectorVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setModelSelectorVisible(false)}
+      >
+        <View style={styles.modelModalOverlay}>
+          <View style={styles.modelModalContent}>
+            <Text style={styles.modelModalTitle}>切换 AI 模型</Text>
+            {availableModels.map((m) => (
+              <TouchableOpacity
+                key={m.id}
+                style={[styles.modelOption, selectedModel === m.id && styles.modelOptionActive]}
+                onPress={() => handleModelSelect(m.id)}
+                accessibilityLabel={`选择模型：${m.label}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected: selectedModel === m.id }}
+              >
+                <Ionicons
+                  name={selectedModel === m.id ? 'checkmark-circle' : 'ellipse-outline'}
+                  size={18}
+                  color={selectedModel === m.id ? colors.brand.primary : colors.text.hint}
+                />
+                <Text style={[styles.modelOptionText, selectedModel === m.id && styles.modelOptionTextActive]}>
+                  {m.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.modelModalClose}
+              onPress={() => setModelSelectorVisible(false)}
+              accessibilityLabel="关闭模型选择"
+              accessibilityRole="button"
+            >
+              <Text style={styles.modelModalCloseText}>关闭</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1049,14 +1130,18 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     container: { flex: 1, backgroundColor: colors.bg.primary },
 
     // -- 顶部栏 --
-    headerMenuBtn: { paddingHorizontal: 12, paddingVertical: 4 },
-    headerMenuText: { fontSize: 22 * scale, color: colors.brand.primary },
-    headerTitle: { fontSize: 17 * scale, fontWeight: '600', color: colors.text.primary },
+    headerIconContainer: {
+      backgroundColor: '#F1F5F9',
+      borderRadius: 8,
+      padding: 6,
+      marginLeft: 8,
+    },
+    headerIconText: { fontSize: 18 * scale, color: colors.text.primary },
+    headerTitle: { fontSize: 17 * scale, fontWeight: '700', color: colors.text.primary },
     headerRight: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
-      paddingRight: 4,
+      marginRight: 8,
     },
 
     // -- 搜索栏 --
@@ -1189,21 +1274,20 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     chatInputBar: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.bg.card,
-      marginHorizontal: 12,
-      marginBottom: 4,
-      borderRadius: 10,
+      backgroundColor: '#F1F5F9',
+      marginHorizontal: 16,
+      marginBottom: 8,
+      borderRadius: 24,
       paddingHorizontal: 8,
-      height: 44,
-      borderTopWidth: 1,
-      borderTopColor: colors.border.default,
+      height: 48,
+      borderWidth: 1,
+      borderColor: '#E2E8F0',
     },
     voiceBtn: {
-      padding: 6,
       marginRight: 4,
     },
     voiceBtnText: {
-      fontSize: 20 * scale,
+      fontSize: 18 * scale,
     },
     chatInput: {
       flex: 1,
@@ -1213,7 +1297,6 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       maxHeight: 100,
     },
     cameraBtn: {
-      padding: 6,
       marginLeft: 4,
     },
     cameraBtnText: {
@@ -1373,6 +1456,43 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     skeletonCard: {
       height: 68, backgroundColor: '#E0E0E0', borderRadius: 10,
       marginBottom: 10, opacity: 0.4,
+    },
+
+    // -- 模型切换弹窗 --
+    modelModalOverlay: {
+      flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center', alignItems: 'center',
+    },
+    modelModalContent: {
+      width: '80%', backgroundColor: colors.bg.card, borderRadius: 12,
+      padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15, shadowRadius: 8, elevation: 5,
+    },
+    modelModalTitle: {
+      fontSize: 16 * scale, fontWeight: '700', color: colors.text.primary,
+      textAlign: 'center', marginBottom: 16,
+    },
+    modelOption: {
+      flexDirection: 'row', alignItems: 'center', gap: 10,
+      paddingVertical: 12, paddingHorizontal: 12, borderRadius: 8,
+      backgroundColor: colors.bg.primary, marginBottom: 6,
+    },
+    modelOptionActive: {
+      backgroundColor: colors.brand.primary + '12',
+      borderWidth: 1, borderColor: colors.brand.primary + '40',
+    },
+    modelOptionText: {
+      fontSize: 14 * scale, color: colors.text.primary,
+    },
+    modelOptionTextActive: {
+      color: colors.brand.primary, fontWeight: '600',
+    },
+    modelModalClose: {
+      marginTop: 12, paddingVertical: 10, borderRadius: 8,
+      backgroundColor: colors.bg.primary, alignItems: 'center',
+    },
+    modelModalCloseText: {
+      fontSize: 14 * scale, color: colors.text.secondary, fontWeight: '500',
     },
   });
 }

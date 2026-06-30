@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, memo } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Keyboard,
 } from 'react-native';
 import { CameraView, useCameraPermissions, CameraType, type CameraViewRef } from 'expo-camera';
+import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../context/store';
 import { useCartStore } from '../store/cart';
 import { useAIConfigStore } from '../store/aiConfig';
@@ -25,6 +26,83 @@ import type { Product } from '../db/types';
 import type { ScanScreenProps } from '../navigation/types';
 
 type ScanMode = 'scan' | 'photo';
+
+// ponytail: Extract CameraView into memoized child so its hook count
+// is always stable regardless of parent mode/prop changes. This isolates
+// CameraView's internal hooks from ScanScreen's re-render cycle, fixing
+// the "Rendered more hooks than during the previous render" crash.
+const CameraContent = memo(function CameraContent({
+  mode,
+  cameraRef,
+  facing,
+  colors,
+  scale,
+  isLoading,
+  onBarcodeScanned,
+  onTakePhoto,
+  onFlipCamera,
+}: {
+  mode: ScanMode;
+  cameraRef: React.RefObject<CameraViewRef | null>;
+  facing: CameraType;
+  colors: ReturnType<typeof useTheme>['theme']['colors'];
+  scale: number;
+  isLoading: boolean;
+  onBarcodeScanned: (event: { data: string }) => void;
+  onTakePhoto: () => void;
+  onFlipCamera: () => void;
+}) {
+  const styles = useMemo(() => createCameraStyles(colors, scale), [colors, scale]);
+
+  return (
+    <CameraView
+      ref={cameraRef as any}
+      style={styles.camera}
+      facing={facing}
+      barcodeScannerSettings={{
+        barcodeTypes: [
+          'ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'qr',
+        ],
+      }}
+      onBarcodeScanned={onBarcodeScanned}
+    >
+      {mode === 'scan' && (
+        <View style={styles.scanOverlay}>
+          <View style={styles.scanFrame} />
+          <Text style={styles.scanHint}>将条码对准框�?/Text>
+        </View>
+      )}
+
+      {mode === 'photo' && (
+        <View style={styles.photoOverlay}>
+          <TouchableOpacity
+            style={styles.captureButton}
+            onPress={onTakePhoto}
+            disabled={isLoading}
+            accessibilityLabel="拍照识别"
+            accessibilityRole="button"
+          >
+            <View style={styles.captureInner} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.flipButton}
+            onPress={onFlipCamera}
+            accessibilityLabel="切换前后摄像�?
+            accessibilityRole="button"
+          >
+            <Ionicons name="camera-reverse" size={20} color="#FFF" />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={colors.brand.primary} />
+        </View>
+      )}
+    </CameraView>
+  );
+});
 
 export function ScanScreen({ navigation }: ScanScreenProps) {
   const { db } = useStore();
@@ -69,7 +147,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
   if (!permission.granted) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.permissionText}>需要相机权限才能扫码</Text>
+        <Text style={styles.permissionText}>需要相机权限才能扫�?/Text>
         <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission} accessibilityLabel="授权相机权限" accessibilityRole="button">
           <Text style={styles.permissionBtnText}>授权</Text>
         </TouchableOpacity>
@@ -101,8 +179,8 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
             .join(' · '),
         });
       } else {
-        console.warn('ScanScreen: AI 条码解析无结果', result);
-        Alert.alert('AI 解析无结果', '该条码未识别到商品信息，请手动录入', [
+        console.warn('ScanScreen: AI 条码解析无结�?, result);
+        Alert.alert('AI 解析无结�?, '该条码未识别到商品信息，请手动录�?, [
           { text: '手动录入', onPress: () => navigation.navigate('ProductEdit', { barcode }) },
         ]);
       }
@@ -120,18 +198,18 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
 
   const showUnmatchedAlert = useCallback((barcode: string) => {
     Alert.alert(
-      '未找到商品',
+      '未找到商�?,
       `条码 ${barcode}`,
       [
         {
-          text: '仅记录',
+          text: '仅记�?,
           style: 'cancel',
           onPress: async () => {
             try {
               await createOrUpdate(db, barcode);
-              Alert.alert('已记录', `条码 ${barcode} 已写入，可在管理模式中补充`);
+              Alert.alert('已记�?, `条码 ${barcode} 已写入，可在管理模式中补充`);
             } catch {
-              Alert.alert('记录失败', '数据库写入失败，请重试');
+              Alert.alert('记录失败', '数据库写入失败，请重�?);
             }
           },
         },
@@ -276,7 +354,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
     }
   }, [aiConfig, syncConfigServerUrl]);
 
-  // ==================== 候选列表加购 ====================
+  // ==================== 候选列表加�?====================
 
   const handleCandidateAddToCart = useCallback(
     async (candidate: { name: string; confidence: number; spec?: string }) => {
@@ -286,7 +364,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
       } else {
         Alert.alert(
           '未匹配到商品',
-          `是否将「${candidate.name}」加入商品库？`,
+          `是否将�?{candidate.name}」加入商品库？`,
           [
             { text: '取消', style: 'cancel' },
             {
@@ -308,7 +386,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
     [db, addToCart, navigation],
   );
 
-  // ==================== 候选列表手动搜索 ====================
+  // ==================== 候选列表手动搜�?====================
 
   const handleCandidateManualSearch = useCallback(() => {
     setShowCandidates(false);
@@ -363,69 +441,20 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
         ))}
       </View>
 
-      {/* Camera 预览区 */}
-      <View style={styles.cameraContainer}>
-        <CameraView
-          ref={cameraRef as any}
-          style={styles.camera}
-          facing={facing}
-          barcodeScannerSettings={{
-            barcodeTypes: [
-              'ean13',
-              'ean8',
-              'upc_a',
-              'upc_e',
-              'code128',
-              'qr',
-            ],
-          }}
-          onBarcodeScanned={
-            mode === 'scan'
-              ? (event) => handleBarcodeScanned(event.data)
-              : undefined
-          }
-        >
-          {/* 扫码框覆盖层 */}
-          {mode === 'scan' && (
-            <View style={styles.scanOverlay}>
-              <View style={styles.scanFrame} />
-              <Text style={styles.scanHint}>将条码对准框内</Text>
-            </View>
-          )}
-
-          {/* 拍照按钮（仅拍照模式） */}
-          {mode === 'photo' && (
-            <View style={styles.photoOverlay}>
-              <TouchableOpacity
-                style={styles.captureButton}
-                onPress={handleTakePhoto}
-                disabled={isLoading}
-                accessibilityLabel="拍照识别"
-                accessibilityRole="button"
-              >
-                <View style={styles.captureInner} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.flipButton}
-                onPress={() =>
-                  setFacing((f) => (f === 'back' ? 'front' : 'back'))
-                }
-                accessibilityLabel="切换前后摄像头"
-                accessibilityRole="button"
-              >
-                <Text style={styles.flipButtonText}>翻转</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* 加载指示器 */}
-          {isLoading && (
-            <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="large" color={colors.brand.primary} />
-            </View>
-          )}
-        </CameraView>
-      </View>
+      {/* Camera 预览区（全屏填充剩余空间�?*/}
+      <CameraContent
+        mode={mode}
+        cameraRef={cameraRef}
+        facing={facing}
+        colors={colors}
+        scale={scale}
+        isLoading={isLoading}
+        onBarcodeScanned={(event) => {
+        if (mode === 'scan') handleBarcodeScanned(event.data);
+      }}
+        onTakePhoto={handleTakePhoto}
+        onFlipCamera={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
+      />
 
       {/* 商品匹配卡片（扫码结果） */}
       {matchedProduct && mode === 'scan' && (
@@ -449,7 +478,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
             <TouchableOpacity
               style={styles.ignoreBtn}
               onPress={handleIgnore}
-              accessibilityLabel="忽略此商品"
+              accessibilityLabel="忽略此商�?
               accessibilityRole="button"
             >
               <Text style={styles.ignoreBtnText}>忽略</Text>
@@ -484,7 +513,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
         </TouchableOpacity>
       </View>
 
-      {/* 候选列表 Bottom Sheet */}
+      {/* 候选列�?Bottom Sheet */}
       <Modal
         visible={showCandidates}
         animationType="slide"
@@ -506,7 +535,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
                     )}
                     {item.confidence >= 0 && (
                       <Text style={styles.candidateConfidence}>
-                        置信度 {(item.confidence * 100).toFixed(0)}%
+                        置信�?{(item.confidence * 100).toFixed(0)}%
                       </Text>
                     )}
                     {item.confidence < 0 && (
@@ -533,13 +562,13 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
               accessibilityRole="button"
             >
               <Text style={styles.manualSearchBtnText}>
-                以上都不是 → 手动搜索
+                以上都不�?�?手动搜索
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.sheetCloseBtn}
               onPress={() => setShowCandidates(false)}
-              accessibilityLabel="关闭候选列表"
+              accessibilityLabel="关闭候选列�?
               accessibilityRole="button"
             >
               <Text style={styles.sheetCloseBtnText}>关闭</Text>
@@ -572,35 +601,6 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     tabActive: { borderBottomWidth: 2, borderBottomColor: colors.brand.primary },
     tabText: { fontSize: 15 * scale, color: colors.text.secondary, fontWeight: '500' },
     tabTextActive: { color: colors.brand.primary, fontWeight: '600' },
-    cameraContainer: { flex: 1, position: 'relative' },
-    camera: { flex: 1 },
-    scanOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    scanFrame: {
-      width: 240, height: 240, borderWidth: 2, borderColor: colors.text.inverse,
-      borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)',
-    },
-    scanHint: {
-      color: colors.text.inverse, fontSize: 14 * scale, marginTop: 16,
-      textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 },
-      textShadowRadius: 2,
-    },
-    photoOverlay: {
-      flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 60,
-    },
-    captureButton: {
-      width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.3)',
-      justifyContent: 'center', alignItems: 'center', marginBottom: 20,
-    },
-    captureInner: {
-      width: 56, height: 56, borderRadius: 28, backgroundColor: colors.text.inverse,
-      borderWidth: 4, borderColor: colors.brand.primary,
-    },
-    flipButton: { padding: 12, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 8 },
-    flipButtonText: { color: colors.text.inverse, fontSize: 14 * scale },
-    loadingOverlay: {
-      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-      justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)',
-    },
     resultCard: {
       backgroundColor: colors.bg.card, marginHorizontal: 16, marginBottom: 12,
       borderRadius: 12, padding: 16,
@@ -671,3 +671,37 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     sheetCloseBtnText: { color: colors.text.inverse, fontSize: 15 * scale, fontWeight: '600' },
   });
 }
+
+// CameraContent 专属样式（不依赖 ScanScreen 内部�?mode/barcode 逻辑�?
+function createCameraStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+  return StyleSheet.create({
+    camera: { flex: 1 },
+    scanOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    scanFrame: {
+      width: 240, height: 240, borderWidth: 2, borderColor: colors.text.inverse,
+      borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)',
+    },
+    scanHint: {
+      color: colors.text.inverse, fontSize: 14 * scale, marginTop: 16,
+      textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
+    },
+    photoOverlay: {
+      flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 60,
+    },
+    captureButton: {
+      width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.3)',
+      justifyContent: 'center', alignItems: 'center', marginBottom: 20,
+    },
+    captureInner: {
+      width: 56, height: 56, borderRadius: 28, backgroundColor: colors.text.inverse,
+      borderWidth: 4, borderColor: colors.brand.primary,
+    },
+    flipButton: { padding: 12, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 8 },
+    loadingOverlay: {
+      position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+      justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)',
+    },
+  });
+}
+
