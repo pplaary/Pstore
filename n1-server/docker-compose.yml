@@ -2,7 +2,9 @@ version: "3.8"
 
 services:
   n1:
-    build: .
+    build:
+      context: ..
+      dockerfile: n1-server/Dockerfile
     container_name: pstore-n1
     ports:
       - "3141:3141"
@@ -12,6 +14,12 @@ services:
       - CONFIG_PIN=0000
       - DATA_DIR=/data
       - PORT=3141
+      # AI 配置
+      - AI_API_KEY=sk-lqbWSSPJPfkvbyqHT9iIFHhI5o8Z1Sb9iDyZRbUQz2Qzm4tx
+      - AI_BASE_URL=http://192.168.0.200:3000
+      - AI_MODEL=gemini-3.1-flash-lite-preview
+      - AI_VISION_MODEL=vision
+      - AI_CODE_MODEL=code
     restart: unless-stopped
 
 volumes:
