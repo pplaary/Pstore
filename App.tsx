@@ -5,6 +5,7 @@ import { StoreProvider } from './src/context/store';
 import RootNavigator from './src/navigation/RootNavigator';
 import { ThemeProvider } from './src/theme/ThemeContext';
 import { useAIConfigStore } from './src/store/aiConfig';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 function AIInit() {
@@ -66,8 +67,10 @@ export default function App() {
   return (
     <StoreProvider db={db}>
       <ThemeProvider>
-        <AIInit />
-        <RootNavigator />
+        <ErrorBoundary>
+          <AIInit />
+          <RootNavigator />
+        </ErrorBoundary>
       </ThemeProvider>
     </StoreProvider>
   );
