@@ -370,7 +370,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
       <View style={styles.bottomBar}>
         <TouchableOpacity
           style={styles.scanButton}
-          onPress={() => (navigation as any).navigate('ScanBarcode')}
+          onPress={() => (navigation as any).navigate('HomeTabs', { screen: 'Scan' })}
           accessibilityLabel="扫码识别"
           accessibilityRole="button"
         >
