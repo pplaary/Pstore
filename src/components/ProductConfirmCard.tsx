@@ -1,14 +1,15 @@
 /**
- * AI 识别结果确认卡片
+ * AI 识别结果确认卡片 — 设计稿对齐
  *
- * 展示 AI 识别的商品信息，提供 [加购] / [忽略] 操作。
+ * 布局：图片左 | 商品信息右
+ *       底部：数量控件 [- 1 +]  |  [忽略] [加购]
+ *
  * 60 秒过期后变灰显示（视觉提示，不阻断交互）。
- *
- * spec-v4.5 §7.4：草稿卡 60 秒过期变灰，仍可点击确认。
  */
 
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme, type ThemeColors } from '../theme/ThemeContext';
 import type { Product } from '../db/types';
 
@@ -29,31 +30,11 @@ export interface ProductConfirmCardProps {
   onIgnore: () => void;
 }
 
-// ==================== 置信度颜色 ====================
-
-const CONFIDENCE_COLORS = {
-  high: '#16A34A',
-  mid: '#F59E0B',
-  low: '#EF4444',
-};
-
-// ==================== 辅助函数 ====================
-
-function getConfidenceMeta(confidence: number): { color: string; bg: string; label: string } {
-  if (confidence >= 0.8) {
-    return { color: CONFIDENCE_COLORS.high, bg: '#DCFCE7', label: '高置信度' };
-  }
-  if (confidence >= 0.5) {
-    return { color: CONFIDENCE_COLORS.mid, bg: '#FEF3C7', label: '中置信度' };
-  }
-  return { color: CONFIDENCE_COLORS.low, bg: '#FEE2E2', label: '低置信度' };
-}
-
 // ==================== 组件 ====================
 
 export function ProductConfirmCard({
   product,
-  quantity,
+  quantity: initialQty,
   confidence,
   expired,
   onAddToCart,
@@ -61,75 +42,81 @@ export function ProductConfirmCard({
 }: ProductConfirmCardProps): JSX.Element {
   const { theme } = useTheme();
   const { colors, scale } = theme;
-  const confidenceMeta = getConfidenceMeta(confidence);
-  const displayName = quantity > 1 ? `${product.name} ×${quantity}` : product.name;
+  const [qty, setQty] = useState(initialQty);
 
   const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
   return (
     <View
-      style={[
-        styles.card,
-        expired ? styles.cardExpired : styles.cardNormal,
-      ]}
+      style={[styles.card, expired && styles.cardExpired]}
       accessible
     >
-      {/* 商品信息区 */}
+      {/* 商品信息行：图片 + 信息 */}
       <View style={styles.infoRow}>
-        {/* 缩略图 */}
+        {/* 商品图片 */}
         {product.imageUri ? (
-          <View style={styles.thumbnailWrapper}>
-            <Image source={{ uri: product.imageUri }} style={styles.thumbnail} accessible accessibilityLabel="商品图片" />
+          <View style={styles.imageWrap}>
+            <Image source={{ uri: product.imageUri }} style={styles.image} />
           </View>
         ) : (
-          <View style={styles.thumbnailPlaceholder} accessible accessibilityLabel="商品占位图">
-            <Text style={styles.thumbnailPlaceholderText}>📦</Text>
+          <View style={styles.imagePlaceholder}>
+            <Ionicons name="cube-outline" size={28 * scale} color={colors.text.tertiary} />
           </View>
         )}
+
+        {/* 商品信息 */}
         <View style={styles.infoText}>
-          <Text style={[styles.name, expired && styles.nameExpired]} numberOfLines={1}>
-            {displayName}
-          </Text>
+          <Text style={styles.name} numberOfLines={1}>{product.name}</Text>
           {product.spec ? (
-            <Text style={[styles.spec, expired && styles.specExpired]} numberOfLines={1}>
-              {product.spec}
-            </Text>
+            <Text style={styles.spec} numberOfLines={1}>{product.spec}</Text>
           ) : null}
-          <Text style={[styles.price, expired && styles.priceExpired]}>
-            ¥{product.price.toFixed(2)}
-          </Text>
-        </View>
-        {/* 置信度标签 */}
-        <View style={[styles.confidenceBadge, { backgroundColor: confidenceMeta.bg }]}>
-          <Text style={[styles.confidenceText, { color: confidenceMeta.color }]}>
-            {confidenceMeta.label}
-          </Text>
+          <Text style={styles.price}>¥{product.price.toFixed(2)}</Text>
         </View>
       </View>
 
-      {/* 过期提示 */}
-      {expired && (
-        <Text style={styles.expiredHint}>已超时，请确认后再操作</Text>
-      )}
+      {/* 底部操作行：数量控件 + 操作按钮 */}
+      <View style={styles.actionRow}>
+        {/* 数量控件 */}
+        <View style={styles.qtyControl}>
+          <TouchableOpacity
+            style={styles.qtyBtn}
+            onPress={() => setQty(Math.max(1, qty - 1))}
+            disabled={qty <= 1}
+            accessibilityLabel="减少数量"
+            accessibilityRole="button"
+          >
+            <Ionicons name="remove" size={16 * scale} color={qty <= 1 ? colors.text.tertiary : colors.text.primary} />
+          </TouchableOpacity>
+          <Text style={styles.qtyText}>{qty}</Text>
+          <TouchableOpacity
+            style={styles.qtyBtn}
+            onPress={() => setQty(qty + 1)}
+            accessibilityLabel="增加数量"
+            accessibilityRole="button"
+          >
+            <Ionicons name="add" size={16 * scale} color={colors.text.primary} />
+          </TouchableOpacity>
+        </View>
 
-      {/* 操作按钮 */}
-      <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={styles.addBtn}
-          onPress={() => onAddToCart(product, quantity)}
-          accessibilityLabel={`加购${quantity > 1 ? quantity + '个' : ''}${product.name}`}
-          accessibilityRole="button"
-        >
-          <Text style={styles.addBtnText}>加购</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.ignoreBtn}
-          onPress={onIgnore}
-          accessibilityLabel="忽略此商品"
-          accessibilityRole="button"
-        >
-          <Text style={styles.ignoreBtnText}>忽略</Text>
-        </TouchableOpacity>
+        {/* 操作按钮 */}
+        <View style={styles.btnGroup}>
+          <TouchableOpacity
+            style={styles.ignoreBtn}
+            onPress={onIgnore}
+            accessibilityLabel="忽略此商品"
+            accessibilityRole="button"
+          >
+            <Text style={styles.ignoreBtnText}>忽略</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.addBtn}
+            onPress={() => onAddToCart(product, qty)}
+            accessibilityLabel={`加购${qty > 1 ? qty + '个' : ''}${product.name}`}
+            accessibilityRole="button"
+          >
+            <Text style={styles.addBtnText}>加购</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -139,128 +126,126 @@ export function ProductConfirmCard({
 
 function createStyles(colors: ThemeColors, scale: number) {
   return StyleSheet.create({
-    // 卡片容器
     card: {
-      borderRadius: 10 * scale,
-      padding: 14 * scale,
-      marginVertical: 6 * scale,
-    },
-    cardNormal: {
       backgroundColor: colors.surface.s1,
-      borderWidth: 2,
-      borderColor: colors.brand.primary,
+      borderRadius: 12 * scale,
+      padding: 14 * scale,
+      marginHorizontal: 16 * scale,
+      marginVertical: 6 * scale,
+      borderWidth: 1,
+      borderColor: colors.border.subtle,
     },
     cardExpired: {
-      backgroundColor: colors.surface.s0,
-      borderWidth: 2,
-      borderColor: colors.text.tertiary,
-      opacity: 0.5,
+      opacity: 0.4,
     },
+
     // 商品信息行
     infoRow: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
-      marginBottom: 10 * scale,
+      marginBottom: 12 * scale,
     },
-    thumbnailWrapper: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+    imageWrap: {
+      width: 72 * scale,
+      height: 72 * scale,
+      borderRadius: 10 * scale,
       overflow: 'hidden',
-      marginRight: 10,
-      borderWidth: 1,
-      borderColor: colors.border.default,
+      marginRight: 12 * scale,
+      backgroundColor: colors.surface.s0,
     },
-    thumbnail: {
-      width: 48,
-      height: 48,
+    image: {
+      width: 72 * scale,
+      height: 72 * scale,
     },
-    thumbnailPlaceholder: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+    imagePlaceholder: {
+      width: 72 * scale,
+      height: 72 * scale,
+      borderRadius: 10 * scale,
       backgroundColor: colors.surface.s0,
       alignItems: 'center',
       justifyContent: 'center',
-      marginRight: 10,
+      marginRight: 12 * scale,
       borderWidth: 1,
-      borderColor: colors.border.default,
-    },
-    thumbnailPlaceholderText: {
-      fontSize: 20 * scale,
+      borderColor: colors.border.subtle,
     },
     infoText: {
       flex: 1,
-      marginRight: 10,
+      justifyContent: 'center',
     },
     name: {
-      fontSize: 15 * scale,
-      fontWeight: '600',
+      fontSize: 16 * scale,
+      fontWeight: '700',
       color: colors.text.primary,
-      marginBottom: 2,
-    },
-    nameExpired: {
-      color: colors.text.secondary,
+      marginBottom: 4 * scale,
     },
     spec: {
       fontSize: 13 * scale,
       color: colors.text.secondary,
-      marginBottom: 4,
-    },
-    specExpired: {
-      color: colors.text.secondary,
+      marginBottom: 4 * scale,
     },
     price: {
       fontSize: 16 * scale,
       fontWeight: '700',
-      color: colors.brand.danger,
+      color: colors.text.primary,
     },
-    priceExpired: {
-      color: colors.text.secondary,
-    },
-    // 置信度标签
-    confidenceBadge: {
-      paddingHorizontal: 8 * scale,
-      paddingVertical: 4 * scale,
-      borderRadius: 6 * scale,
-    },
-    confidenceText: {
-      fontSize: 12 * scale,
-      fontWeight: '600',
-    },
-    // 过期提示
-    expiredHint: {
-      fontSize: 11 * scale,
-      color: CONFIDENCE_COLORS.mid,
-      marginBottom: 8 * scale,
-    },
-    // 按钮行
-    buttonRow: {
+
+    // 底部操作行
+    actionRow: {
       flexDirection: 'row',
-      gap: 10 * scale,
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+
+    // 数量控件
+    qtyControl: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2 * scale,
+    },
+    qtyBtn: {
+      width: 30 * scale,
+      height: 30 * scale,
+      borderRadius: 15 * scale,
+      borderWidth: 1,
+      borderColor: colors.border.default,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surface.s0,
+    },
+    qtyText: {
+      fontSize: 15 * scale,
+      fontWeight: '600',
+      color: colors.text.primary,
+      minWidth: 28 * scale,
+      textAlign: 'center',
+    },
+
+    // 操作按钮组
+    btnGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8 * scale,
+    },
+    ignoreBtn: {
+      paddingHorizontal: 16 * scale,
+      paddingVertical: 8 * scale,
+    },
+    ignoreBtnText: {
+      fontSize: 14 * scale,
+      fontWeight: '500',
+      color: colors.text.tertiary,
     },
     addBtn: {
-      flex: 1,
       backgroundColor: colors.brand.primary,
-      borderRadius: 8 * scale,
-      paddingVertical: 10 * scale,
+      borderRadius: 6 * scale,
+      paddingHorizontal: 20 * scale,
+      paddingVertical: 8 * scale,
+      minWidth: 64 * scale,
       alignItems: 'center',
     },
     addBtnText: {
       fontSize: 14 * scale,
       fontWeight: '600',
       color: colors.text.inverse,
-    },
-    ignoreBtn: {
-      flex: 1,
-      paddingVertical: 10 * scale,
-      alignItems: 'center',
-    },
-    ignoreBtnText: {
-      fontSize: 14 * scale,
-      fontWeight: '600',
-      color: colors.text.tertiary,
     },
   });
 }

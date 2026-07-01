@@ -1,11 +1,10 @@
 /**
- * AI 会话气泡组件 — 现代化设计
+ * AI 会话气泡组件 — 设计稿对齐
  *
  * 设计特征：
- * - 用户气泡：品牌色背景，右对齐，微阴影
- * - AI 气泡：表面色背景，左对齐，带头像占位
- * - 时间戳 + AI 提示
- * - 支持消息状态指示
+ * - AI 气泡：薄荷绿背景 (#D4F8D4)，时间戳在气泡内右下角
+ * - 用户气泡：浅紫背景 (#F0ECFE)，时间戳在气泡内右下角
+ * - 无头像，纯文字气泡
  */
 
 import React, { useMemo } from 'react';
@@ -40,8 +39,8 @@ function createStyles(theme: Theme) {
     // 消息行容器
     row: {
       flexDirection: 'row',
-      marginVertical: spacing.xs,
-      paddingHorizontal: spacing.md,
+      marginVertical: 4 * scale,
+      paddingHorizontal: spacing.lg,
     },
     userRow: {
       justifyContent: 'flex-end',
@@ -50,50 +49,31 @@ function createStyles(theme: Theme) {
       justifyContent: 'flex-start',
     },
 
-    // AI 头像占位
-    aiAvatar: {
-      width: 32 * scale,
-      height: 32 * scale,
-      borderRadius: radii.full,
-      backgroundColor: colors.brand.primaryMuted,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginRight: spacing.sm,
-      alignSelf: 'flex-end',
-    },
-    aiAvatarText: {
-      fontSize: 13 * scale,
-      fontWeight: '700',
-      color: colors.brand.primary,
-    },
-
     // 气泡容器
     bubbleWrapper: {
-      maxWidth: '75%',
+      maxWidth: '80%',
     },
 
     // 气泡主体
     bubble: {
-      borderRadius: radii.lg,
-      paddingHorizontal: spacing.md + 2,
-      paddingVertical: spacing.sm + 2,
+      borderRadius: 12 * scale,
+      paddingHorizontal: 14 * scale,
+      paddingTop: 10 * scale,
+      paddingBottom: 6 * scale,
     },
     userBubble: {
       backgroundColor: colors.chat.userBubble,
-      borderBottomRightRadius: radii.sm,
-      ...theme.shadows.sm,
+      borderBottomRightRadius: 4 * scale,
     },
     aiBubble: {
       backgroundColor: colors.chat.aiBubble,
-      borderBottomLeftRadius: radii.sm,
-      borderWidth: 1,
-      borderColor: colors.border.subtle,
+      borderBottomLeftRadius: 4 * scale,
     },
 
     // 消息文字
     content: {
-      fontSize: 15 * scale,
-      lineHeight: 21 * scale,
+      fontSize: 14 * scale,
+      lineHeight: 20 * scale,
     },
     userContent: {
       color: colors.chat.userBubbleText,
@@ -102,26 +82,15 @@ function createStyles(theme: Theme) {
       color: colors.chat.aiBubbleText,
     },
 
-    // 元信息行
-    metaRow: {
+    // 时间戳（气泡内右下角）
+    timestampRow: {
       flexDirection: 'row',
-      marginTop: spacing.xs,
-      paddingHorizontal: spacing.xs,
-      gap: spacing.sm,
-    },
-    userMeta: {
       justifyContent: 'flex-end',
-    },
-    aiMeta: {
-      justifyContent: 'flex-start',
-      paddingLeft: 32 * scale + spacing.sm,
+      marginTop: 4 * scale,
+      paddingBottom: 2 * scale,
     },
     timestamp: {
-      fontSize: 11 * scale,
-      color: colors.text.tertiary,
-    },
-    aiHint: {
-      fontSize: 11 * scale,
+      fontSize: 10 * scale,
       color: colors.text.tertiary,
     },
   });
@@ -138,25 +107,17 @@ export function AIChatBubble({ role, content, timestamp }: AIChatBubbleProps): J
 
   return (
     <View style={[styles.row, isUser ? styles.userRow : styles.aiRow]}>
-      {/* AI 头像 */}
-      {!isUser && (
-        <View style={styles.aiAvatar}>
-          <Text style={styles.aiAvatarText}>AI</Text>
-        </View>
-      )}
-
       <View style={styles.bubbleWrapper}>
         {/* 气泡主体 */}
-        <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]} accessibilityLabel={isUser ? "用户消息" : "AI 回复"}>
+        <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}>
           <Text style={[styles.content, isUser ? styles.userContent : styles.aiContent]}>
             {content}
           </Text>
-        </View>
-
-        {/* 元信息 */}
-        <View style={[styles.metaRow, isUser ? styles.userMeta : styles.aiMeta]}>
-          {timeStr ? <Text style={styles.timestamp}>{timeStr}</Text> : null}
-          {!isUser && <Text style={styles.aiHint}>AI 生成，请确认</Text>}
+          {timeStr ? (
+            <View style={styles.timestampRow}>
+              <Text style={styles.timestamp}>{timeStr}</Text>
+            </View>
+          ) : null}
         </View>
       </View>
     </View>

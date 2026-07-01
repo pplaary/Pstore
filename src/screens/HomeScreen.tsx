@@ -1,17 +1,12 @@
 /**
  * 首页 — AI 对话 + 智能物品管理
  *
- * 双模式架构：
- * - chat 模式：AI 聊天界面，支持语音输入、AR 扫码
- * - search 模式：本地 FTS5 实时搜索，渲染 ProductCard 列表
- *
- * 单手交互要点：
- * - 底部 Tab 栏（抽屉入口在左上角）
- * - 药丸形输入栏在拇指热区
- * - 语音按钮在输入栏左侧
- * - 扫码按钮在输入栏右侧
- * - 购物车浮层从底部弹出
- * - 连击标题 5 次进入管理模式
+ * 设计稿对齐：
+ * - 顶部 Header：汉堡菜单 | PStore 标题 | 同步图标 + 购物车
+ * - AI 对话区域：消息列表 + 产品确认卡片
+ * - 购物车：可折叠底部栏（折叠态显示合计+结账，展开态显示物品列表）
+ * - 底部输入栏：药丸形，麦克风(左) + 输入框(中) + 相机(右)
+ * - 结账弹窗：居中卡片，合计清单，关闭并清空
  */
 
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
@@ -29,6 +24,7 @@ import {
   Modal,
   Dimensions,
   Easing,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, type Theme } from '../theme/ThemeContext';
@@ -47,7 +43,7 @@ import type { Product } from '../db/types';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { HomeTabParamList, HomeScreenCompositeProps } from '../navigation/types';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // ==================== 类型 ====================
 
@@ -64,13 +60,12 @@ interface Message {
 function createStyles(theme: Theme) {
   const { colors, spacing, radii, scale } = theme;
   return StyleSheet.create({
-    // 页面容器
     container: {
       flex: 1,
       backgroundColor: colors.surface.s0,
     },
 
-    // 自定义 Header
+    // ─── Header ───
     header: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -127,7 +122,7 @@ function createStyles(theme: Theme) {
       minWidth: 18 * scale,
       height: 18 * scale,
       borderRadius: radii.full,
-      backgroundColor: colors.brand.tertiary,
+      backgroundColor: colors.brand.primary,
       justifyContent: 'center',
       alignItems: 'center',
       paddingHorizontal: 4,
@@ -138,21 +133,15 @@ function createStyles(theme: Theme) {
       color: colors.text.inverse,
     },
 
-    // 搜索模式头部
-    searchHeader: {
-      paddingHorizontal: spacing.lg,
+    // ─── 消息列表 ───
+    messageList: {
+      flex: 1,
+    },
+    messageContent: {
       paddingVertical: spacing.sm,
     },
-    searchInput: {
-      height: 40 * scale,
-      borderRadius: radii.full,
-      backgroundColor: colors.input,
-      paddingHorizontal: spacing.lg,
-      fontSize: 14 * scale,
-      color: colors.text.primary,
-    },
 
-    // 空态
+    // ─── 空态 ───
     emptyContainer: {
       flex: 1,
       justifyContent: 'center',
@@ -183,7 +172,7 @@ function createStyles(theme: Theme) {
       marginBottom: spacing.xxl,
     },
 
-    // 快捷操作 (空态)
+    // ─── 快捷操作 ───
     quickActions: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -207,20 +196,12 @@ function createStyles(theme: Theme) {
       fontWeight: '500',
     },
 
-    // 消息列表
-    messageList: {
-      flex: 1,
-    },
-    messageContent: {
-      paddingVertical: spacing.sm,
-    },
-
-    // 加载指示器
+    // ─── 输入指示器 ───
     typingIndicator: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.xs,
-      paddingHorizontal: spacing.lg + 32 * scale + spacing.sm,
+      gap: 4 * scale,
+      paddingHorizontal: spacing.lg,
       paddingVertical: spacing.sm,
     },
     typingDot: {
@@ -230,98 +211,53 @@ function createStyles(theme: Theme) {
       backgroundColor: colors.text.tertiary,
     },
 
-    // 搜索模式结果列表
-    searchResultItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      backgroundColor: colors.surface.s1,
-      marginHorizontal: spacing.md,
-      marginVertical: 3 * scale,
-      borderRadius: radii.md,
-      borderWidth: 0.5,
-      borderColor: colors.border.subtle,
-    },
-    searchResultInfo: {
-      flex: 1,
-      marginLeft: spacing.sm,
-    },
-    searchResultName: {
-      fontSize: 15 * scale,
-      fontWeight: '600',
-      color: colors.text.primary,
-    },
-    searchResultSpec: {
-      fontSize: 12 * scale,
-      color: colors.text.secondary,
-      marginTop: 2,
-    },
-    searchResultPrice: {
-      fontSize: 15 * scale,
-      fontWeight: '700',
-      color: colors.brand.danger,
-    },
-    searchResultStatus: {
-      fontSize: 11 * scale,
-      fontWeight: '600',
-      color: colors.text.tertiary,
-      marginLeft: spacing.sm,
-    },
-    searchEmpty: {
-      paddingVertical: spacing.xxxl,
-      alignItems: 'center',
-    },
-    searchEmptyText: {
-      fontSize: 14 * scale,
-      color: colors.text.tertiary,
-    },
-
-    // 底部输入栏
+    // ─── 底部输入栏 ───
     bottomBar: {
       flexDirection: 'row',
-      alignItems: 'flex-end',
+      alignItems: 'center',
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
       backgroundColor: colors.surface.s1,
       borderTopWidth: 0.5,
       borderTopColor: colors.border.subtle,
       gap: spacing.sm,
-      paddingBottom: Platform.OS === 'ios' ? 20 : spacing.sm,
+      paddingBottom: Platform.OS === 'ios' ? 24 : spacing.sm,
     },
     inputContainer: {
       flex: 1,
       flexDirection: 'row',
-      alignItems: 'flex-end',
+      alignItems: 'center',
       backgroundColor: colors.surface.s0,
-      borderRadius: radii.xl,
+      borderRadius: 24 * scale,
       borderWidth: 1,
       borderColor: colors.border.default,
       paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.xs,
-      minHeight: 42 * scale,
-      maxHeight: 120 * scale,
+      paddingVertical: 2 * scale,
+      minHeight: 44 * scale,
+    },
+    micBtn: {
+      width: 28 * scale,
+      height: 28 * scale,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     input: {
       flex: 1,
-      fontSize: 15 * scale,
+      fontSize: 14 * scale,
       color: colors.text.primary,
       paddingVertical: 0,
-      paddingRight: spacing.sm,
+      paddingHorizontal: spacing.sm,
       minHeight: 30 * scale,
-      maxHeight: 100 * scale,
     },
-    sendButton: {
-      minWidth: 48 * scale,
-      minHeight: 48 * scale,
+    sendBtn: {
+      width: 28 * scale,
+      height: 28 * scale,
       borderRadius: radii.full,
       backgroundColor: colors.brand.primary,
       justifyContent: 'center',
       alignItems: 'center',
-      marginLeft: spacing.xs,
-      marginBottom: 2,
     },
-    scanButton: {
+    cameraBtn: {
       width: 42 * scale,
       height: 42 * scale,
       borderRadius: radii.full,
@@ -332,43 +268,94 @@ function createStyles(theme: Theme) {
       borderColor: colors.border.default,
     },
 
-    // 购物车浮层
-    cartSheet: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: colors.surface.s2,
-      borderTopLeftRadius: radii.xl,
-      borderTopRightRadius: radii.xl,
+    // ─── 购物车折叠栏（底部输入栏上方） ───
+    cartBar: {
+      backgroundColor: colors.surface.s1,
+      borderTopWidth: 0.5,
+      borderTopColor: colors.border.subtle,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+    },
+    cartBarRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    cartBarLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    cartBarIcon: {
+      width: 32 * scale,
+      height: 32 * scale,
+      borderRadius: radii.full,
+      backgroundColor: colors.brand.primaryMuted,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    cartBarCount: {
+      fontSize: 13 * scale,
+      fontWeight: '600',
+      color: colors.brand.primary,
+    },
+    cartBarTotal: {
+      fontSize: 16 * scale,
+      fontWeight: '700',
+      color: colors.text.primary,
+    },
+    cartBarRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    cartBarExpandBtn: {
+      width: 28 * scale,
+      height: 28 * scale,
+      borderRadius: radii.full,
+      borderWidth: 1,
+      borderColor: colors.border.default,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    checkoutBtn: {
+      backgroundColor: colors.brand.primary,
+      borderRadius: 6 * scale,
+      paddingHorizontal: 20 * scale,
+      paddingVertical: 8 * scale,
+    },
+    checkoutBtnText: {
+      fontSize: 14 * scale,
+      fontWeight: '600',
+      color: colors.text.inverse,
+    },
+
+    // ─── 购物车展开面板 ───
+    cartExpanded: {
+      backgroundColor: colors.surface.s1,
+      borderTopLeftRadius: 20 * scale,
+      borderTopRightRadius: 20 * scale,
       paddingHorizontal: spacing.xl,
       paddingTop: spacing.md,
-      paddingBottom: Platform.OS === 'ios' ? 32 : spacing.lg,
+      paddingBottom: spacing.sm,
+      maxHeight: SCREEN_HEIGHT * 0.45,
       ...theme.shadows.lg,
     },
-    cartSheetHandle: {
-      width: 36 * scale,
-      height: 4 * scale,
-      borderRadius: radii.full,
-      backgroundColor: colors.border.default,
-      alignSelf: 'center',
-      marginBottom: spacing.md,
-    },
-    cartSheetHeader: {
+    cartExpandedHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: spacing.md,
     },
-    cartSheetTitle: {
+    cartExpandedTitle: {
       fontSize: 16 * scale,
       fontWeight: '700',
       color: colors.text.primary,
     },
-    cartSheetClear: {
+    cartExpandedClear: {
       fontSize: 13 * scale,
-      color: colors.brand.danger,
-      fontWeight: '600',
+      color: colors.text.tertiary,
+      fontWeight: '500',
     },
     cartItem: {
       flexDirection: 'row',
@@ -378,126 +365,136 @@ function createStyles(theme: Theme) {
       borderBottomColor: colors.border.subtle,
       gap: spacing.sm,
     },
+    cartItemThumb: {
+      width: 40 * scale,
+      height: 40 * scale,
+      borderRadius: 8 * scale,
+      backgroundColor: colors.surface.s0,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
     cartItemName: {
       flex: 1,
       fontSize: 14 * scale,
       color: colors.text.primary,
+      fontWeight: '500',
     },
     cartItemQty: {
       fontSize: 13 * scale,
       color: colors.text.secondary,
+      marginRight: spacing.sm,
     },
     cartItemPrice: {
       fontSize: 14 * scale,
       fontWeight: '600',
       color: colors.text.primary,
     },
-    cartSheetTotal: {
+    cartExpandedFooter: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       marginTop: spacing.md,
-      paddingVertical: spacing.sm,
+      paddingBottom: spacing.sm,
     },
-    cartSheetTotalLabel: {
-      fontSize: 14 * scale,
-      color: colors.text.secondary,
-    },
-    cartSheetTotalPrice: {
-      fontSize: 20 * scale,
-      fontWeight: '800',
-      color: colors.brand.danger,
-    },
-    checkoutBtn: {
-      backgroundColor: colors.brand.primary,
-      borderRadius: radii.md,
-      paddingVertical: spacing.md + 2,
-      alignItems: 'center',
-      marginTop: spacing.md,
-    },
-    checkoutBtnText: {
-      fontSize: 15 * scale,
+    cartExpandedTotal: {
+      fontSize: 16 * scale,
       fontWeight: '700',
-      color: colors.text.inverse,
+      color: colors.text.primary,
+    },
+    cartExpandedTotalPrice: {
+      fontSize: 18 * scale,
+      fontWeight: '800',
+      color: colors.brand.primary,
     },
 
-    // 结账 Modal
-    modalOverlay: {
+    // ─── 结账弹窗（居中卡片） ───
+    checkoutOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      justifyContent: 'flex-end',
+      backgroundColor: colors.surface.overlay,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing.xxl,
     },
-    modalContainer: {
-      backgroundColor: colors.surface.s2,
-      borderTopLeftRadius: radii.xl,
-      borderTopRightRadius: radii.xl,
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.md,
-      paddingBottom: Platform.OS === 'ios' ? 32 : spacing.lg,
-      maxHeight: '70%',
+    checkoutCard: {
+      width: '100%',
+      maxWidth: 340,
+      backgroundColor: colors.surface.s1,
+      borderRadius: 20 * scale,
+      padding: spacing.xxl,
+      ...theme.shadows.lg,
     },
-    modalHandle: {
-      width: 36 * scale,
-      height: 4 * scale,
-      borderRadius: radii.full,
-      backgroundColor: colors.border.default,
-      alignSelf: 'center',
-      marginBottom: spacing.md,
-    },
-    modalTitle: {
+    checkoutCardTitle: {
       fontSize: 18 * scale,
       fontWeight: '700',
       color: colors.text.primary,
-      marginBottom: spacing.md,
+      textAlign: 'center',
+      marginBottom: spacing.xl,
     },
-    modalTotal: {
+    checkoutCloseBtn: {
+      position: 'absolute',
+      top: spacing.md,
+      right: spacing.md,
+      width: 32 * scale,
+      height: 32 * scale,
+      borderRadius: radii.full,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    checkoutItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      borderBottomWidth: 0.5,
+      borderBottomColor: colors.border.subtle,
+      gap: spacing.sm,
+    },
+    checkoutItemName: {
+      flex: 1,
+      fontSize: 14 * scale,
+      color: colors.text.primary,
+    },
+    checkoutItemQty: {
+      fontSize: 13 * scale,
+      color: colors.text.secondary,
+    },
+    checkoutItemPrice: {
+      fontSize: 14 * scale,
+      fontWeight: '600',
+      color: colors.text.primary,
+    },
+    checkoutTotal: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: spacing.md,
-      borderTopWidth: 1,
-      borderTopColor: colors.border.subtle,
-      marginTop: spacing.sm,
+      paddingVertical: spacing.lg,
     },
-    modalTotalLabel: {
-      fontSize: 16 * scale,
+    checkoutTotalLabel: {
+      fontSize: 15 * scale,
       fontWeight: '600',
       color: colors.text.primary,
     },
-    modalTotalPrice: {
+    checkoutTotalPrice: {
       fontSize: 22 * scale,
       fontWeight: '800',
-      color: colors.brand.danger,
+      color: colors.brand.primary,
     },
-    modalActions: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-      marginTop: spacing.md,
-    },
-    modalCloseBtn: {
-      flex: 1,
-      paddingVertical: spacing.md,
-      borderRadius: radii.md,
-      borderWidth: 1,
-      borderColor: colors.border.default,
+    checkoutClearBtn: {
+      backgroundColor: colors.brand.primary,
+      borderRadius: 8 * scale,
+      paddingVertical: 14 * scale,
       alignItems: 'center',
+      marginTop: spacing.sm,
     },
-    modalCloseBtnText: {
-      fontSize: 15 * scale,
-      fontWeight: '600',
-      color: colors.text.primary,
-    },
-    modalClearBtn: {
-      flex: 1,
-      paddingVertical: spacing.md,
-      borderRadius: radii.md,
-      backgroundColor: colors.brand.danger,
-      alignItems: 'center',
-    },
-    modalClearBtnText: {
-      fontSize: 15 * scale,
-      fontWeight: '600',
+    checkoutClearBtnText: {
+      fontSize: 16 * scale,
+      fontWeight: '700',
       color: colors.text.inverse,
+    },
+    checkoutClearHint: {
+      fontSize: 12 * scale,
+      color: colors.text.tertiary,
+      textAlign: 'center',
+      marginTop: spacing.sm,
     },
   });
 }
@@ -517,18 +514,8 @@ function TypingIndicator({ theme }: { theme: Theme }) {
       Animated.loop(
         Animated.sequence([
           Animated.delay(d.delay),
-          Animated.timing(d.anim, {
-            toValue: 1,
-            duration: 400,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(d.anim, {
-            toValue: 0.3,
-            duration: 400,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
+          Animated.timing(d.anim, { toValue: 1, duration: 400, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(d.anim, { toValue: 0.3, duration: 400, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         ])
       )
     );
@@ -536,18 +523,10 @@ function TypingIndicator({ theme }: { theme: Theme }) {
     return () => loops.forEach((l) => l.stop());
   }, []);
 
-  const { colors, spacing, scale } = theme;
-
   return (
     <View style={createStyles(theme).typingIndicator}>
       {dots.map((d, i) => (
-        <Animated.View
-          key={i}
-          style={[
-            createStyles(theme).typingDot,
-            { opacity: d.anim },
-          ]}
-        />
+        <Animated.View key={i} style={[createStyles(theme).typingDot, { opacity: d.anim }]} />
       ))}
     </View>
   );
@@ -565,13 +544,6 @@ function EmptyState({
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { colors, scale } = theme;
 
-  const quickActions = [
-    { icon: 'search' as const, label: '查找物品', text: '帮我查找最近添加的物品' },
-    { icon: 'add-circle-outline' as const, label: '添加物品', text: '我想添加一个物品' },
-    { icon: 'list-outline' as const, label: '查看库存', text: '显示我的库存清单' },
-    { icon: 'stats-chart-outline' as const, label: '价格分析', text: '分析我的物品价格趋势' },
-  ];
-
   return (
     <View style={styles.emptyContainer}>
       <View style={styles.emptyIcon}>
@@ -582,7 +554,10 @@ function EmptyState({
         通过对话管理你的物品，支持语音输入、扫码添加和自然语言查询
       </Text>
       <View style={styles.quickActions}>
-        {quickActions.map((action, i) => (
+        {[
+          { icon: 'search' as const, label: '查找物品', text: '帮我查找最近添加的物品' },
+          { icon: 'add-circle-outline' as const, label: '添加物品', text: '我想添加一个物品' },
+        ].map((action, i) => (
           <TouchableOpacity
             key={i}
             style={styles.quickAction}
@@ -595,18 +570,6 @@ function EmptyState({
           </TouchableOpacity>
         ))}
       </View>
-      <TouchableOpacity
-        style={[
-          styles.quickAction,
-          { marginTop: 16 * scale, backgroundColor: colors.brand.primaryMuted, borderColor: colors.brand.primary + '40' },
-        ]}
-        onPress={onScan}
-        accessibilityLabel="扫码添加物品"
-        accessibilityRole="button"
-      >
-        <Ionicons name="scan" size={16 * scale} color={colors.brand.primary} />
-        <Text style={[styles.quickActionText, { color: colors.brand.primary }]}>扫码添加</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -618,29 +581,20 @@ export default function HomeScreen({ navigation }: HomeScreenCompositeProps) {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { colors, scale } = theme;
 
-  const { mode, reachable, isVoiceAvailable } = useAIConfigStore();
   const { items: cartItems, total: cartTotal, clearCart } = useCartStore();
   const { db } = useStore();
 
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [cartExpanded, setCartExpanded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [showPinModal, setShowPinModal] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const inputRef = useRef<TextInput>(null);
-  const cartAnim = useRef(new Animated.Value(0)).current;
   const titleTapCount = useRef(0);
   const titleTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 搜索模式状态
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const isChatMode = mode === 'chat';
   const cartCount = cartItems.reduce((s, i) => s + i.quantity, 0);
 
   // ─── 连击标题 5 次进管理模式 ───
@@ -651,57 +605,18 @@ export default function HomeScreen({ navigation }: HomeScreenCompositeProps) {
       titleTapCount.current = 0;
       setShowPinModal(true);
     } else {
-      titleTapTimer.current = setTimeout(() => {
-        titleTapCount.current = 0;
-      }, 1000);
+      titleTapTimer.current = setTimeout(() => { titleTapCount.current = 0; }, 1000);
     }
   }, []);
-
-  // ─── 搜索模式：FTS5 实时搜索 ───
-  const handleSearchInput = useCallback(
-    (text: string) => {
-      setSearchQuery(text);
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-      if (!text.trim()) {
-        setSearchResults([]);
-        setIsSearching(false);
-        return;
-      }
-      setIsSearching(true);
-      searchTimerRef.current = setTimeout(async () => {
-        try {
-          const results = await searchProducts(db, text.trim(), { limit: 50 });
-          setSearchResults(results);
-        } catch {
-          setSearchResults([]);
-        } finally {
-          setIsSearching(false);
-        }
-      }, 300);
-    },
-    [db],
-  );
-
-  // 切换购物车浮层
-  const toggleCart = useCallback(() => {
-    const toValue = showCart ? 0 : 1;
-    setShowCart(!showCart);
-    Animated.spring(cartAnim, {
-      toValue,
-      useNativeDriver: true,
-      damping: 20,
-      stiffness: 200,
-    }).start();
-  }, [showCart, cartAnim]);
 
   // ─── 结账：关闭并清空 ───
   const handleCheckoutClear = useCallback(() => {
     clearCart();
     setShowCheckout(false);
-    setShowCart(false);
+    setCartExpanded(false);
   }, [clearCart]);
 
-  // 发送消息（AI 模式）
+  // ─── 发送消息 ───
   const handleSend = useCallback(async () => {
     const trimmed = inputText.trim();
     if (!trimmed || isLoading) return;
@@ -735,7 +650,7 @@ export default function HomeScreen({ navigation }: HomeScreenCompositeProps) {
           timestamp: new Date().toISOString(),
         },
       ]);
-    } catch (e) {
+    } catch {
       setMessages((prev) => [
         ...prev,
         {
@@ -750,26 +665,23 @@ export default function HomeScreen({ navigation }: HomeScreenCompositeProps) {
     }
   }, [inputText, isLoading]);
 
-  // 语音输入回调
+  // ─── 语音输入 ───
   const handleVoiceResult = useCallback((text: string) => {
     setInputText(text);
   }, []);
 
-  // 快捷操作
+  // ─── 快捷操作 ───
   const handleQuickAction = useCallback((text: string) => {
     setInputText(text);
     inputRef.current?.focus();
   }, []);
 
-  // 扫码
+  // ─── 扫码 ───
   const handleScan = useCallback(() => {
-    (navigation as BottomTabNavigationProp<HomeTabParamList>).navigate({
-      name: 'Scan',
-      params: {},
-    });
+    (navigation as BottomTabNavigationProp<HomeTabParamList>).navigate({ name: 'Scan', params: {} });
   }, [navigation]);
 
-  // 渲染消息
+  // ─── 渲染消息 ───
   const renderMessage = useCallback(
     ({ item }: { item: Message }) => (
       <AIChatBubble role={item.role} content={item.content} timestamp={item.timestamp} />
@@ -778,41 +690,17 @@ export default function HomeScreen({ navigation }: HomeScreenCompositeProps) {
   );
 
   const renderFooter = useCallback(() => {
-    if (!isLoading || !isChatMode) return null;
+    if (!isLoading) return null;
     return <TypingIndicator theme={theme} />;
-  }, [isLoading, isChatMode, theme]);
+  }, [isLoading, theme]);
 
   const renderEmpty = useCallback(() => {
-    if (messages.length > 0 || !isChatMode) return null;
+    if (messages.length > 0) return null;
     return <EmptyState theme={theme} onQuickAction={handleQuickAction} onScan={handleScan} />;
-  }, [messages.length, isChatMode, theme, handleQuickAction, handleScan]);
-
-  // 搜索模式渲染结果
-  const renderSearchResult = useCallback(
-    ({ item }: { item: Product }) => (
-      <TouchableOpacity
-        style={styles.searchResultItem}
-        onPress={() => navigation.navigate('ProductDetail', { id: item.id })}
-        accessibilityLabel={`${item.name}${item.spec ? ` ${item.spec}` : ''}，¥${item.price.toFixed(2)}`}
-        accessibilityRole="button"
-      >
-        <View style={{ width: 40 * scale, height: 40 * scale, borderRadius: 20 * scale, backgroundColor: colors.brand.primaryMuted, justifyContent: 'center', alignItems: 'center' }}>
-          <Ionicons name="cube-outline" size={20 * scale} color={colors.brand.primary} />
-        </View>
-        <View style={styles.searchResultInfo}>
-          <Text style={styles.searchResultName} numberOfLines={1}>{item.name}</Text>
-          {item.spec && <Text style={styles.searchResultSpec} numberOfLines={1}>{item.spec}</Text>}
-        </View>
-        <Text style={styles.searchResultPrice}>¥{item.price.toFixed(2)}</Text>
-        <Text style={styles.searchResultStatus}>{item.status === 'IN_SHOP' ? '在售' : item.status === 'OUT_OF_STOCK' ? '缺货' : '待采'}</Text>
-      </TouchableOpacity>
-    ),
-    [styles, colors, navigation, scale],
-  );
+  }, [messages.length, theme, handleQuickAction, handleScan]);
 
   useEffect(() => {
     return () => {
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
       if (titleTapTimer.current) clearTimeout(titleTapTimer.current);
     };
   }, []);
@@ -820,37 +708,22 @@ export default function HomeScreen({ navigation }: HomeScreenCompositeProps) {
   return (
     <View style={styles.container}>
       {/* Pin Modal */}
-      <PinModal
-        visible={showPinModal}
-        onClose={() => setShowPinModal(false)}
-        onSuccess={() => setShowPinModal(false)}
-      />
+      <PinModal visible={showPinModal} onClose={() => setShowPinModal(false)} onSuccess={() => setShowPinModal(false)} />
 
-      {/* 自定义 Header */}
+      {/* ─── Header ─── */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <ThemedTouchable
-            style={styles.menuButton}
-            onPress={() => navigation.openDrawer()}
-            accessibilityLabel="打开菜单"
-            accessibilityRole="button"
-          >
+          <ThemedTouchable style={styles.menuButton} onPress={() => navigation.openDrawer()} accessibilityLabel="打开菜单" accessibilityRole="button">
             <Ionicons name="menu" size={22 * scale} color={colors.text.primary} />
           </ThemedTouchable>
-          <TouchableOpacity onPress={handleTitlePress} activeOpacity={1} accessibilityLabel="切换搜索模式" accessibilityRole="button">
+          <TouchableOpacity onPress={handleTitlePress} activeOpacity={1}>
             <Text style={styles.headerTitle}>PStore</Text>
-            <Text style={styles.headerSubtitle}>{isChatMode ? 'AI 在线' : '搜索模式'}</Text>
+            <Text style={styles.headerSubtitle}>AI 在线</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.headerRight}>
           <SyncStatusIcon />
-          <ThemedTouchable
-            style={styles.headerIconBtn}
-            onPress={toggleCart}
-            disabled={cartCount === 0}
-            accessibilityLabel={`购物车，${cartCount}件商品`}
-            accessibilityRole="button"
-          >
+          <ThemedTouchable style={styles.headerIconBtn} onPress={() => setCartExpanded(!cartExpanded)} disabled={cartCount === 0} accessibilityLabel={`购物车，${cartCount}件商品`} accessibilityRole="button">
             <Ionicons name="cart-outline" size={22 * scale} color={colors.text.primary} />
             {cartCount > 0 && (
               <View style={styles.cartBadge}>
@@ -861,200 +734,140 @@ export default function HomeScreen({ navigation }: HomeScreenCompositeProps) {
         </View>
       </View>
 
-      {/* 搜索模式：搜索输入框 */}
-      {!isChatMode && (
-        <View style={styles.searchHeader}>
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={handleSearchInput}
-            placeholder="搜索商品名..."
-            placeholderTextColor={colors.text.tertiary}
-            autoFocus
-            accessibilityLabel="搜索商品"
-          />
+      {/* ─── 消息列表 ─── */}
+      <FlatList
+        ref={flatListRef}
+        style={styles.messageList}
+        contentContainerStyle={[styles.messageContent, messages.length === 0 && { flex: 1 }]}
+        data={messages}
+        renderItem={renderMessage}
+        keyExtractor={(item) => item.id}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={renderEmpty}
+        onContentSizeChange={() => { if (messages.length > 0) flatListRef.current?.scrollToEnd({ animated: false }); }}
+        keyboardShouldPersistTaps="handled"
+      />
+
+      {/* ─── 购物车折叠栏 ─── */}
+      {cartCount > 0 && !cartExpanded && (
+        <View style={styles.cartBar}>
+          <View style={styles.cartBarRow}>
+            <View style={styles.cartBarLeft}>
+              <View style={styles.cartBarIcon}>
+                <Ionicons name="cart" size={16 * scale} color={colors.brand.primary} />
+              </View>
+              <Text style={styles.cartBarCount}>购物车 ({cartCount})</Text>
+              <Text style={styles.cartBarTotal}>合计 ¥{cartTotal.toFixed(2)}</Text>
+            </View>
+            <View style={styles.cartBarRight}>
+              <TouchableOpacity style={styles.cartBarExpandBtn} onPress={() => setCartExpanded(true)} accessibilityLabel="展开购物车" accessibilityRole="button">
+                <Ionicons name="chevron-up" size={16 * scale} color={colors.text.primary} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.checkoutBtn} onPress={() => setShowCheckout(true)} accessibilityLabel="结账" accessibilityRole="button">
+                <Text style={styles.checkoutBtnText}>结账</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       )}
 
-      {/* 主体内容 */}
-      {isChatMode ? (
-        /* Chat 模式：消息列表 */
-        <FlatList
-          ref={flatListRef}
-          style={styles.messageList}
-          contentContainerStyle={[
-            styles.messageContent,
-            messages.length === 0 && { flex: 1 },
-          ]}
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
-          ListFooterComponent={renderFooter}
-          ListEmptyComponent={renderEmpty}
-          onContentSizeChange={() => {
-            if (messages.length > 0) {
-              flatListRef.current?.scrollToEnd({ animated: false });
-            }
-          }}
-          keyboardShouldPersistTaps="handled"
-        />
-      ) : (
-        /* 搜索模式：结果列表 */
-        <FlatList
-          style={styles.messageList}
-          data={searchResults}
-          renderItem={renderSearchResult}
-          keyExtractor={(item) => item.id}
-          keyboardShouldPersistTaps="handled"
-          ListEmptyComponent={
-            searchQuery.trim() && !isSearching ? (
-              <View style={styles.searchEmpty}>
-                <Text style={styles.searchEmptyText}>未找到匹配的商品</Text>
+      {/* ─── 购物车展开面板 ─── */}
+      {cartExpanded && cartCount > 0 && (
+        <View style={styles.cartExpanded}>
+          <View style={styles.cartExpandedHeader}>
+            <Text style={styles.cartExpandedTitle}>购物车 ({cartCount})</Text>
+            <TouchableOpacity onPress={clearCart} accessibilityLabel="清空购物车" accessibilityRole="button">
+              <Text style={styles.cartExpandedClear}>清空</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={{ maxHeight: SCREEN_HEIGHT * 0.3 }} bounces={false}>
+            {cartItems.map((item) => (
+              <View key={item.productId} style={styles.cartItem}>
+                <View style={styles.cartItemThumb}>
+                  <Ionicons name="cube-outline" size={18 * scale} color={colors.text.tertiary} />
+                </View>
+                <Text style={styles.cartItemName} numberOfLines={1}>{item.name}</Text>
+                <Text style={styles.cartItemQty}>×{item.quantity}</Text>
+                <Text style={styles.cartItemPrice}>¥{(item.price * item.quantity).toFixed(2)}</Text>
               </View>
-            ) : null
-          }
-        />
+            ))}
+          </ScrollView>
+          <View style={styles.cartExpandedFooter}>
+            <Text style={styles.cartExpandedTotal}>合计</Text>
+            <Text style={styles.cartExpandedTotalPrice}>¥{cartTotal.toFixed(2)}</Text>
+          </View>
+          <TouchableOpacity style={[styles.checkoutBtn, { alignSelf: 'stretch', paddingVertical: 12 * scale }]} onPress={() => setShowCheckout(true)} accessibilityLabel="结账" accessibilityRole="button">
+            <Text style={styles.checkoutBtnText}>结账</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.cartBarExpandBtn, { alignSelf: 'center', marginTop: 8 * scale }]} onPress={() => setCartExpanded(false)} accessibilityLabel="收起购物车" accessibilityRole="button">
+            <Ionicons name="chevron-down" size={16 * scale} color={colors.text.primary} />
+          </TouchableOpacity>
+        </View>
       )}
 
-      {/* 底部输入栏 */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-      >
+      {/* ─── 底部输入栏 ─── */}
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.bottomBar}>
           {/* 语音按钮 (左) */}
-          {isChatMode && (
-            <VoiceButton onResult={handleVoiceResult} available={isVoiceAvailable} />
-          )}
+          <VoiceButton onResult={handleVoiceResult} available={true} />
 
-          {/* 输入框容器 (中) */}
+          {/* 输入框 (中) */}
           <View style={styles.inputContainer}>
             <TextInput
               ref={inputRef}
               style={styles.input}
-              value={isChatMode ? inputText : searchQuery}
-              onChangeText={isChatMode ? setInputText : handleSearchInput}
-              placeholder={isChatMode ? '说"可乐多少钱"' : '搜索商品名…'}
+              value={inputText}
+              onChangeText={setInputText}
+              placeholder="说'可乐多少钱'或搜索商品..."
               placeholderTextColor={colors.text.tertiary}
-              multiline={isChatMode}
+              multiline
               maxLength={500}
               editable={!isLoading}
-              accessibilityLabel={isChatMode ? '输入消息' : '搜索商品'}
-              returnKeyType={isChatMode ? 'send' : 'search'}
-              onSubmitEditing={isChatMode ? handleSend : undefined}
+              accessibilityLabel="输入消息"
+              returnKeyType="send"
+              onSubmitEditing={handleSend}
               blurOnSubmit={false}
             />
-            {isChatMode && inputText.trim().length > 0 && (
-              <TouchableOpacity
-                style={styles.sendButton}
-                onPress={handleSend}
-                accessibilityLabel="发送"
-                accessibilityRole="button"
-              >
-                <Ionicons name="arrow-up" size={18 * scale} color={colors.text.inverse} />
+            {inputText.trim().length > 0 && (
+              <TouchableOpacity style={styles.sendBtn} onPress={handleSend} accessibilityLabel="发送" accessibilityRole="button">
+                <Ionicons name="arrow-up" size={16 * scale} color={colors.text.inverse} />
               </TouchableOpacity>
             )}
           </View>
 
           {/* 扫码按钮 (右) */}
-          <TouchableOpacity
-            style={styles.scanButton}
-            onPress={handleScan}
-            accessibilityLabel="扫码"
-            accessibilityRole="button"
-          >
-            <Ionicons name="scan" size={22 * scale} color={colors.text.primary} />
+          <TouchableOpacity style={styles.cameraBtn} onPress={handleScan} accessibilityLabel="扫码" accessibilityRole="button">
+            <Ionicons name="camera-outline" size={22 * scale} color={colors.text.primary} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
 
-      {/* 购物车浮层 */}
-      {showCart && (
-        <Animated.View
-          style={[
-            styles.cartSheet,
-            {
-              transform: [
-                {
-                  translateY: cartAnim.interpolate({ inputRange: [0, 1], outputRange: [300, 0] }),
-                },
-              ],
-            },
-          ]}
-        >
-          <View style={styles.cartSheetHandle} />
-          <View style={styles.cartSheetHeader}>
-            <Text style={styles.cartSheetTitle}>购物车 ({cartItems.length})</Text>
-            <TouchableOpacity onPress={clearCart} accessibilityLabel="清空购物车" accessibilityRole="button">
-              <Text style={styles.cartSheetClear}>清空</Text>
+      {/* ─── 结账弹窗（居中卡片） ─── */}
+      <Modal visible={showCheckout} transparent animationType="fade">
+        <View style={styles.checkoutOverlay}>
+          <View style={styles.checkoutCard}>
+            <TouchableOpacity style={styles.checkoutCloseBtn} onPress={() => setShowCheckout(false)} accessibilityLabel="关闭" accessibilityRole="button">
+              <Ionicons name="close" size={22 * scale} color={colors.text.secondary} />
             </TouchableOpacity>
-          </View>
-          {cartItems.map((item) => (
-            <View key={item.productId} style={styles.cartItem}>
-              <Text style={styles.cartItemName} numberOfLines={1}>
-                {item.name}
-              </Text>
-              <Text style={styles.cartItemQty}>x{item.quantity}</Text>
-              <Text style={styles.cartItemPrice}>¥{(item.price * item.quantity).toFixed(2)}</Text>
-            </View>
-          ))}
-          {cartItems.length === 0 && (
-            <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-              <Text style={{ fontSize: 14 * scale, color: colors.text.tertiary }}>购物车为空</Text>
-            </View>
-          )}
-          <View style={styles.cartSheetTotal}>
-            <Text style={styles.cartSheetTotalLabel}>合计</Text>
-            <Text style={styles.cartSheetTotalPrice}>¥{cartTotal.toFixed(2)}</Text>
-          </View>
-          {cartItems.length > 0 && (
-            <TouchableOpacity
-              style={styles.checkoutBtn}
-              onPress={() => setShowCheckout(true)}
-              accessibilityLabel="结账"
-              accessibilityRole="button"
-            >
-              <Text style={styles.checkoutBtnText}>结账 ({cartItems.length} 件)</Text>
-            </TouchableOpacity>
-          )}
-        </Animated.View>
-      )}
+            <Text style={styles.checkoutCardTitle}>合计清单</Text>
 
-      {/* 结账弹窗 Modal */}
-      <Modal visible={showCheckout} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>结账清单</Text>
             {cartItems.map((item) => (
-              <View key={item.productId} style={styles.cartItem}>
-                <Text style={styles.cartItemName} numberOfLines={1}>{item.name}</Text>
-                <Text style={styles.cartItemQty}>x{item.quantity}</Text>
-                <Text style={styles.cartItemPrice}>¥{(item.price * item.quantity).toFixed(2)}</Text>
+              <View key={item.productId} style={styles.checkoutItem}>
+                <Text style={styles.checkoutItemName} numberOfLines={1}>{item.name}</Text>
+                <Text style={styles.checkoutItemQty}>×{item.quantity}</Text>
+                <Text style={styles.checkoutItemPrice}>¥{(item.price * item.quantity).toFixed(2)}</Text>
               </View>
             ))}
-            <View style={styles.modalTotal}>
-              <Text style={styles.modalTotalLabel}>总计</Text>
-              <Text style={styles.modalTotalPrice}>¥{cartTotal.toFixed(2)}</Text>
+
+            <View style={styles.checkoutTotal}>
+              <Text style={styles.checkoutTotalLabel}>总额</Text>
+              <Text style={styles.checkoutTotalPrice}>¥{cartTotal.toFixed(2)}</Text>
             </View>
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCloseBtn}
-                onPress={() => setShowCheckout(false)}
-                accessibilityLabel="关闭"
-                accessibilityRole="button"
-              >
-                <Text style={styles.modalCloseBtnText}>关闭</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalClearBtn}
-                onPress={handleCheckoutClear}
-                accessibilityLabel="关闭并清空购物车"
-                accessibilityRole="button"
-              >
-                <Text style={styles.modalClearBtnText}>关闭并清空</Text>
-              </TouchableOpacity>
-            </View>
+
+            <TouchableOpacity style={styles.checkoutClearBtn} onPress={handleCheckoutClear} accessibilityLabel="关闭并清空购物车" accessibilityRole="button">
+              <Text style={styles.checkoutClearBtnText}>关闭并清空</Text>
+            </TouchableOpacity>
+            <Text style={styles.checkoutClearHint}>清空购物车，不留任何记录</Text>
           </View>
         </View>
       </Modal>

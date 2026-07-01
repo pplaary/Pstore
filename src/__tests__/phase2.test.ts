@@ -1,8 +1,8 @@
 /**
  * Phase 2 集成测试：验证新模块存在且导出正确
  *
- * 更新至 refactored 架构（v4.5 audit fix）：
- * - HomeScreen: 新的双模式架构（chat + search），购物车折叠栏重命名为 cartSheet
+ * 更新至 v5.0 设计稿对齐：
+ * - HomeScreen: AI 对话式单屏架构，购物车折叠栏 (cartExpanded)
  * - FAB + 批量管理已迁移到 ProductListScreen
  */
 
@@ -41,9 +41,9 @@ describe('Phase 2: 购物车 + 抽屉导航 + 管理模式 + 列表增强', () =
     const f = path.join(PROJECT_ROOT, 'src', 'screens', 'HomeScreen.tsx');
     expect(fs.existsSync(f)).toBe(true);
     const content = fs.readFileSync(f, 'utf8');
-    // 重构后使用新的购物车折叠栏（cartSheet / showCart / showCheckout）
-    expect(content).toContain('cartSheet');
-    expect(content).toContain('showCart');
+    // 重构后使用新的购物车折叠栏（cartExpanded / showCheckout / cartBar）
+    expect(content).toContain('cartExpanded');
+    expect(content).toContain('cartBar');
     expect(content).toContain('showCheckout');
   });
 
@@ -92,12 +92,12 @@ describe('Phase 2: 购物车 + 抽屉导航 + 管理模式 + 列表增强', () =
     expect(content).toContain('softDeleteProduct');
   });
 
-  it('HomeScreen.tsx 包含双模式架构（chat + search）', () => {
+  it('HomeScreen.tsx 包含 AI 对话式单屏架构', () => {
     const f = path.join(PROJECT_ROOT, 'src', 'screens', 'HomeScreen.tsx');
     const content = fs.readFileSync(f, 'utf8');
-    expect(content).toContain('isChatMode');
-    expect(content).toContain('handleSearchInput');
+    expect(content).toContain('handleSend');
     expect(content).toContain('handleTitlePress');
-    expect(content).toContain('toggleCart');
+    expect(content).toContain('cartExpanded');
+    expect(content).toContain('handleCheckoutClear');
   });
 });

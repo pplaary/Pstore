@@ -1,9 +1,9 @@
 /**
  * ThemeContext — 现代化主题基础设施
  *
- * 设计系统：Modern Minimalist + Soft Tech
- * 主色调: Blue (#2563EB) — 专业可靠聚焦
- * 风格: 干净表面、微妙景深、精致排版
+ * 设计系统：Purple + Mint Green AI
+ * 主色调: Deep Purple (#6B4EE6) — 科技感信任感
+ * 风格: 明亮表面、微妙景深、AI对话式界面
  *
  * 三种实际模式: 'light' | 'dark' | 'care'
  * 存储值:    'light' | 'dark' | 'care' | 'system'
@@ -152,82 +152,82 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
   // ─── Light Mode — 现代明亮 ───────────────────────────────
   light: {
     surface: {
-      s0: '#F8FAFC',
+      s0: '#F5F5F7',
       s1: '#FFFFFF',
       s2: '#FFFFFF',
-      overlay: 'rgba(0,0,0,0.5)',
+      overlay: 'rgba(0,0,0,0.4)',
     },
-    input: '#F1F5F9',
+    input: '#F3F3F5',
     text: {
-      primary: '#1E293B',
-      secondary: '#475569',
-      tertiary: '#94A3B8',
+      primary: '#1A1A1A',
+      secondary: '#666666',
+      tertiary: '#999999',
       inverse: '#FFFFFF',
-      link: '#2563EB',
+      link: '#6B4EE6',
     },
     brand: {
-      primary: '#2563EB',
-      primaryLight: '#60A5FA',
-      primaryMuted: '#DBEAFE',
+      primary: '#6B4EE6',
+      primaryLight: '#9B8AFB',
+      primaryMuted: '#F0ECFE',
       tertiary: '#8B5CF6',
-      success: '#10B981',
-      successMuted: '#ECFDF5',
+      success: '#22C55E',
+      successMuted: '#DCFCE7',
       danger: '#EF4444',
       dangerMuted: '#FEF2F2',
       warning: '#F59E0B',
       warningMuted: '#FFFBEB',
     },
     border: {
-      subtle: '#F1F5F9',
-      default: '#E2E8F0',
-      strong: '#CBD5E1',
+      subtle: '#F0F0F0',
+      default: '#E5E5E5',
+      strong: '#D0D0D0',
     },
     chat: {
-      userBubble: '#D1FAE5',
-      userBubbleText: '#065F46',
-      aiBubble: '#F1F5F9',
-      aiBubbleText: '#1E293B',
+      userBubble: '#F0ECFE',
+      userBubbleText: '#4C1D95',
+      aiBubble: '#D4F8D4',
+      aiBubbleText: '#065F46',
     },
   },
 
   // ─── Dark Mode — 深邃内敛 ───────────────────────────────
   dark: {
     surface: {
-      s0: '#0B1120',
-      s1: '#111827',
-      s2: '#1E293B',
+      s0: '#0D0D15',
+      s1: '#16162A',
+      s2: '#1E1E38',
       overlay: 'rgba(0,0,0,0.7)',
     },
-    input: '#1E293B',
+    input: '#1E1E38',
     text: {
-      primary: '#F1F5F9',
-      secondary: '#94A3B8',
-      tertiary: '#64748B',
+      primary: '#F0F0F5',
+      secondary: '#A0A0B8',
+      tertiary: '#6B6B8A',
       inverse: '#FFFFFF',
-      link: '#60A5FA',
+      link: '#A78BFA',
     },
     brand: {
-      primary: '#60A5FA',
-      primaryLight: '#93C5FD',
-      primaryMuted: '#1E3A5F',
-      tertiary: '#A78BFA',
-      success: '#34D399',
-      successMuted: '#064E3B',
+      primary: '#A78BFA',
+      primaryLight: '#C4B5FD',
+      primaryMuted: '#2E1065',
+      tertiary: '#8B5CF6',
+      success: '#4ADE80',
+      successMuted: '#052E16',
       danger: '#F87171',
       dangerMuted: '#7F1D1D',
       warning: '#FBBF24',
       warningMuted: '#78350F',
     },
     border: {
-      subtle: '#1E293B',
-      default: '#334155',
-      strong: '#475569',
+      subtle: '#1E1E38',
+      default: '#2D2D50',
+      strong: '#3D3D60',
     },
     chat: {
-      userBubble: '#064E3B',
-      userBubbleText: '#A7F3D0',
-      aiBubble: '#1E293B',
-      aiBubbleText: '#F1F5F9',
+      userBubble: '#2E1065',
+      userBubbleText: '#C4B5FD',
+      aiBubble: '#052E16',
+      aiBubbleText: '#6EE7B7',
     },
   },
 
