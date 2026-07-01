@@ -36,6 +36,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<ProductStatus | null>(null);
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'updatedAt'>('updatedAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [longPressItem, setLongPressItem] = useState<Product | null>(null);
 
@@ -89,7 +90,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
       const options: any = {
         category: selectedCategory ?? undefined,
         status: selectedStatus ?? undefined,
-        sortBy: sortBy === 'updatedAt' ? 'updatedAt' : sortBy === 'price' ? 'priceLow' : 'relevance',
+        sortBy: sortBy === 'updatedAt' ? 'updatedAt' : sortBy === 'price' ? (sortDirection === 'asc' ? 'priceLow' : 'priceHigh') : 'relevance',
       };
       if (filter === 'deleted') {
         options.includeDeleted = true;
@@ -100,7 +101,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
       console.error('ProductListScreen: 搜索失败', e);
       setFilteredProducts([]);
     }
-  }, [db, query, selectedCategory, selectedStatus, sortBy, filter]);
+  }, [db, query, selectedCategory, selectedStatus, sortBy, sortDirection, filter]);
 
   // ========== NL 搜索 ==========
   const doNLSearch = useCallback(async (question: string) => {
@@ -260,7 +261,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
             <TouchableOpacity
               key={opt.label}
               style={[styles.statusChip, active && styles.statusChipActive]}
-              onPress={() => { setSelectedStatus(opt.key); setSelectedCategory(null); }}
+              onPress={() => { setSelectedStatus(opt.key); }}
               accessibilityLabel={`状态：${opt.label}${active ? '，已选中' : ''}`}
               accessibilityRole="button"
             >
@@ -278,7 +279,14 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
               <TouchableOpacity
                 key={opt.key}
                 style={[styles.sortChip, active && styles.sortChipActive]}
-                onPress={() => setSortBy(opt.key)}
+                onPress={() => {
+              if (active) {
+                setSortDirection(d => d === 'asc' ? 'desc' : 'asc');
+              } else {
+                setSortBy(opt.key);
+                setSortDirection('asc');
+              }
+            }}
                 accessibilityLabel={`排序：${opt.label}${active ? '，已选中' : ''}`}
                 accessibilityRole="button"
               >
@@ -424,7 +432,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
                 } catch { showToast('状态更新失败'); }
                 setLongPressItem(null);
               }}
-              accessibilityLabel="切换在售/缺货状态"
+              accessibilityLabel={longPressItem.status === 'TO_BE_PURCHASED' ? '切换为在售' : '切换在售/缺货状态'}
               accessibilityRole="button"
             >
               <Text style={styles.actionItemText}>切换在售/缺货</Text>

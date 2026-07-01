@@ -41,15 +41,6 @@ export default function DrawerContent(props: DrawerContentComponentProps) {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { colors, spacing, radii, scale } = theme;
 
-  const handleExport = useCallback(() => {
-    Alert.alert('选择导出范围', '请选择要导出的商品范围', [
-      { text: '全部商品', onPress: () => exportAndSave('all') },
-      { text: '在售商品', onPress: () => exportAndSave('in_stock') },
-      { text: '待采商品', onPress: () => exportAndSave('to_be_purchased') },
-      { text: '取消', style: 'cancel' },
-    ]);
-  }, [db]);
-
   const exportAndSave = useCallback(async (scope: ExportScope) => {
     try {
       const products = await exportProducts(db);
@@ -61,6 +52,15 @@ export default function DrawerContent(props: DrawerContentComponentProps) {
       Alert.alert('导出失败', e instanceof Error ? e.message : '未知错误');
     }
   }, [db]);
+
+  const handleExport = useCallback(() => {
+    Alert.alert('选择导出范围', '请选择要导出的商品范围', [
+      { text: '全部商品', onPress: () => exportAndSave('all') },
+      { text: '在售商品', onPress: () => exportAndSave('in_stock') },
+      { text: '待采商品', onPress: () => exportAndSave('to_be_purchased') },
+      { text: '取消', style: 'cancel' },
+    ]);
+  }, [exportAndSave]);
 
   const totalQty = items.reduce((s, i) => s + i.quantity, 0);
 

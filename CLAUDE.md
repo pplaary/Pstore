@@ -28,7 +28,11 @@ index.ts → App.tsx → StoreProvider → NavigationContainer
                                     ├── ProductListScreen
                                     ├── ProductDetailScreen
                                     ├── ProductEditScreen
-                                    └── ScanScreen
+                                    ├── ScanScreen
+                                    ├── Config
+                                    ├── DuplicateList
+                                    ├── PendingItems
+                                    └── LooseGoodsManage
 ```
 
 ### 导航结构（Phase 2 重构后）
@@ -45,6 +49,8 @@ index.ts → App.tsx → StoreProvider → NavigationContainer
 | `useCartStore` | `src/store/cart.ts` | 购物车（纯内存，不持久化） |
 | `useModeStore` | `src/store/mode.ts` | 管理模式开关（纯内存，重启回普通） |
 | `usePinStore` | `src/store/pin.ts` | PIN 密码（SHA-256 哈希，纯内存） |
+| `useAiConfigStore` | `src/store/aiConfig.ts` | AI 搜索配置（serverUrl 等） |
+| `useSyncConfigStore` | `src/store/syncConfig.ts` | 同步配置（serverUrl 等） |
 
 ### Screen 层
 
@@ -53,6 +59,26 @@ index.ts → App.tsx → StoreProvider → NavigationContainer
 - **ProductDetailScreen** — 商品详情 + 价格历史 + 编辑/删除
 - **ProductEditScreen** — 新增/编辑表单（name/price/spec/barcode/aliases/category/status）
 - **ScanScreen** — 扫码（expo-camera）+ 手动输入 fallback
+- **ConfigScreen** — 同步配置与设置
+- **DuplicateScreen** — 商品重复检测
+- **PendingItemsScreen** — 待处理条码列表
+- **LooseGoodsManageScreen** — 散装标签管理
+
+### Component 层
+
+| 组件 | 文件 | 职责 |
+|------|------|------|
+| `DrawerContent` | `src/components/DrawerContent.tsx` | 抽屉菜单（管理模式条件渲染、购物车概览） |
+| `AIChatBubble` | `src/components/AIChatBubble.tsx` | AI 对话气泡 |
+| `NetworkIndicator` | `src/components/NetworkIndicator.tsx` | 网络状态指示器 |
+| `RecoveryProgress` | `src/components/RecoveryProgress.tsx` | 数据恢复进度 |
+| `SyncStatusIcon` | `src/components/SyncStatusIcon.tsx` | 同步状态图标 |
+| `VoiceButton` | `src/components/VoiceButton.tsx` | 语音输入按钮 |
+| `WebDAVConfig` | `src/components/WebDAVConfig.tsx` | WebDAV 配置表单 |
+| `ProductConfirmCard` | `src/components/ProductConfirmCard.tsx` | 商品确认卡片 |
+| `PriceChart` | `src/components/PriceChart.tsx` | 价格历史图表 |
+| `PinModal` | `src/components/PinModal.tsx` | PIN 验证/设置弹窗 |
+| `ErrorBoundary` | `src/components/ErrorBoundary.tsx` | 错误边界 |
 
 ### DB 层（`src/db/` — spec v4.5 锁定）
 
