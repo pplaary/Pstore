@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Platform,
   type ViewStyle,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -34,7 +35,23 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
 
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<ProductStatus | null>(null);
+  const [sortBy, setSortBy] = useState<'name' | 'price' | 'updatedAt'>('updatedAt');
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [longPressItem, setLongPressItem] = useState<Product | null>(null);
+
+  const statusOptions = [
+    { key: null as ProductStatus | null, label: '全部' },
+    { key: 'IN_SHOP' as ProductStatus, label: '在售' },
+    { key: 'OUT_OF_STOCK' as ProductStatus, label: '缺货' },
+    { key: 'TO_BE_PURCHASED' as ProductStatus, label: '待采' },
+  ];
+
+  const sortOptions = [
+    { key: 'name' as const, label: '名称' },
+    { key: 'price' as const, label: '价格' },
+    { key: 'updatedAt' as const, label: '时间' },
+  ];
 
   // ========== NL 搜索模式状态 ==========
   const [isNLSearch, setIsNLSearch] = useState(false);
@@ -72,7 +89,8 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
     try {
       const options: any = {
         category: selectedCategory ?? undefined,
-        sortBy: 'relevance',
+        status: selectedStatus ?? undefined,
+        sortBy: sortBy === 'updatedAt' ? 'updatedAt' : sortBy === 'price' ? 'priceLow' : 'relevance',
       };
       if (filter === 'deleted') {
         options.includeDeleted = true;
@@ -83,7 +101,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
       console.error('ProductListScreen: 搜索失败', e);
       setFilteredProducts([]);
     }
-  }, [db, query, selectedCategory, filter]);
+  }, [db, query, selectedCategory, selectedStatus, sortBy, filter]);
 
   // ========== NL 搜索 ==========
   const doNLSearch = useCallback(async (question: string) => {
@@ -153,7 +171,8 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
       <TouchableOpacity
         style={styles.productItem}
         onPress={() => navigation.navigate('ProductDetail', { id: item.id })}
-        accessibilityLabel={`${item.name}，价格${item.price.toFixed(2)}元，${item.spec ? `规格${item.spec}，` : ''}状态${statusLabels[item.status]}`}
+        onLongPress={() => { if (isManagement) setLongPressItem(item); }}
+        accessibilityLabel={`${item.name}${item.spec ? ` ${item.spec}` : ''}，¥${item.price.toFixed(2)}，${statusLabels[item.status]}`}
         accessibilityRole="button"
       >
         <View style={styles.productLeft}>
@@ -232,6 +251,45 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
         {isNLLoading && (
           <Text style={styles.nlLoadingText}>AI...</Text>
         )}
+      </View>
+
+      {/* 状态筛选 Tab */}
+      <View style={styles.statusBar}>
+        {statusOptions.map((opt) => {
+          const active = selectedStatus === opt.key;
+          return (
+            <TouchableOpacity
+              key={opt.label}
+              style={[styles.statusChip, active && styles.statusChipActive]}
+              onPress={() => { setSelectedStatus(opt.key); setSelectedCategory(null); }}
+              accessibilityLabel={`状态：${opt.label}${active ? '，已选中' : ''}`}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.statusChipText, active && styles.statusChipTextActive]}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+        {/* 排序选择 */}
+        <View style={styles.sortRow}>
+          {sortOptions.map((opt) => {
+            const active = sortBy === opt.key;
+            return (
+              <TouchableOpacity
+                key={opt.key}
+                style={[styles.sortChip, active && styles.sortChipActive]}
+                onPress={() => setSortBy(opt.key)}
+                accessibilityLabel={`排序：${opt.label}${active ? '，已选中' : ''}`}
+                accessibilityRole="button"
+              >
+                <Text style={[styles.sortChipText, active && styles.sortChipTextActive]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
 
       {/* 分类筛选条 */}
@@ -333,6 +391,65 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
           <Text style={styles.fabText}>+</Text>
         </TouchableOpacity>
       )}
+
+      {/* 长按菜单 */}
+      {longPressItem && (
+        <View style={styles.overlay}>
+          <TouchableOpacity
+            style={styles.overlayBackdrop}
+            onPress={() => setLongPressItem(null)}
+          />
+          <View style={styles.actionSheet}>
+            <Text style={styles.actionSheetTitle}>{longPressItem.name}</Text>
+            <TouchableOpacity
+              style={styles.actionItem}
+              onPress={() => {
+                navigation.navigate('ProductEdit' as any, { id: longPressItem.id });
+                setLongPressItem(null);
+              }}
+              accessibilityLabel="编辑商品"
+              accessibilityRole="button"
+            >
+              <Text style={styles.actionItemText}>编辑</Text>
+            </TouchableOpacity>
+            <View style={styles.actionDivider} />
+            <TouchableOpacity
+              style={styles.actionItem}
+              onPress={async () => {
+                try {
+                  const { updateProduct } = await import('../db/product');
+                  const nextStatus = longPressItem.status === 'IN_SHOP' ? 'OUT_OF_STOCK' : 'IN_SHOP';
+                  await updateProduct(db, longPressItem.id, { status: nextStatus as ProductStatus });
+                  refreshProducts();
+                  showToast('状态已更新');
+                } catch { showToast('状态更新失败'); }
+                setLongPressItem(null);
+              }}
+              accessibilityLabel="切换在售/缺货状态"
+              accessibilityRole="button"
+            >
+              <Text style={styles.actionItemText}>切换在售/缺货</Text>
+            </TouchableOpacity>
+            <View style={styles.actionDivider} />
+            <TouchableOpacity
+              style={styles.actionItem}
+              onPress={async () => {
+                try {
+                  const { softDeleteProduct } = await import('../db/product');
+                  await softDeleteProduct(db, longPressItem.id);
+                  refreshProducts();
+                  showToast('商品已删除');
+                } catch { showToast('删除失败'); }
+                setLongPressItem(null);
+              }}
+              accessibilityLabel="删除商品"
+              accessibilityRole="button"
+            >
+              <Text style={[styles.actionItemText, { color: colors.brand.danger }]}>删除</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -414,6 +531,59 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       fontWeight: '600',
       marginLeft: 6,
     },
+    // 状态筛选
+    statusBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      marginBottom: 4,
+      gap: 6,
+    },
+    statusChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 5,
+      borderRadius: 14,
+      backgroundColor: colors.surface.s1,
+      borderWidth: 1,
+      borderColor: colors.border.default,
+    },
+    statusChipActive: {
+      backgroundColor: colors.brand.primary,
+      borderColor: colors.brand.primary,
+    },
+    statusChipText: {
+      fontSize: 12 * scale,
+      color: colors.text.secondary,
+      fontWeight: '500',
+    },
+    statusChipTextActive: {
+      color: colors.text.inverse,
+    },
+    // 排序
+    sortRow: {
+      flexDirection: 'row',
+      gap: 4,
+      marginLeft: 'auto',
+    },
+    sortChip: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 10,
+      backgroundColor: 'transparent',
+    },
+    sortChipActive: {
+      backgroundColor: colors.brand.primaryMuted,
+    },
+    sortChipText: {
+      fontSize: 11 * scale,
+      color: colors.text.tertiary,
+      fontWeight: '500',
+    },
+    sortChipTextActive: {
+      color: colors.brand.primary,
+      fontWeight: '600',
+    },
+    // 长按菜单
     // 分类筛选条
     categoryBar: {
       marginBottom: 8,
@@ -541,6 +711,42 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       fontSize: 14 * scale,
       color: colors.brand.primary,
       fontWeight: '600',
+    },
+    // 长按菜单
+    overlay: {
+      position: 'absolute',
+      top: 0, left: 0, right: 0, bottom: 0,
+      justifyContent: 'flex-end',
+    },
+    overlayBackdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+    },
+    actionSheet: {
+      backgroundColor: colors.surface.s1,
+      borderTopLeftRadius: 16 * scale,
+      borderTopRightRadius: 16 * scale,
+      paddingHorizontal: 20 * scale,
+      paddingTop: 16 * scale,
+      paddingBottom: Platform.OS === 'ios' ? 34 : 20 * scale,
+    },
+    actionSheetTitle: {
+      fontSize: 16 * scale,
+      fontWeight: '700',
+      color: colors.text.primary,
+      marginBottom: 12 * scale,
+    },
+    actionItem: {
+      paddingVertical: 14 * scale,
+    },
+    actionItemText: {
+      fontSize: 15 * scale,
+      color: colors.text.primary,
+      fontWeight: '500',
+    },
+    actionDivider: {
+      height: 0.5,
+      backgroundColor: colors.border.subtle,
     },
     // 底部扫码
     bottomBar: {
