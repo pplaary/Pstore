@@ -12,13 +12,14 @@ import { useStore } from '../context/store';
 import { getAllMergeCandidates, mergeProducts, markNotDuplicate } from '../db/duplicate';
 import { useTheme } from '../theme/ThemeContext';
 import type { MergeCandidate } from '../db/types';
+import type { DuplicateListScreenProps } from '../navigation/types';
 
 type ConfirmState = {
   candidate: MergeCandidate;
   keepChoice: 'A' | 'B';
 } | null;
 
-export function DuplicateScreen({ navigation }: any) {
+export function DuplicateScreen({ navigation }: DuplicateListScreenProps) {
   const { db } = useStore();
   const { theme } = useTheme();
   const { colors, scale } = theme;

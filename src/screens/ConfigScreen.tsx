@@ -15,6 +15,7 @@ import {
   Alert,
   ScrollView,
   Switch,
+  Modal,
 } from 'react-native';
 import { useNetworkDetection } from '../hooks/useNetworkDetection';
 import { useSyncConfigStore } from '../store/syncConfig';
@@ -23,6 +24,8 @@ import { performSync } from '../services/sync';
 import { clearAllProducts, resetDatabase } from '../services/backup/clear';
 import { showToast } from '../utils/toast';
 import type { ConfigScreenProps } from '../navigation/types';
+import type { DrawerNavigationProp } from '@react-navigation/drawer';
+import type { DrawerParamList } from '../navigation/types';
 import { useStore } from '../context/store';
 import { WebDAVConfig } from '../components/WebDAVConfig';
 import { useTheme } from '../theme/ThemeContext';
@@ -38,10 +41,12 @@ export function ConfigScreen(_props: Props) {
   const setServerUrl = useSyncConfigStore((s) => s.setServerUrl);
   const isManagement = useModeStore((s) => s.isManagement);
   const { db } = useStore();
-  const navigation = useNavigation();
+  const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
   const [inputUrl, setInputUrl] = useState(serverUrl ?? '');
   const [checking, setChecking] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [showClearModal, setShowClearModal] = useState(false);
+  const [clearConfirmInput, setClearConfirmInput] = useState('');
   const networkStatus = useNetworkDetection(inputUrl.trim() || null);
 
   // ─── 主题 ────────────────────────────────────────────────
@@ -106,25 +111,19 @@ export function ConfigScreen(_props: Props) {
   // ─── 数据管理 ────────────────────────────────────────────
 
   const handleClearProducts = useCallback(async () => {
-    Alert.alert(
-      '清空商品',
-      '此操作将所有商品标记为已删除（软删除），数据仍可通过 WebDAV 备份恢复。确定继续？',
-      [
-        { text: '取消', style: 'cancel' },
-        {
-          text: '确定',
-          style: 'destructive',
-          onPress: async () => {
-            const result = await clearAllProducts(db);
-            if (result.ok) {
-              showToast(result.message, 'LONG');
-            } else {
-              Alert.alert('清空失败', result.message);
-            }
-          },
-        },
-      ],
-    );
+    setClearConfirmInput('');
+    setShowClearModal(true);
+  }, []);
+
+  const doClearProducts = useCallback(async () => {
+    setShowClearModal(false);
+    setClearConfirmInput('');
+    const result = await clearAllProducts(db);
+    if (result.ok) {
+      showToast(result.message, 'LONG');
+    } else {
+      Alert.alert('清空失败', result.message);
+    }
   }, [db]);
 
   const handleResetDatabase = useCallback(async () => {
@@ -150,6 +149,7 @@ export function ConfigScreen(_props: Props) {
   }, [db]);
 
   return (
+    <>
     <ScrollView style={styles.container}>
       {/* 主题 */}
       <View style={styles.section}>
@@ -300,7 +300,7 @@ export function ConfigScreen(_props: Props) {
         <Text style={styles.sectionTitle}>快速操作</Text>
         <TouchableOpacity
           style={[styles.button, { backgroundColor: colors.brand.primary }]}
-          onPress={() => (navigation as any).navigate('Scan')}
+          onPress={() => navigation.navigate('HomeTabs')}
           accessibilityLabel="打开扫码"
           accessibilityRole="button"
         >
@@ -308,6 +308,54 @@ export function ConfigScreen(_props: Props) {
         </TouchableOpacity>
       </View>
     </ScrollView>
+
+      {/* 清空确认弹窗 */}
+      <Modal visible={showClearModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.clearConfirmSheet}>
+            <Text style={styles.clearConfirmTitle}>确认清空商品</Text>
+            <Text style={styles.clearConfirmDesc}>
+              此操作将所有商品标记为已删除（软删除），数据仍可通过 WebDAV 备份恢复。
+            </Text>
+            <Text style={styles.clearConfirmPrompt}>
+              请在下方输入「确认删除」以确认操作：
+            </Text>
+            <TextInput
+              style={styles.clearConfirmInput}
+              value={clearConfirmInput}
+              onChangeText={setClearConfirmInput}
+              placeholder="输入「确认删除」"
+              placeholderTextColor="#94A3B8"
+              autoCapitalize="none"
+              autoCorrect={false}
+              accessibilityLabel="输入确认删除"
+            />
+            <View style={styles.clearConfirmActions}>
+              <TouchableOpacity
+                style={styles.clearCancelBtn}
+                onPress={() => { setShowClearModal(false); setClearConfirmInput(''); }}
+                accessibilityLabel="取消清空"
+                accessibilityRole="button"
+              >
+                <Text style={styles.clearCancelBtnText}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.clearConfirmBtn,
+                  clearConfirmInput !== '确认删除' && { opacity: 0.4 },
+                ]}
+                onPress={doClearProducts}
+                disabled={clearConfirmInput !== '确认删除'}
+                accessibilityLabel="确认清空所有商品"
+                accessibilityRole="button"
+              >
+                <Text style={styles.clearConfirmBtnText}>确认清空</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      </>
   );
 }
 
@@ -428,6 +476,78 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     statusText: {
       fontSize: 13 * scale,
       fontWeight: '500',
+    },
+    // 清空确认弹窗
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    clearConfirmSheet: {
+      width: '85%',
+      backgroundColor: colors.surface.s1,
+      borderRadius: 12,
+      padding: 24,
+    },
+    clearConfirmTitle: {
+      fontSize: 18 * scale,
+      fontWeight: '700',
+      color: colors.text.primary,
+      marginBottom: 12,
+    },
+    clearConfirmDesc: {
+      fontSize: 14 * scale,
+      color: colors.text.secondary,
+      lineHeight: 20 * scale,
+      marginBottom: 16,
+    },
+    clearConfirmPrompt: {
+      fontSize: 14 * scale,
+      color: colors.text.primary,
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    clearConfirmInput: {
+      backgroundColor: colors.input,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      fontSize: 16 * scale,
+      color: colors.text.primary,
+      borderWidth: 1,
+      borderColor: colors.border.default,
+      marginBottom: 20,
+    },
+    clearConfirmActions: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    clearCancelBtn: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 8,
+      backgroundColor: colors.surface.s0,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border.default,
+    },
+    clearCancelBtnText: {
+      fontSize: 15 * scale,
+      fontWeight: '600',
+      color: colors.text.secondary,
+    },
+    clearConfirmBtn: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 8,
+      backgroundColor: colors.brand.danger,
+      alignItems: 'center',
+    },
+    clearConfirmBtnText: {
+      fontSize: 15 * scale,
+      fontWeight: '600',
+      color: colors.text.inverse,
     },
   });
 }

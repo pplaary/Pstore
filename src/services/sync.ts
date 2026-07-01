@@ -59,7 +59,7 @@ export async function performSync(
 
     const pending: N1.PushChange[] = [];
     for (const p of allProducts) {
-      if (!lastPushAt || p.updatedAt > lastPushAt) {
+      if (!lastPushAt || new Date(p.updatedAt).getTime() > new Date(lastPushAt).getTime()) {
         pending.push({
           id: p.id,
           name: p.name,

@@ -36,6 +36,7 @@ import { AIChatBubble } from '../components/AIChatBubble';
 import { VoiceButton } from '../components/VoiceButton';
 import { PinModal } from '../components/PinModal';
 import { SyncStatusIcon } from '../components/SyncStatusIcon';
+import { ThemedTouchable } from '../components/ThemedTouchable';
 import { useAIConfigStore } from '../store/aiConfig';
 import { useCartStore } from '../store/cart';
 import { useStore } from '../context/store';
@@ -43,6 +44,8 @@ import { callAI, type AIMessage } from '../services/ai';
 import { searchProducts } from '../db/search';
 import * as SecureStore from 'expo-secure-store';
 import type { Product } from '../db/types';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { HomeTabParamList, HomeScreenCompositeProps } from '../navigation/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -610,7 +613,7 @@ function EmptyState({
 
 // ==================== 主组件 ====================
 
-export default function HomeScreen({ navigation }: any) {
+export default function HomeScreen({ navigation }: HomeScreenCompositeProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { colors, scale } = theme;
@@ -760,7 +763,10 @@ export default function HomeScreen({ navigation }: any) {
 
   // 扫码
   const handleScan = useCallback(() => {
-    navigation.navigate('Scan');
+    (navigation as BottomTabNavigationProp<HomeTabParamList>).navigate({
+      name: 'Scan',
+      params: {},
+    });
   }, [navigation]);
 
   // 渲染消息
@@ -823,14 +829,14 @@ export default function HomeScreen({ navigation }: any) {
       {/* 自定义 Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity
+          <ThemedTouchable
             style={styles.menuButton}
             onPress={() => navigation.openDrawer()}
             accessibilityLabel="打开菜单"
             accessibilityRole="button"
           >
             <Ionicons name="menu" size={22 * scale} color={colors.text.primary} />
-          </TouchableOpacity>
+          </ThemedTouchable>
           <TouchableOpacity onPress={handleTitlePress} activeOpacity={1} accessibilityLabel="切换搜索模式" accessibilityRole="button">
             <Text style={styles.headerTitle}>PStore</Text>
             <Text style={styles.headerSubtitle}>{isChatMode ? 'AI 在线' : '搜索模式'}</Text>
@@ -838,10 +844,11 @@ export default function HomeScreen({ navigation }: any) {
         </View>
         <View style={styles.headerRight}>
           <SyncStatusIcon />
-          <TouchableOpacity
+          <ThemedTouchable
             style={styles.headerIconBtn}
             onPress={toggleCart}
-            accessibilityLabel="购物车"
+            disabled={cartCount === 0}
+            accessibilityLabel={`购物车，${cartCount}件商品`}
             accessibilityRole="button"
           >
             <Ionicons name="cart-outline" size={22 * scale} color={colors.text.primary} />
@@ -850,7 +857,7 @@ export default function HomeScreen({ navigation }: any) {
                 <Text style={styles.cartBadgeText}>{cartCount > 99 ? '99+' : cartCount}</Text>
               </View>
             )}
-          </TouchableOpacity>
+          </ThemedTouchable>
         </View>
       </View>
 

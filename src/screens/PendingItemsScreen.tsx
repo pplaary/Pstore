@@ -12,8 +12,9 @@ import { useModeStore } from '../store/mode';
 import { getAll, deleteById, convertToProduct } from '../db/pending';
 import { useTheme } from '../theme/ThemeContext';
 import type { PendingItem } from '../db/types';
+import type { PendingItemsScreenProps } from '../navigation/types';
 
-export function PendingItemsScreen({ navigation }: any) {
+export function PendingItemsScreen({ navigation }: PendingItemsScreenProps) {
   const { db } = useStore();
   const { theme } = useTheme();
   const { colors, scale } = theme;

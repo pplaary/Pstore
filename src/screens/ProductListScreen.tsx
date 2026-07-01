@@ -377,7 +377,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
       <View style={styles.bottomBar}>
         <TouchableOpacity
           style={styles.scanButton}
-          onPress={() => (navigation as any).navigate('HomeTabs', { screen: 'Scan' })}
+          onPress={() => navigation.navigate('HomeTabs')}
           accessibilityLabel="扫码识别"
           accessibilityRole="button"
         >
@@ -390,7 +390,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
       {isManagement && (
         <TouchableOpacity
           style={styles.fab}
-          onPress={() => navigation.navigate('ProductEdit' as any)}
+          onPress={() => navigation.navigate('ProductEdit', {})}
           activeOpacity={0.8}
           accessibilityLabel="添加新商品"
           accessibilityRole="button"
@@ -411,7 +411,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
             <TouchableOpacity
               style={styles.actionItem}
               onPress={() => {
-                navigation.navigate('ProductEdit' as any, { id: longPressItem.id });
+                navigation.navigate('ProductEdit', { id: longPressItem.id });
                 setLongPressItem(null);
               }}
               accessibilityLabel="编辑商品"
