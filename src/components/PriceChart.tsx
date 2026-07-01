@@ -70,9 +70,9 @@ export function PriceChart({ history, width, height }: PriceChartProps) {
     <View style={[s.container, { width: chartWidth, height: chartHeight }]}>
       {/* Y 轴价格标签 */}
       <View style={[s.yLabels, { top: padT, height: plotH }]}>
-        <Text style={[s.yText, { color: colors.text.hint }]}>¥{hiP.toFixed(0)}</Text>
-        <Text style={[s.yText, { color: colors.text.hint }]}>¥{((hiP + loP) / 2).toFixed(0)}</Text>
-        <Text style={[s.yText, { color: colors.text.hint }]}>¥{loP.toFixed(0)}</Text>
+        <Text style={[s.yText, { color: colors.text.tertiary }]}>¥{hiP.toFixed(0)}</Text>
+        <Text style={[s.yText, { color: colors.text.tertiary }]}>¥{((hiP + loP) / 2).toFixed(0)}</Text>
+        <Text style={[s.yText, { color: colors.text.tertiary }]}>¥{loP.toFixed(0)}</Text>
       </View>
 
       {/* 绘图区域 */}
@@ -109,7 +109,7 @@ export function PriceChart({ history, width, height }: PriceChartProps) {
             {/* X 轴日期 */}
             {i % labelStep === 0 && (
               <Text
-                style={[s.xLabel, { left: pt.x - 12, top: plotH + 4, color: colors.text.hint }]}
+                style={[s.xLabel, { left: pt.x - 12, top: plotH + 4, color: colors.text.tertiary }]}
                 numberOfLines={1}
               >
                 {pt.date}
@@ -185,7 +185,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       position: 'absolute',
       left: 0,
       height: 1,
-      backgroundColor: colors.border.light,
+      backgroundColor: colors.border.subtle,
     },
     dot: {
       position: 'absolute',

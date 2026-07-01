@@ -146,14 +146,14 @@ function createStyles(colors: ThemeColors, scale: number) {
       marginVertical: 6 * scale,
     },
     cardNormal: {
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       borderWidth: 2,
       borderColor: colors.brand.primary,
     },
     cardExpired: {
-      backgroundColor: colors.bg.primary,
+      backgroundColor: colors.surface.s0,
       borderWidth: 2,
-      borderColor: colors.text.hint,
+      borderColor: colors.text.tertiary,
       opacity: 0.5,
     },
     // 商品信息行
@@ -180,7 +180,7 @@ function createStyles(colors: ThemeColors, scale: number) {
       width: 48,
       height: 48,
       borderRadius: 24,
-      backgroundColor: colors.bg.primary,
+      backgroundColor: colors.surface.s0,
       alignItems: 'center',
       justifyContent: 'center',
       marginRight: 10,
@@ -260,7 +260,7 @@ function createStyles(colors: ThemeColors, scale: number) {
     ignoreBtnText: {
       fontSize: 14 * scale,
       fontWeight: '600',
-      color: colors.text.hint,
+      color: colors.text.tertiary,
     },
   });
 }

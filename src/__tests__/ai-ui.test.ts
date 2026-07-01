@@ -248,8 +248,8 @@ describe('ProductConfirmCard 组件', () => {
     expect(cardContent).toContain('opacity: 0.5');
   });
 
-  it('过期态背景色使用 colors.bg.primary', () => {
-    expect(cardContent).toContain('colors.bg.primary');
+  it('过期态背景色使用 colors.surface.s0', () => {
+    expect(cardContent).toContain('colors.surface.s0');
   });
 
   it('正常态边框使用 colors.brand.primary', () => {
@@ -293,12 +293,12 @@ describe('AIChatBubble 组件', () => {
     expect(bubbleContent).toContain('colors.brand.success');
   });
 
-  it('用户文字色使用 colors.text.hint', () => {
-    expect(bubbleContent).toContain('colors.text.hint');
+  it('用户文字色使用 colors.text.tertiary', () => {
+    expect(bubbleContent).toContain('colors.text.tertiary');
   });
 
-  it('AI 气泡背景色使用 colors.bg.primary', () => {
-    expect(bubbleContent).toContain('colors.bg.primary');
+  it('AI 气泡背景色使用 colors.surface.s0', () => {
+    expect(bubbleContent).toContain('colors.surface.s0');
   });
 
   it('AI 文字色使用 colors.text.primary', () => {

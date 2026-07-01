@@ -126,11 +126,11 @@ export function PendingItemsScreen({ navigation }: any) {
 
 function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.bg.primary },
+    container: { flex: 1, backgroundColor: colors.surface.s0 },
     listContent: { padding: 12 },
     itemRow: {
       flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-      backgroundColor: colors.bg.card, borderRadius: 10, padding: 16, marginBottom: 8,
+      backgroundColor: colors.surface.s1, borderRadius: 10, padding: 16, marginBottom: 8,
       shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.04, shadowRadius: 2, elevation: 1,
     },
@@ -144,14 +144,14 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     convertBtnText: { color: colors.text.inverse, fontSize: 13 * scale, fontWeight: '600' },
     deleteBtn: {
-      backgroundColor: colors.bg.primary, borderRadius: 6,
+      backgroundColor: colors.surface.s0, borderRadius: 6,
       paddingHorizontal: 12, paddingVertical: 6,
     },
     deleteBtnText: { color: colors.brand.danger, fontSize: 13 * scale, fontWeight: '600' },
     emptyContainer: {
       flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32,
     },
-    emptyText: { fontSize: 16 * scale, color: colors.text.hint, marginBottom: 8 },
+    emptyText: { fontSize: 16 * scale, color: colors.text.tertiary, marginBottom: 8 },
     emptyHint: { fontSize: 14 * scale, color: colors.text.secondary, textAlign: 'center' },
   });
 }

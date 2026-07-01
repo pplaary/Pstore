@@ -31,9 +31,9 @@ const STATUS_OPTIONS: { value: ProductStatus; label: string }[] = [
 // 状态色标（用于选中态）
 function getStatusColors(colors: ReturnType<typeof useTheme>['theme']['colors']): Record<string, string> {
   return {
-    IN_SHOP: colors.brand.inShop,
-    OUT_OF_STOCK: colors.brand.outOfStock,
-    TO_BE_PURCHASED: colors.brand.toBePurchased,
+    IN_SHOP: colors.brand.success,
+    OUT_OF_STOCK: colors.text.tertiary,
+    TO_BE_PURCHASED: colors.brand.warning,
   };
 }
 
@@ -302,14 +302,14 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* AI 文字解析 */}
       {aiDisabled ? (
-        <View style={[styles.aiToggle, { borderColor: colors.border.medium }]}>
-          <Text style={[styles.aiToggleText, { color: colors.text.hint }]}>
+        <View style={[styles.aiToggle, { borderColor: colors.border.strong }]}>
+          <Text style={[styles.aiToggleText, { color: colors.text.tertiary }]}>
             请先在设置中配置 N1 服务器地址
           </Text>
         </View>
       ) : (
         <TouchableOpacity
-          style={[styles.aiToggle, { borderColor: colors.border.medium }]}
+          style={[styles.aiToggle, { borderColor: colors.border.strong }]}
           onPress={() => setAiVisible(!aiVisible)}
           activeOpacity={0.7}
           accessibilityRole="button"
@@ -317,7 +317,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
           <Text style={[styles.aiToggleText, { color: colors.text.primary }]}>
             尝试用 AI 快速录入
           </Text>
-          <Text style={[styles.aiToggleArrow, { color: colors.text.hint }]}>
+          <Text style={[styles.aiToggleArrow, { color: colors.text.tertiary }]}>
             {aiVisible ? '收起 ▲' : '展开 ▲'}
           </Text>
         </TouchableOpacity>
@@ -327,13 +327,13 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         <View
           style={[
             styles.aiInputContainer,
-            { backgroundColor: colors.bg.card, borderColor: colors.border.light },
+            { backgroundColor: colors.surface.s1, borderColor: colors.border.subtle },
           ]}
         >
           <TextInput
-            style={[styles.aiInput, { color: colors.text.primary, backgroundColor: colors.bg.input }]}
+            style={[styles.aiInput, { color: colors.text.primary, backgroundColor: colors.input }]}
             placeholder="描述这个商品，AI 帮你填写（如：黑色蓝牙耳机 299元 蓝牙 降噪 第五代）"
-            placeholderTextColor={colors.text.hint}
+            placeholderTextColor={colors.text.tertiary}
             value={aiText}
             onChangeText={setAiText}
             multiline
@@ -366,7 +366,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
           ref={nameRef}
           style={styles.input}
           placeholder="例如：百事可乐"
-          placeholderTextColor={colors.text.hint}
+          placeholderTextColor={colors.text.tertiary}
           value={name}
           onChangeText={setName}
           autoFocus={!isEdit}
@@ -384,7 +384,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         <TextInput
           style={styles.input}
           placeholder="逗号分隔多个别名，如：百事,可乐"
-          placeholderTextColor={colors.text.hint}
+          placeholderTextColor={colors.text.tertiary}
           value={aliases}
           onChangeText={setAliases}
           returnKeyType="next"
@@ -401,7 +401,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
           ref={priceRef}
           style={styles.input}
           placeholder="0.00"
-          placeholderTextColor={colors.text.hint}
+          placeholderTextColor={colors.text.tertiary}
           value={price}
           onChangeText={setPrice}
           keyboardType="decimal-pad"
@@ -416,7 +416,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         <TextInput
           style={styles.input}
           placeholder="例如：500ml"
-          placeholderTextColor={colors.text.hint}
+          placeholderTextColor={colors.text.tertiary}
           value={spec}
           onChangeText={setSpec}
           returnKeyType="next"
@@ -445,7 +445,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         {/* AI 图片识别按钮 */}
         {imageUri && (
           <TouchableOpacity
-            style={[styles.aiImageBtn, { borderColor: colors.border.medium }]}
+            style={[styles.aiImageBtn, { borderColor: colors.border.strong }]}
             onPress={handleAiImageParse}
             disabled={aiImageLoading}
             activeOpacity={0.7}
@@ -464,7 +464,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
         <TextInput
           style={styles.input}
           placeholder="扫描或手动输入"
-          placeholderTextColor={colors.text.hint}
+          placeholderTextColor={colors.text.tertiary}
           value={barcode}
           onChangeText={setBarcode}
           returnKeyType="next"
@@ -556,7 +556,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.bg.primary,
+      backgroundColor: colors.surface.s0,
     },
     content: {
       padding: 16 * scale,
@@ -575,7 +575,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       color: colors.brand.danger,
     },
     input: {
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       borderWidth: 1,
       borderColor: colors.border.default,
       borderRadius: 8 * scale,
@@ -598,7 +598,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     imagePlaceholder: {
       width: '100%',
       aspectRatio: 1,
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 1,
@@ -608,7 +608,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     imagePlaceholderText: {
       fontSize: 14 * scale,
-      color: colors.text.hint,
+      color: colors.text.tertiary,
     },
     categoryRow: {
       flexDirection: 'row',
@@ -619,7 +619,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       paddingHorizontal: 10 * scale,
       paddingVertical: 5 * scale,
       borderRadius: 14 * scale,
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       borderWidth: 1,
       borderColor: colors.border.default,
     },
@@ -643,7 +643,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       flex: 1,
       paddingVertical: 10 * scale,
       borderRadius: 8 * scale,
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       borderWidth: 1,
       borderColor: colors.border.default,
       alignItems: 'center',

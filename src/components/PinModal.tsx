@@ -104,7 +104,7 @@ export function PinModal({ visible, onClose, onSuccess }: PinModalProps) {
             maxLength={6}
             secureTextEntry
             placeholder="••••"
-            placeholderTextColor={colors.text.hint}
+            placeholderTextColor={colors.text.tertiary}
             onSubmitEditing={handleConfirm}
             accessibilityLabel="输入PIN"
           />
@@ -141,7 +141,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     container: {
       width: '80%',
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       borderRadius: 16 * scale,
       padding: 24 * scale,
       alignItems: 'center',
@@ -186,7 +186,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       flex: 1,
       paddingVertical: 12 * scale,
       borderRadius: 10 * scale,
-      backgroundColor: colors.bg.primary,
+      backgroundColor: colors.surface.s0,
       alignItems: 'center',
     },
     cancelBtnText: {

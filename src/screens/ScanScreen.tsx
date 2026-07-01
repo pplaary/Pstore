@@ -69,7 +69,7 @@ const CameraContent = memo(function CameraContent({
       {mode === 'scan' && (
         <View style={styles.scanOverlay}>
           <View style={styles.scanFrame} />
-          <Text style={styles.scanHint}>将条码对准框�?/Text>
+          <Text style={styles.scanHint}>将条码对准框内</Text>
         </View>
       )}
 
@@ -87,7 +87,7 @@ const CameraContent = memo(function CameraContent({
           <TouchableOpacity
             style={styles.flipButton}
             onPress={onFlipCamera}
-            accessibilityLabel="切换前后摄像�?
+            accessibilityLabel="切换前后摄像头"
             accessibilityRole="button"
           >
             <Ionicons name="camera-reverse" size={20} color="#FFF" />
@@ -147,7 +147,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
   if (!permission.granted) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.permissionText}>需要相机权限才能扫�?/Text>
+        <Text style={styles.permissionText}>需要相机权限才能扫码</Text>
         <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission} accessibilityLabel="授权相机权限" accessibilityRole="button">
           <Text style={styles.permissionBtnText}>授权</Text>
         </TouchableOpacity>
@@ -179,8 +179,8 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
             .join(' · '),
         });
       } else {
-        console.warn('ScanScreen: AI 条码解析无结�?, result);
-        Alert.alert('AI 解析无结�?, '该条码未识别到商品信息，请手动录�?, [
+        console.warn('ScanScreen: AI 条码解析无结果', result);
+        Alert.alert('AI 解析无结果', '该条码未识别到商品信息，请手动录入', [
           { text: '手动录入', onPress: () => navigation.navigate('ProductEdit', { barcode }) },
         ]);
       }
@@ -198,18 +198,18 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
 
   const showUnmatchedAlert = useCallback((barcode: string) => {
     Alert.alert(
-      '未找到商�?,
+      '未找到商品',
       `条码 ${barcode}`,
       [
         {
-          text: '仅记�?,
+          text: '仅记录',
           style: 'cancel',
           onPress: async () => {
             try {
               await createOrUpdate(db, barcode);
-              Alert.alert('已记�?, `条码 ${barcode} 已写入，可在管理模式中补充`);
+              Alert.alert('已记录', `条码 ${barcode} 已写入，可在管理模式中补充`);
             } catch {
-              Alert.alert('记录失败', '数据库写入失败，请重�?);
+              Alert.alert('记录失败', '数据库写入失败，请重试');
             }
           },
         },
@@ -354,7 +354,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
     }
   }, [aiConfig, syncConfigServerUrl]);
 
-  // ==================== 候选列表加�?====================
+  // ==================== 候选列表加购====================
 
   const handleCandidateAddToCart = useCallback(
     async (candidate: { name: string; confidence: number; spec?: string }) => {
@@ -364,7 +364,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
       } else {
         Alert.alert(
           '未匹配到商品',
-          `是否将�?{candidate.name}」加入商品库？`,
+          `是否将「${candidate.name}」加入商品库？`,
           [
             { text: '取消', style: 'cancel' },
             {
@@ -386,7 +386,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
     [db, addToCart, navigation],
   );
 
-  // ==================== 候选列表手动搜�?====================
+  // ==================== 候选列表手动搜索====================
 
   const handleCandidateManualSearch = useCallback(() => {
     setShowCandidates(false);
@@ -441,7 +441,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
         ))}
       </View>
 
-      {/* Camera 预览区（全屏填充剩余空间�?*/}
+      {/* Camera 预览区（全屏填充剩余空间 */}
       <CameraContent
         mode={mode}
         cameraRef={cameraRef}
@@ -478,7 +478,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
             <TouchableOpacity
               style={styles.ignoreBtn}
               onPress={handleIgnore}
-              accessibilityLabel="忽略此商�?
+              accessibilityLabel="忽略此商品"
               accessibilityRole="button"
             >
               <Text style={styles.ignoreBtnText}>忽略</Text>
@@ -492,7 +492,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
         <TextInput
           style={styles.input}
           placeholder="手动输入条码（兜底）"
-          placeholderTextColor={colors.text.hint}
+          placeholderTextColor={colors.text.tertiary}
           value={barcodeInput}
           onChangeText={setBarcodeInput}
           autoCapitalize="none"
@@ -513,7 +513,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
         </TouchableOpacity>
       </View>
 
-      {/* 候选列�?Bottom Sheet */}
+      {/* 候选列表Bottom Sheet */}
       <Modal
         visible={showCandidates}
         animationType="slide"
@@ -535,7 +535,7 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
                     )}
                     {item.confidence >= 0 && (
                       <Text style={styles.candidateConfidence}>
-                        置信�?{(item.confidence * 100).toFixed(0)}%
+                        置信度{(item.confidence * 100).toFixed(0)}%
                       </Text>
                     )}
                     {item.confidence < 0 && (
@@ -562,13 +562,13 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
               accessibilityRole="button"
             >
               <Text style={styles.manualSearchBtnText}>
-                以上都不�?�?手动搜索
+                以上都不是，手动搜索
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.sheetCloseBtn}
               onPress={() => setShowCandidates(false)}
-              accessibilityLabel="关闭候选列�?
+              accessibilityLabel="关闭候选列表"
               accessibilityRole="button"
             >
               <Text style={styles.sheetCloseBtnText}>关闭</Text>
@@ -584,9 +584,9 @@ export function ScanScreen({ navigation }: ScanScreenProps) {
 
 function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.bg.primary },
+    container: { flex: 1, backgroundColor: colors.surface.s0 },
     centerContainer: {
-      flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg.primary,
+      flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.surface.s0,
     },
     permissionText: { fontSize: 16 * scale, color: colors.text.primary, marginBottom: 16 },
     permissionBtn: {
@@ -594,7 +594,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     permissionBtnText: { color: colors.text.inverse, fontSize: 16 * scale, fontWeight: '600' },
     tabBar: {
-      flexDirection: 'row', backgroundColor: colors.bg.card,
+      flexDirection: 'row', backgroundColor: colors.surface.s1,
       borderBottomWidth: 1, borderBottomColor: colors.border.default,
     },
     tab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
@@ -602,7 +602,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     tabText: { fontSize: 15 * scale, color: colors.text.secondary, fontWeight: '500' },
     tabTextActive: { color: colors.brand.primary, fontWeight: '600' },
     resultCard: {
-      backgroundColor: colors.bg.card, marginHorizontal: 16, marginBottom: 12,
+      backgroundColor: colors.surface.s1, marginHorizontal: 16, marginBottom: 12,
       borderRadius: 12, padding: 16,
       shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
@@ -617,12 +617,12 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     addCartBtnText: { color: colors.text.inverse, fontSize: 15 * scale, fontWeight: '600' },
     ignoreBtn: {
-      flex: 1, backgroundColor: colors.bg.primary, borderRadius: 8,
+      flex: 1, backgroundColor: colors.surface.s0, borderRadius: 8,
       paddingVertical: 10, alignItems: 'center',
     },
     ignoreBtnText: { color: colors.text.secondary, fontSize: 15 * scale, fontWeight: '600' },
     inputBar: {
-      flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bg.card,
+      flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface.s1,
       marginHorizontal: 12, marginBottom: 12, borderRadius: 10,
       paddingHorizontal: 12, borderWidth: 1, borderColor: colors.border.default,
     },
@@ -637,7 +637,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end',
     },
     candidateSheet: {
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       borderTopLeftRadius: 16, borderTopRightRadius: 16,
       maxHeight: '60%', paddingBottom: 20,
     },
@@ -648,7 +648,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     candidateRow: {
       flexDirection: 'row', alignItems: 'center',
       paddingHorizontal: 16, paddingVertical: 12,
-      borderBottomWidth: 1, borderBottomColor: colors.bg.primary,
+      borderBottomWidth: 1, borderBottomColor: colors.surface.s0,
     },
     candidateInfo: { flex: 1 },
     candidateName: { fontSize: 15 * scale, fontWeight: '600', color: colors.text.primary },
@@ -661,7 +661,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     candidateAddBtnText: { color: colors.text.inverse, fontSize: 13 * scale, fontWeight: '600' },
     manualSearchBtn: {
       marginHorizontal: 16, marginTop: 12, paddingVertical: 12,
-      alignItems: 'center', backgroundColor: colors.bg.primary, borderRadius: 8,
+      alignItems: 'center', backgroundColor: colors.surface.s0, borderRadius: 8,
     },
     manualSearchBtnText: { fontSize: 14 * scale, color: colors.brand.primary, fontWeight: '500' },
     sheetCloseBtn: {
@@ -672,7 +672,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
   });
 }
 
-// CameraContent 专属样式（不依赖 ScanScreen 内部�?mode/barcode 逻辑�?
+// CameraContent 专属样式（不依赖 ScanScreen 内部的 mode/barcode 逻辑
 function createCameraStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
   return StyleSheet.create({
     camera: { flex: 1 },

@@ -43,7 +43,7 @@ export function SyncStatusIcon() {
 
   let iconName: keyof typeof Ionicons.glyphMap = 'cloud-offline';
   let label = '本地模式';
-  let color = colors.text.hint;
+  let color = colors.text.tertiary;
 
   if (isN1Reachable) {
     iconName = 'cloud-done';

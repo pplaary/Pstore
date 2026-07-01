@@ -1,97 +1,198 @@
 /**
- * 根导航：DrawerNavigator + NativeStack 组合
+ * 导航根组件 — 现代化导航架构
  *
- * 结构：
+ * 架构:
  * RootStack (NativeStack)
- *   ├─ MainDrawer (DrawerNavigator)
- *   │    ├─ Home → 主界面（搜索 + 购物车折叠栏 + 底部输入栏）
- *   │    └─ ProductList → 商品列表（管理模式入口）
- *   ├─ ProductDetail → 详情页（推入）
- *   ├─ ProductEdit → 编辑页（推入）
- *   └─ ScanBarcode → 扫码页（推入）
+ *   └── MainDrawer (DrawerNavigator)
+ *         ├── HomeTabs (BottomTab)
+ *         │     ├── Home (首页对话)
+ *         │     └── Scan (扫码)
+ *         ├── ProductList
+ *         ├── ProductDetail
+ *         ├── ProductEdit
+ *         ├── Config
+ *         ├── DuplicateList
+ *         ├── PendingItems
+ *         └── LooseGoodsManage
+ *
+ * 单手交互:
+ * - 抽屉从左侧滑出
+ * - 底部 Tab 栏易于拇指触及
+ * - 返回按钮在左上角
  */
 
+import React, { useMemo } from 'react';
+import { Platform } from 'react-native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { HomeScreen } from '../screens/HomeScreen';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../theme/ThemeContext';
+
+import { ScanScreen } from '../screens/ScanScreen';
 import { ProductListScreen } from '../screens/ProductListScreen';
 import { ProductDetailScreen } from '../screens/ProductDetailScreen';
 import { ProductEditScreen } from '../screens/ProductEditScreen';
-import { ScanScreen } from '../screens/ScanScreen';
-import { PendingItemsScreen } from '../screens/PendingItemsScreen';
-import { DuplicateScreen } from '../screens/DuplicateScreen';
 import { ConfigScreen } from '../screens/ConfigScreen';
+import { DuplicateScreen } from '../screens/DuplicateScreen';
+import { PendingItemsScreen } from '../screens/PendingItemsScreen';
 import { LooseGoodsManageScreen } from '../screens/LooseGoodsManageScreen';
 import DrawerContent from '../components/DrawerContent';
-import type { RootStackParamList } from './types';
-import type { DrawerParamList } from './types';
+import HomeScreen from '../screens/HomeScreen';
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
-const Drawer = createDrawerNavigator<DrawerParamList>();
+// ==================== 导航器实例 ====================
+
+const Stack = createNativeStackNavigator();
+const Drawer = createDrawerNavigator();
+const Tab = createBottomTabNavigator();
+
+// ==================== 底部 Tab 导航 ====================
+
+function HomeTabs() {
+  const { theme } = useTheme();
+  const { colors, scale } = theme;
+
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: colors.surface.s1,
+          borderTopColor: colors.border.subtle,
+          borderTopWidth: 0.5,
+          height: Platform.OS === 'ios' ? 80 : 60,
+          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+          paddingTop: 8,
+        },
+        tabBarActiveTintColor: colors.brand.primary,
+        tabBarInactiveTintColor: colors.text.tertiary,
+        tabBarLabelStyle: {
+          fontSize: 11 * scale,
+          fontWeight: '600',
+        },
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          tabBarLabel: '对话',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubble-ellipses" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Scan"
+        component={ScanScreen as any}
+        options={{
+          tabBarLabel: '扫码',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="scan" size={size} color={color} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+// ==================== Drawer 导航 ====================
 
 function MainDrawer() {
+  const { theme } = useTheme();
+  const { colors } = theme;
+
   return (
     <Drawer.Navigator
       drawerContent={(props) => <DrawerContent {...props} />}
       screenOptions={{
-        headerShown: true,
+        headerShown: false,
+        drawerStyle: {
+          backgroundColor: colors.surface.s1,
+          width: 300,
+        },
         drawerType: 'front',
+        overlayColor: 'rgba(0,0,0,0.4)',
+        swipeEdgeWidth: 40,
+        swipeMinDistance: 10,
       }}
     >
-      <Drawer.Screen name="Home" component={HomeScreen as any} />
-      <Drawer.Screen name="ProductList" component={ProductListScreen as any} />
+      <Drawer.Screen name="HomeTabs" component={HomeTabs} />
+      <Drawer.Screen
+        name="ProductList"
+        component={ProductListScreen as any}
+        options={{ drawerItemStyle: { display: 'none' } }}
+      />
+      <Drawer.Screen
+        name="ProductDetail"
+        component={ProductDetailScreen as any}
+        options={{ drawerItemStyle: { display: 'none' } }}
+      />
+      <Drawer.Screen
+        name="ProductEdit"
+        component={ProductEditScreen as any}
+        options={{ drawerItemStyle: { display: 'none' } }}
+      />
+      <Drawer.Screen
+        name="Config"
+        component={ConfigScreen as any}
+        options={{ drawerItemStyle: { display: 'none' } }}
+      />
+      <Drawer.Screen
+        name="DuplicateList"
+        component={DuplicateScreen as any}
+        options={{ drawerItemStyle: { display: 'none' } }}
+      />
+      <Drawer.Screen
+        name="PendingItems"
+        component={PendingItemsScreen as any}
+        options={{ drawerItemStyle: { display: 'none' } }}
+      />
+      <Drawer.Screen
+        name="LooseGoodsManage"
+        component={LooseGoodsManageScreen as any}
+        options={{ drawerItemStyle: { display: 'none' } }}
+      />
     </Drawer.Navigator>
   );
 }
 
-export function RootNavigator() {
+// ==================== 根导航器 ====================
+
+export default function RootNavigator() {
+  const { theme } = useTheme();
+  const { colors } = theme;
+
+  const navTheme = useMemo(
+    () => ({
+      ...(theme.isDark ? DarkTheme : DefaultTheme),
+      colors: {
+        ...(theme.isDark ? DarkTheme.colors : DefaultTheme.colors),
+        primary: colors.brand.primary,
+        background: colors.surface.s0,
+        card: colors.surface.s1,
+        text: colors.text.primary,
+        border: colors.border.subtle,
+        notification: colors.brand.danger,
+      },
+    }),
+    [theme.isDark, colors]
+  );
+
   return (
-    <Stack.Navigator
-      initialRouteName="MainDrawer"
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Screen name="MainDrawer" component={MainDrawer} />
-      <Stack.Screen
-        name="Config"
-        component={ConfigScreen}
-        options={{ presentation: 'card', headerShown: true, title: '配置中心' }}
-      />
-      <Stack.Screen
-        name="ProductDetail"
-        component={ProductDetailScreen}
-        options={{ presentation: 'card', headerShown: true, title: '商品详情' }}
-      />
-      <Stack.Screen
-        name="ProductEdit"
-        component={ProductEditScreen}
-        options={({ route }) => ({
-          presentation: 'card',
-          headerShown: true,
-          title: route.params?.id ? '编辑商品' : '新增商品',
-        })}
-      />
-      <Stack.Screen
-        name="ScanBarcode"
-        component={ScanScreen}
-        options={{ presentation: 'card', headerShown: true, title: '扫码' }}
-      />
-      <Stack.Screen
-        name="PendingItems"
-        component={PendingItemsScreen}
-        options={{ presentation: 'card', headerShown: true, title: '待处理条码' }}
-      />
-      <Stack.Screen
-        name="DuplicateList"
-        component={DuplicateScreen}
-        options={{ presentation: 'card', headerShown: true, title: '重复检测' }}
-      />
-      <Stack.Screen
-        name="LooseGoodsManage"
-        component={LooseGoodsManageScreen}
-        options={{ presentation: 'card', headerShown: true, title: '散装标签管理' }}
-      />
-    </Stack.Navigator>
+    <NavigationContainer theme={navTheme}>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          animation: 'slide_from_right',
+          contentStyle: {
+            backgroundColor: colors.surface.s0,
+          },
+        }}
+      >
+        <Stack.Screen name="MainDrawer" component={MainDrawer} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }

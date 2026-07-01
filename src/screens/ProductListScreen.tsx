@@ -42,9 +42,9 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
   const [nlResult, setNlResult] = useState<AiQueryResult | null>(null);
 
   const statusColors: Record<string, string> = {
-    IN_SHOP: colors.brand.inShop,
-    OUT_OF_STOCK: colors.brand.outOfStock,
-    TO_BE_PURCHASED: colors.brand.toBePurchased,
+    IN_SHOP: colors.brand.success,
+    OUT_OF_STOCK: colors.text.tertiary,
+    TO_BE_PURCHASED: colors.brand.warning,
   };
 
   // 右上角 "+" 按钮（仅管理模式/未过滤已删除时显示）
@@ -176,7 +176,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
           <View
             style={[
               styles.statusBadge,
-              { backgroundColor: statusColors[item.status] || colors.text.hint },
+              { backgroundColor: statusColors[item.status] || colors.text.tertiary },
             ]}
           >
             <Text style={styles.statusText}>
@@ -200,7 +200,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
         <TextInput
           style={styles.searchInput}
           placeholder={isNLSearch ? '用自然语言描述你需要的商品...' : '搜索商品名称、拼音或条码'}
-          placeholderTextColor={colors.text.hint}
+          placeholderTextColor={colors.text.tertiary}
           value={query}
           onChangeText={setQuery}
           returnKeyType="search"
@@ -343,7 +343,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.bg.primary,
+      backgroundColor: colors.surface.s0,
     },
     // 头部按钮
     headerButton: {
@@ -360,7 +360,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     searchBar: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       marginHorizontal: 12,
       marginTop: 12,
       marginBottom: 8,
@@ -389,7 +389,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     clearButtonText: {
       fontSize: 14 * scale,
-      color: colors.text.hint,
+      color: colors.text.tertiary,
     },
     nlToggleBtn: {
       paddingHorizontal: 8,
@@ -402,7 +402,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     nlToggleText: {
       fontSize: 11 * scale,
       fontWeight: '700',
-      color: colors.text.hint,
+      color: colors.text.tertiary,
       letterSpacing: 0.5,
     },
     nlToggleTextActive: {
@@ -426,7 +426,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       paddingHorizontal: 14,
       paddingVertical: 6,
       borderRadius: 16,
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       borderWidth: 1,
       borderColor: colors.border.default,
     },
@@ -451,7 +451,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       borderRadius: 10,
       paddingHorizontal: 16,
       paddingVertical: 14,
@@ -479,7 +479,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     productPinyin: {
       fontSize: 12 * scale,
-      color: colors.text.hint,
+      color: colors.text.tertiary,
       marginLeft: 6,
       fontWeight: '500',
     },
@@ -526,7 +526,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     emptySubText: {
       fontSize: 14 * scale,
-      color: colors.text.hint,
+      color: colors.text.tertiary,
     },
     emptyAiBtn: {
       marginTop: 12,
@@ -551,7 +551,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       paddingHorizontal: 12,
       paddingBottom: 24,
       paddingTop: 10,
-      backgroundColor: colors.bg.primary,
+      backgroundColor: colors.surface.s0,
     },
     scanButton: {
       flexDirection: 'row',

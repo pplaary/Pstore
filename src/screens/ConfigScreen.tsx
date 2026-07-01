@@ -202,7 +202,7 @@ export function ConfigScreen(_props: Props) {
         <TextInput
           style={styles.input}
           placeholder="http://192.168.x.x:3141"
-          placeholderTextColor={colors.text.hint}
+          placeholderTextColor={colors.text.tertiary}
           value={inputUrl}
           onChangeText={setInputUrl}
           autoCapitalize="none"
@@ -238,8 +238,8 @@ export function ConfigScreen(_props: Props) {
           </View>
         ) : (
           <View style={styles.statusRow}>
-            <Text style={[styles.statusDot, { backgroundColor: networkStatus ? colors.brand.success : colors.text.hint }]} />
-            <Text style={[styles.statusText, { color: networkStatus ? colors.brand.success : colors.text.hint }]}>
+            <Text style={[styles.statusDot, { backgroundColor: networkStatus ? colors.brand.success : colors.text.tertiary }]} />
+            <Text style={[styles.statusText, { color: networkStatus ? colors.brand.success : colors.text.tertiary }]}>
               {networkStatus ? '已连接' : '不可达'}
             </Text>
           </View>
@@ -259,13 +259,13 @@ export function ConfigScreen(_props: Props) {
         <TextInput
           style={styles.input}
           placeholder="API 地址"
-          placeholderTextColor={colors.text.hint}
+          placeholderTextColor={colors.text.tertiary}
           accessibilityLabel="AI API地址"
         />
         <TextInput
           style={styles.input}
           placeholder="API Key"
-          placeholderTextColor={colors.text.hint}
+          placeholderTextColor={colors.text.tertiary}
           secureTextEntry
           accessibilityLabel="AI API密钥"
         />
@@ -303,10 +303,10 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.bg.primary,
+      backgroundColor: colors.surface.s0,
     },
     section: {
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       marginHorizontal: 16,
       marginTop: 16,
       padding: 16,
@@ -342,7 +342,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       borderRadius: 8,
       borderWidth: 1.5,
       borderColor: colors.border.default,
-      backgroundColor: colors.bg.primary,
+      backgroundColor: colors.surface.s0,
       alignItems: 'center',
     },
     modeChipText: {
@@ -362,7 +362,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       marginBottom: 12,
     },
     input: {
-      backgroundColor: colors.bg.input,
+      backgroundColor: colors.input,
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 10,
@@ -397,7 +397,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     hint: {
       fontSize: 12 * scale,
-      color: colors.text.hint,
+      color: colors.text.tertiary,
       marginTop: 4,
     },
     statusRow: {

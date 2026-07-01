@@ -1,10 +1,12 @@
 /**
- * 抽屉导航内容组件
+ * 抽屉导航内容组件 — 现代化设计
  *
- * 菜单项按 spec §4.4 设计：
- * - 管理模式入口：全员可见（需 PIN）
- * - 管理模式中：显示商品管理、待处理条码、重复检测、导出
- * - 全员：同步配置、深色模式、关怀模式、设置
+ * 设计特征：
+ * - 品牌标识头部区域
+ * - 分组菜单项，清晰图标+文字
+ * - 购物车概览卡片
+ * - 管理模式入口
+ * - 使用语义化间距和圆角令牌
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -13,22 +15,21 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Switch,
   TextInput,
   Alert,
 } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
+import { Ionicons } from '@expo/vector-icons';
 import { useModeStore } from '../store/mode';
 import { useCartStore } from '../store/cart';
 import { usePinStore } from '../store/pin';
-import { useTheme } from '../theme/ThemeContext';
+import { useTheme, type Theme } from '../theme/ThemeContext';
 import { useStore } from '../context/store';
 import { exportProductsCSV, type ExportScope } from '../services/backup/exportCSV';
 import { exportProducts } from '../db/search';
 
 export default function DrawerContent(props: any) {
   const { theme } = useTheme();
-  const { colors, scale } = theme;
   const { isManagement, enterManagement, exitManagement } = useModeStore();
   const { items, total, clearCart } = useCartStore();
   const { pinHash, isPinSet, verifyPin, setPin } = usePinStore();
@@ -36,17 +37,16 @@ export default function DrawerContent(props: any) {
   const [pinInput, setPinInput] = useState('');
   const [pinModalVisible, setPinModalVisible] = useState(false);
 
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const { colors, spacing, radii, scale } = theme;
+
   const handleExport = useCallback(() => {
-    Alert.alert(
-      '选择导出范围',
-      '请选择要导出的商品范围',
-      [
-        { text: '全部商品', onPress: () => exportAndSave('all') },
-        { text: '在售商品', onPress: () => exportAndSave('in_stock') },
-        { text: '待采商品', onPress: () => exportAndSave('to_be_purchased') },
-        { text: '取消', style: 'cancel' },
-      ],
-    );
+    Alert.alert('选择导出范围', '请选择要导出的商品范围', [
+      { text: '全部商品', onPress: () => exportAndSave('all') },
+      { text: '在售商品', onPress: () => exportAndSave('in_stock') },
+      { text: '待采商品', onPress: () => exportAndSave('to_be_purchased') },
+      { text: '取消', style: 'cancel' },
+    ]);
   }, [db]);
 
   const exportAndSave = useCallback(async (scope: ExportScope) => {
@@ -60,8 +60,6 @@ export default function DrawerContent(props: any) {
       Alert.alert('导出失败', e instanceof Error ? e.message : '未知错误');
     }
   }, [db]);
-
-  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
   const totalQty = items.reduce((s, i) => s + i.quantity, 0);
 
@@ -77,7 +75,6 @@ export default function DrawerContent(props: any) {
   const handlePinAction = useCallback(async () => {
     const trimmed = pinInput.trim();
     if (!trimmed) return;
-
     if (isPinSet) {
       const ok = await verifyPin(trimmed);
       if (ok) {
@@ -102,11 +99,23 @@ export default function DrawerContent(props: any) {
   }, [pinInput, isPinSet, verifyPin, setPin, enterManagement, props]);
 
   return (
-    <DrawerContentScrollView {...props}>
+    <DrawerContentScrollView {...props} style={styles.container}>
+      {/* 品牌标识头部 */}
+      <View style={styles.brandHeader}>
+        <View style={styles.brandIcon}>
+          <Ionicons name="cube" size={28 * scale} color={colors.text.inverse} />
+        </View>
+        <Text style={styles.brandTitle}>PStore</Text>
+        <Text style={styles.brandSubtitle}>AI 智能物品管理</Text>
+      </View>
+
       {/* 购物车概览 */}
       {items.length > 0 && (
         <View style={styles.cartSummary}>
-          <Text style={styles.cartSummaryTitle}>🛒 购物车</Text>
+          <View style={styles.cartSummaryRow}>
+            <Ionicons name="cart" size={18 * scale} color={colors.brand.primary} />
+            <Text style={styles.cartSummaryTitle}>购物车</Text>
+          </View>
           <Text style={styles.cartSummaryText}>
             {items.length} 种商品，共 {totalQty} 件
           </Text>
@@ -114,123 +123,128 @@ export default function DrawerContent(props: any) {
         </View>
       )}
 
-      {/* 管理模式菜单项 */}
+      {/* 管理模式菜单 */}
       {isManagement && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>管理</Text>
-          <TouchableOpacity
-            style={styles.menuItem}
+          <DrawerMenuItem
+            icon="archive"
+            label="商品管理"
             onPress={() => props.navigation.navigate('ProductList')}
-            accessibilityLabel="商品管理"
-            accessibilityRole="menuitem"
-          >
-            <Text style={styles.menuItemText}>📦 商品管理</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.menuItem}
+            colors={colors}
+            scale={scale}
+          />
+          <DrawerMenuItem
+            icon="clipboard"
+            label="待处理条码"
             onPress={() => props.navigation.navigate('PendingItems')}
-            accessibilityLabel="待处理条码"
-            accessibilityRole="menuitem"
-          >
-            <Text style={styles.menuItemText}>📋 待处理条码</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.menuItem}
+            colors={colors}
+            scale={scale}
+          />
+          <DrawerMenuItem
+            icon="trash"
+            label="已删除商品"
             onPress={() => props.navigation.navigate('ProductList', { filter: 'deleted' })}
-            accessibilityLabel="已删除商品"
-            accessibilityRole="menuitem"
-          >
-            <Text style={styles.menuItemText}>🗑 已删除商品</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.menuItem}
+            colors={colors}
+            scale={scale}
+          />
+          <DrawerMenuItem
+            icon="git-compare"
+            label="重复检测"
             onPress={() => props.navigation.navigate('DuplicateList')}
-            accessibilityLabel="重复检测"
-            accessibilityRole="menuitem"
-          >
-            <Text style={styles.menuItemText}>🔍 重复检测</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.menuItem}
+            colors={colors}
+            scale={scale}
+          />
+          <DrawerMenuItem
+            icon="pricetags"
+            label="散装标签管理"
             onPress={() => props.navigation.navigate('LooseGoodsManage')}
-            accessibilityLabel="散装标签管理"
-            accessibilityRole="menuitem"
-          >
-            <Text style={styles.menuItemText}>🏷 散装标签管理</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.menuItem}
+            colors={colors}
+            scale={scale}
+          />
+          <DrawerMenuItem
+            icon="download"
+            label="商品数据导出"
             onPress={handleExport}
-            accessibilityLabel="商品数据导出"
-            accessibilityRole="menuitem"
-          >
-            <Text style={styles.menuItemText}>📤 商品数据导出</Text>
-          </TouchableOpacity>
+            colors={colors}
+            scale={scale}
+          />
         </View>
       )}
 
       {/* 通用功能 */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>功能</Text>
-        <TouchableOpacity
-          style={styles.menuItem}
+        <DrawerMenuItem
+          icon="sync"
+          label="同步配置"
           onPress={() => props.navigation.navigate('Config')}
-          accessibilityLabel="同步配置"
-          accessibilityRole="menuitem"
-        >
-          <Text style={styles.menuItemText}>🔄 同步配置</Text>
-        </TouchableOpacity>
+          colors={colors}
+          scale={scale}
+        />
       </View>
 
       {/* 设置 */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>设置</Text>
-        <TouchableOpacity
-          style={styles.menuItem}
+        <DrawerMenuItem
+          icon="moon"
+          label="深色模式"
           onPress={() => props.navigation.navigate('Config')}
-          accessibilityLabel="深色模式"
-          accessibilityRole="menuitem"
-        >
-          <Text style={styles.menuItemText}>🌙 深色模式 ›</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.menuItem}
+          colors={colors}
+          scale={scale}
+          showChevron
+        />
+        <DrawerMenuItem
+          icon="accessibility"
+          label="关怀模式"
           onPress={() => props.navigation.navigate('Config')}
-          accessibilityLabel="关怀模式"
-          accessibilityRole="menuitem"
-        >
-          <Text style={styles.menuItemText}>👴 关怀模式 ›</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.menuItem}
+          colors={colors}
+          scale={scale}
+          showChevron
+        />
+        <DrawerMenuItem
+          icon="settings"
+          label="设置"
           onPress={() => alert('设置页开发中')}
-          accessibilityLabel="设置"
-          accessibilityRole="menuitem"
-        >
-          <Text style={styles.menuItemText}>⚙️ 设置</Text>
-        </TouchableOpacity>
+          colors={colors}
+          scale={scale}
+        />
       </View>
 
       {/* 管理模式入口 */}
-      <View style={styles.section}>
-        <TouchableOpacity
-          style={[styles.modeButton, isManagement && styles.modeButtonActive]}
-          onPress={handleModeToggle}
-          accessibilityLabel={isManagement ? '退出管理模式' : '进入管理模式'}
-          accessibilityRole="button"
-        >
-          <Text style={styles.modeButtonText}>
-            {isManagement ? '✓ 已进入管理模式（点击退出）' : '🔒 进入管理模式'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={[styles.modeButton, isManagement && styles.modeButtonActive]}
+        onPress={handleModeToggle}
+        accessibilityLabel={isManagement ? '退出管理模式' : '进入管理模式'}
+        accessibilityRole="button"
+      >
+        <Ionicons
+          name={isManagement ? 'lock-open' : 'lock-closed'}
+          size={16 * scale}
+          color={colors.text.inverse}
+          style={{ marginRight: spacing.sm }}
+        />
+        <Text style={styles.modeButtonText}>
+          {isManagement ? '已进入管理模式（点击退出）' : '进入管理模式'}
+        </Text>
+      </TouchableOpacity>
 
       {/* 清空购物车 */}
       {items.length > 0 && (
-        <TouchableOpacity style={styles.clearCartBtn} onPress={clearCart} accessibilityLabel="清空购物车" accessibilityRole="button">
-          <Text style={styles.clearCartText}>🗑 清空购物车</Text>
+        <TouchableOpacity
+          style={styles.clearCartBtn}
+          onPress={clearCart}
+          accessibilityLabel="清空购物车"
+          accessibilityRole="button"
+        >
+          <Ionicons name="trash-outline" size={16 * scale} color={colors.brand.danger} style={{ marginRight: spacing.sm }} />
+          <Text style={styles.clearCartText}>清空购物车</Text>
         </TouchableOpacity>
       )}
+
+      {/* 底部间距 */}
+      <View style={{ height: spacing.xxxl }} />
 
       {/* PIN 验证弹窗 */}
       {pinModalVisible && (
@@ -245,7 +259,7 @@ export default function DrawerContent(props: any) {
             <TextInput
               style={styles.pinInput}
               placeholder={isPinSet ? '输入 PIN' : '设置 PIN'}
-              placeholderTextColor={colors.text.hint}
+              placeholderTextColor={colors.text.tertiary}
               value={pinInput}
               onChangeText={setPinInput}
               secureTextEntry
@@ -257,10 +271,7 @@ export default function DrawerContent(props: any) {
             <View style={styles.pinActions}>
               <TouchableOpacity
                 style={styles.pinCancelBtn}
-                onPress={() => {
-                  setPinModalVisible(false);
-                  setPinInput('');
-                }}
+                onPress={() => { setPinModalVisible(false); setPinInput(''); }}
                 accessibilityLabel="取消PIN输入"
                 accessibilityRole="button"
               >
@@ -282,48 +293,166 @@ export default function DrawerContent(props: any) {
   );
 }
 
-function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+// ─── 菜单项子组件 ────────────────────────────────────────────
+
+function DrawerMenuItem({
+  icon,
+  label,
+  onPress,
+  colors,
+  scale,
+  showChevron,
+}: {
+  icon: string;
+  label: string;
+  onPress: () => void;
+  colors: Theme['colors'];
+  scale: number;
+  showChevron?: boolean;
+}) {
+  return (
+    <TouchableOpacity
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12 * scale,
+        paddingHorizontal: 16 * scale,
+        minHeight: 44 * scale,
+      }}
+      onPress={onPress}
+      accessibilityLabel={label}
+      accessibilityRole="menuitem"
+    >
+      <Ionicons name={icon as any} size={20 * scale} color={colors.text.secondary} style={{ marginRight: 12 * scale }} />
+      <Text style={{ flex: 1, fontSize: 15 * scale, color: colors.text.primary }}>{label}</Text>
+      {showChevron && (
+        <Ionicons name="chevron-forward" size={16 * scale} color={colors.text.tertiary} />
+      )}
+    </TouchableOpacity>
+  );
+}
+
+// ─── 样式 ────────────────────────────────────────────────────
+
+function createStyles(theme: Theme) {
+  const { colors, spacing, radii, scale, shadows } = theme;
   return StyleSheet.create({
-    cartSummary: {
-      margin: 16 * scale,
-      padding: 12 * scale,
-      backgroundColor: colors.bg.primary,
-      borderRadius: 8 * scale,
+    container: {
+      backgroundColor: colors.surface.s1,
     },
-    cartSummaryTitle: { fontSize: 14 * scale, fontWeight: '600', color: colors.text.primary },
-    cartSummaryText: { fontSize: 12 * scale, color: colors.text.secondary, marginTop: 2 * scale },
-    cartSummaryTotal: {
-      fontSize: 18 * scale, fontWeight: '700', color: colors.brand.danger, marginTop: 4 * scale,
-    },
-    section: { marginTop: 8 * scale },
-    sectionTitle: {
-      fontSize: 12 * scale, fontWeight: '600', color: colors.text.hint,
-      marginHorizontal: 16 * scale, marginBottom: 4 * scale, textTransform: 'uppercase',
-    },
-    menuItem: { paddingVertical: 12 * scale, paddingHorizontal: 16 * scale },
-    menuItemText: { fontSize: 15 * scale, color: colors.text.primary },
-    settingRow: {
-      flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-      paddingHorizontal: 16 * scale, paddingVertical: 10 * scale,
-    },
-    settingLabel: { fontSize: 15 * scale, color: colors.text.primary },
-    modeButton: {
-      margin: 16 * scale,
-      padding: 12 * scale,
+
+    // 品牌头部
+    brandHeader: {
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.xxl,
+      paddingBottom: spacing.lg,
       backgroundColor: colors.brand.primary,
-      borderRadius: 8 * scale,
-      alignItems: 'center',
+      marginBottom: spacing.sm,
     },
-    modeButtonActive: { backgroundColor: colors.brand.success },
-    modeButtonText: { fontSize: 14 * scale, color: colors.text.inverse, fontWeight: '600' },
+    brandIcon: {
+      width: 48 * scale,
+      height: 48 * scale,
+      borderRadius: radii.lg,
+      backgroundColor: 'rgba(255,255,255,0.2)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.sm,
+    },
+    brandTitle: {
+      fontSize: 22 * scale,
+      fontWeight: '800',
+      color: colors.text.inverse,
+      letterSpacing: -0.5,
+    },
+    brandSubtitle: {
+      fontSize: 13 * scale,
+      color: 'rgba(255,255,255,0.75)',
+      marginTop: spacing.xs,
+    },
+
+    // 购物车概览
+    cartSummary: {
+      margin: spacing.lg,
+      padding: spacing.md,
+      backgroundColor: colors.brand.primaryMuted,
+      borderRadius: radii.md,
+      borderWidth: 1,
+      borderColor: colors.brand.primary + '20',
+    },
+    cartSummaryRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.xs,
+    },
+    cartSummaryTitle: {
+      fontSize: 14 * scale,
+      fontWeight: '600',
+      color: colors.brand.primary,
+      marginLeft: spacing.sm,
+    },
+    cartSummaryText: {
+      fontSize: 12 * scale,
+      color: colors.text.secondary,
+      marginTop: 2 * scale,
+    },
+    cartSummaryTotal: {
+      fontSize: 20 * scale,
+      fontWeight: '800',
+      color: colors.brand.danger,
+      marginTop: spacing.xs,
+    },
+
+    // 分组
+    section: {
+      marginTop: spacing.sm,
+    },
+    sectionTitle: {
+      fontSize: 11 * scale,
+      fontWeight: '700',
+      color: colors.text.tertiary,
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.xs,
+      marginTop: spacing.sm,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+
+    // 管理模式按钮
+    modeButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      margin: spacing.lg,
+      padding: spacing.md,
+      backgroundColor: colors.brand.primary,
+      borderRadius: radii.md,
+      ...shadows.sm,
+    },
+    modeButtonActive: {
+      backgroundColor: colors.brand.success,
+    },
+    modeButtonText: {
+      fontSize: 14 * scale,
+      color: colors.text.inverse,
+      fontWeight: '600',
+    },
+
+    // 清空购物车
     clearCartBtn: {
-      margin: 16 * scale,
-      padding: 12 * scale,
-      backgroundColor: colors.bg.primary,
-      borderRadius: 8 * scale,
+      flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
+      margin: spacing.lg,
+      padding: spacing.md,
+      backgroundColor: colors.brand.dangerMuted,
+      borderRadius: radii.md,
     },
-    clearCartText: { fontSize: 14 * scale, color: colors.brand.danger, fontWeight: '600' },
+    clearCartText: {
+      fontSize: 14 * scale,
+      color: colors.brand.danger,
+      fontWeight: '600',
+    },
+
     // PIN 弹窗
     pinOverlay: {
       position: 'absolute',
@@ -334,45 +463,63 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     pinModal: {
       width: '80%',
-      backgroundColor: colors.bg.card,
-      borderRadius: 12 * scale,
-      padding: 24 * scale,
+      backgroundColor: colors.surface.s2,
+      borderRadius: radii.lg,
+      padding: spacing.xxl,
     },
     pinTitle: {
-      fontSize: 18 * scale, fontWeight: '700', color: colors.text.primary,
-      textAlign: 'center', marginBottom: 8 * scale,
+      fontSize: 18 * scale,
+      fontWeight: '700',
+      color: colors.text.primary,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
     },
     pinHint: {
-      fontSize: 14 * scale, color: colors.text.secondary,
-      textAlign: 'center', marginBottom: 20 * scale,
+      fontSize: 14 * scale,
+      color: colors.text.secondary,
+      textAlign: 'center',
+      marginBottom: spacing.xl,
     },
     pinInput: {
-      backgroundColor: colors.bg.primary,
-      borderRadius: 8 * scale,
-      paddingHorizontal: 16 * scale,
-      paddingVertical: 12 * scale,
+      backgroundColor: colors.surface.s0,
+      borderRadius: radii.md,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
       fontSize: 18 * scale,
       textAlign: 'center',
       letterSpacing: 8 * scale,
       color: colors.text.primary,
-      marginBottom: 20 * scale,
+      marginBottom: spacing.xl,
+      borderWidth: 1,
+      borderColor: colors.border.default,
     },
-    pinActions: { flexDirection: 'row', gap: 12 * scale },
+    pinActions: {
+      flexDirection: 'row',
+      gap: spacing.md,
+    },
     pinCancelBtn: {
       flex: 1,
-      paddingVertical: 10 * scale,
-      borderRadius: 8 * scale,
-      backgroundColor: colors.bg.primary,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: radii.md,
+      backgroundColor: colors.surface.s0,
       alignItems: 'center',
     },
-    pinCancelBtnText: { fontSize: 14 * scale, color: colors.text.secondary, fontWeight: '600' },
+    pinCancelBtnText: {
+      fontSize: 14 * scale,
+      color: colors.text.secondary,
+      fontWeight: '600',
+    },
     pinConfirmBtn: {
       flex: 1,
-      paddingVertical: 10 * scale,
-      borderRadius: 8 * scale,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: radii.md,
       backgroundColor: colors.brand.primary,
       alignItems: 'center',
     },
-    pinConfirmBtnText: { color: colors.text.inverse, fontSize: 14 * scale, fontWeight: '600' },
+    pinConfirmBtnText: {
+      color: colors.text.inverse,
+      fontSize: 14 * scale,
+      fontWeight: '600',
+    },
   });
 }

@@ -186,14 +186,14 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
       ? colors.brand.success
       : connState === 'failed'
         ? colors.brand.danger
-        : colors.text.hint;
+        : colors.text.tertiary;
 
   return (
     <View>
       <TextInput
         style={styles.input}
         placeholder="https://example.com/webdav"
-        placeholderTextColor={colors.text.hint}
+        placeholderTextColor={colors.text.tertiary}
         value={url}
         onChangeText={setUrl}
         editable={editable}
@@ -205,7 +205,7 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
       <TextInput
         style={styles.input}
         placeholder="账号"
-        placeholderTextColor={colors.text.hint}
+        placeholderTextColor={colors.text.tertiary}
         value={username}
         onChangeText={setUsername}
         editable={editable}
@@ -216,7 +216,7 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
       <TextInput
         style={styles.input}
         placeholder="密码"
-        placeholderTextColor={colors.text.hint}
+        placeholderTextColor={colors.text.tertiary}
         value={password}
         onChangeText={setPassword}
         editable={editable}
@@ -275,7 +275,7 @@ export function WebDAVConfig({ editable }: WebDAVConfigProps) {
 function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
   return StyleSheet.create({
     input: {
-      backgroundColor: colors.bg.primary,
+      backgroundColor: colors.surface.s0,
       borderRadius: 8 * scale,
       paddingHorizontal: 12 * scale,
       paddingVertical: 10 * scale,

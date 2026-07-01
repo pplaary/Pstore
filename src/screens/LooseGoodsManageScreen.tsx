@@ -199,7 +199,7 @@ export function LooseGoodsManageScreen({ navigation }: LooseGoodsManageScreenPro
         <TextInput
           style={styles.addInput}
           placeholder="输入新标签名称"
-          placeholderTextColor={colors.text.hint}
+          placeholderTextColor={colors.text.tertiary}
           value={newLabelText}
           onChangeText={setNewLabelText}
           onSubmitEditing={handleAdd}
@@ -240,7 +240,7 @@ export function LooseGoodsManageScreen({ navigation }: LooseGoodsManageScreenPro
 
 function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.bg.primary },
+    container: { flex: 1, backgroundColor: colors.surface.s0 },
 
     addRow: {
       flexDirection: 'row', alignItems: 'center',
@@ -249,7 +249,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     addInput: {
       flex: 1,
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 10,
@@ -272,7 +272,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
 
     itemRow: {
       flexDirection: 'row', alignItems: 'center',
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       borderRadius: 10,
       paddingVertical: 12,
       paddingHorizontal: 12,
@@ -281,7 +281,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     dragButtons: { flexDirection: 'row', gap: 4, marginRight: 8 },
     dragBtn: {
       width: 28, height: 28, borderRadius: 6,
-      backgroundColor: colors.bg.primary,
+      backgroundColor: colors.surface.s0,
       alignItems: 'center', justifyContent: 'center',
       borderWidth: 1, borderColor: colors.border.default,
     },
@@ -290,7 +290,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     labelText: { flex: 1, fontSize: 15 * scale, color: colors.text.primary },
     editInput: {
       flex: 1,
-      backgroundColor: colors.bg.primary,
+      backgroundColor: colors.surface.s0,
       borderRadius: 6,
       paddingHorizontal: 8,
       paddingVertical: 4,
@@ -304,7 +304,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 6,
-      backgroundColor: colors.bg.primary,
+      backgroundColor: colors.surface.s0,
       borderWidth: 1,
       borderColor: colors.border.default,
     },
@@ -321,6 +321,6 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       paddingTop: 80,
     },
     emptyText: { fontSize: 16 * scale, color: colors.text.secondary },
-    emptyHint: { fontSize: 13 * scale, color: colors.text.hint, marginTop: 8 },
+    emptyHint: { fontSize: 13 * scale, color: colors.text.tertiary, marginTop: 8 },
   });
 }

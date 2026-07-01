@@ -52,7 +52,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       alignItems: 'center',
     },
     card: {
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       borderRadius: 16 * scale,
       padding: 32 * scale,
       alignItems: 'center',

@@ -3,7 +3,7 @@ import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet } from 'rea
 import { NavigationContainer } from '@react-navigation/native';
 import { initDatabase } from './src/db/init';
 import { StoreProvider } from './src/context/store';
-import { RootNavigator } from './src/navigation/RootNavigator';
+import RootNavigator from './src/navigation/RootNavigator';
 import { ThemeProvider } from './src/theme/ThemeContext';
 import { useAIConfigStore } from './src/store/aiConfig';
 import type { SQLiteDatabase } from 'expo-sqlite';

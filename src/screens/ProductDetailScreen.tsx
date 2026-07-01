@@ -157,7 +157,7 @@ function DetailContent({ db, productId }: { db: ReturnType<typeof useStore>['db'
           {product.category && <InfoRow label="分类" value={product.category} />}
           <View style={styles.statusRow}>
             <Text style={styles.infoLabel}>状态</Text>
-            <View style={[styles.statusBadge, { backgroundColor: statusColors[product.status] || colors.text.hint }]}>
+            <View style={[styles.statusBadge, { backgroundColor: statusColors[product.status] || colors.text.tertiary }]}>
               <Text style={styles.statusText}>{statusLabels[product.status] || product.status}</Text>
             </View>
           </View>
@@ -218,14 +218,14 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.bg.primary,
+      backgroundColor: colors.surface.s0,
     },
     scrollContent: {
       padding: 12,
       paddingBottom: 80,
     },
     card: {
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       borderRadius: 10,
       padding: 16,
       marginBottom: 12,
@@ -264,7 +264,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     infoLabelSub: {
       fontSize: 12 * scale,
-      color: colors.text.hint,
+      color: colors.text.tertiary,
     },
     infoValue: {
       fontSize: 14 * scale,
@@ -298,7 +298,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     loadingText: {
       fontSize: 14 * scale,
-      color: colors.text.hint,
+      color: colors.text.tertiary,
     },
     emptyContainer: {
       flex: 1,
@@ -307,7 +307,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     emptyText: {
       fontSize: 14 * scale,
-      color: colors.text.hint,
+      color: colors.text.tertiary,
     },
     sectionTitle: {
       fontSize: 16 * scale,
@@ -320,7 +320,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     historyItem: {
       paddingVertical: 10,
       borderBottomWidth: 1,
-      borderBottomColor: colors.bg.primary,
+      borderBottomColor: colors.surface.s0,
     },
     historyPriceRow: {
       flexDirection: 'row',
@@ -329,7 +329,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     historyOldPrice: {
       fontSize: 14 * scale,
-      color: colors.text.hint,
+      color: colors.text.tertiary,
       textDecorationLine: 'line-through',
     },
     historyArrow: {
@@ -343,7 +343,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     historyDate: {
       fontSize: 12 * scale,
-      color: colors.text.hint,
+      color: colors.text.tertiary,
       marginTop: 4,
     },
     bottomBar: {
@@ -355,7 +355,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       paddingHorizontal: 12,
       paddingBottom: 24,
       paddingTop: 10,
-      backgroundColor: colors.bg.primary,
+      backgroundColor: colors.surface.s0,
       gap: 10,
     },
     actionButton: {
@@ -369,7 +369,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       backgroundColor: colors.brand.primary,
     },
     deleteButton: {
-      backgroundColor: colors.bg.card,
+      backgroundColor: colors.surface.s1,
       borderWidth: 1,
       borderColor: colors.brand.danger,
     },
