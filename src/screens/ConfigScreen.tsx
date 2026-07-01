@@ -22,12 +22,12 @@ import { useModeStore } from '../store/mode';
 import { performSync } from '../services/sync';
 import { clearAllProducts, resetDatabase } from '../services/backup/clear';
 import { showToast } from '../utils/toast';
-import type { RootStackScreenProps } from '../navigation/types';
+import type { ConfigScreenProps } from '../navigation/types';
 import { useStore } from '../context/store';
 import { WebDAVConfig } from '../components/WebDAVConfig';
 import { useTheme } from '../theme/ThemeContext';
 
-type Props = RootStackScreenProps<'Config'>;
+type Props = ConfigScreenProps;
 
 export function ConfigScreen(_props: Props) {
   const { theme, setMode: setThemeMode } = useTheme();

@@ -23,7 +23,7 @@ import { aiParse, aiParseImage } from '../services/n1';
 import { useSyncConfigStore } from '../store/syncConfig';
 import { useTheme } from '../theme/ThemeContext';
 import type { Product } from '../db/types';
-import type { ScanScreenProps } from '../navigation/types';
+import type { ScanScreenCompositeProps } from '../navigation/types';
 
 type ScanMode = 'scan' | 'photo';
 
@@ -104,7 +104,7 @@ const CameraContent = memo(function CameraContent({
   );
 });
 
-export function ScanScreen({ navigation }: ScanScreenProps) {
+export function ScanScreen({ navigation }: ScanScreenCompositeProps) {
   const { db } = useStore();
   const { theme } = useTheme();
   const { colors, scale } = theme;
