@@ -309,8 +309,8 @@ function createStyles(theme: Theme) {
       maxHeight: 100 * scale,
     },
     sendButton: {
-      width: 36 * scale,
-      height: 36 * scale,
+      minWidth: 48 * scale,
+      minHeight: 48 * scale,
       borderRadius: radii.full,
       backgroundColor: colors.brand.primary,
       justifyContent: 'center',
@@ -831,7 +831,7 @@ export default function HomeScreen({ navigation }: any) {
           >
             <Ionicons name="menu" size={22 * scale} color={colors.text.primary} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleTitlePress} activeOpacity={1}>
+          <TouchableOpacity onPress={handleTitlePress} activeOpacity={1} accessibilityLabel="切换搜索模式" accessibilityRole="button">
             <Text style={styles.headerTitle}>PStore</Text>
             <Text style={styles.headerSubtitle}>{isChatMode ? 'AI 在线' : '搜索模式'}</Text>
           </TouchableOpacity>
@@ -978,7 +978,7 @@ export default function HomeScreen({ navigation }: any) {
           <View style={styles.cartSheetHandle} />
           <View style={styles.cartSheetHeader}>
             <Text style={styles.cartSheetTitle}>购物车 ({cartItems.length})</Text>
-            <TouchableOpacity onPress={clearCart} accessibilityLabel="清空购物车">
+            <TouchableOpacity onPress={clearCart} accessibilityLabel="清空购物车" accessibilityRole="button">
               <Text style={styles.cartSheetClear}>清空</Text>
             </TouchableOpacity>
           </View>

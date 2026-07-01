@@ -27,7 +27,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
   const { db, products, refreshProducts } = useStore();
   const { theme } = useTheme();
   const { colors, scale } = theme;
-  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
+  const styles = useMemo(() => createStyles(colors, scale, theme.isDark), [colors, scale, theme.isDark]);
   const filter = route.params?.filter;
   const isManagement = useModeStore(s => s.isManagement);
   const syncConfigServerUrl = useSyncConfigStore((s) => s.serverUrl);
@@ -456,7 +456,7 @@ export function ProductListScreen({ navigation, route }: ProductListScreenCompos
 
 // ==================== 样式 ====================
 
-function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number, isDark: boolean) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -484,7 +484,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       borderRadius: 10,
       paddingHorizontal: 12,
       height: 44,
-      shadowColor: '#000',
+      shadowColor: isDark ? 'transparent' : '#000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
@@ -542,6 +542,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     statusChip: {
       paddingHorizontal: 12,
       paddingVertical: 5,
+      minHeight: 48 * scale,
       borderRadius: 14,
       backgroundColor: colors.surface.s1,
       borderWidth: 1,
@@ -626,7 +627,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       paddingHorizontal: 16,
       paddingVertical: 14,
       marginBottom: 8,
-      shadowColor: '#000',
+      shadowColor: isDark ? 'transparent' : '#000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.04,
       shadowRadius: 2,
@@ -720,7 +721,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     overlayBackdrop: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0,0,0,0.4)',
+      backgroundColor: colors.surface.overlay,
     },
     actionSheet: {
       backgroundColor: colors.surface.s1,
@@ -793,7 +794,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       justifyContent: 'center',
       alignItems: 'center',
       elevation: 6,
-      shadowColor: '#000',
+      shadowColor: isDark ? 'transparent' : '#000',
       shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.25,
       shadowRadius: 4,

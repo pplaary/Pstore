@@ -147,7 +147,7 @@ export function AIChatBubble({ role, content, timestamp }: AIChatBubbleProps): J
 
       <View style={styles.bubbleWrapper}>
         {/* 气泡主体 */}
-        <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}>
+        <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]} accessibilityLabel={isUser ? "用户消息" : "AI 回复"}>
           <Text style={[styles.content, isUser ? styles.userContent : styles.aiContent]}>
             {content}
           </Text>

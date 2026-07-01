@@ -114,7 +114,7 @@ function MainDrawer() {
           width: 300,
         },
         drawerType: 'front',
-        overlayColor: 'rgba(0,0,0,0.4)',
+        overlayColor: colors.surface.overlay,
         swipeEdgeWidth: 40,
         swipeMinDistance: 10,
       }}

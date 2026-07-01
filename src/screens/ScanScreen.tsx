@@ -39,6 +39,7 @@ const CameraContent = memo(function CameraContent({
   facing,
   colors,
   scale,
+  isDark,
   isLoading,
   onBarcodeScanned,
   onTakePhoto,
@@ -49,12 +50,13 @@ const CameraContent = memo(function CameraContent({
   facing: CameraType;
   colors: ReturnType<typeof useTheme>['theme']['colors'];
   scale: number;
+  isDark: boolean;
   isLoading: boolean;
   onBarcodeScanned: (event: { data: string }) => void;
   onTakePhoto: () => void;
   onFlipCamera: () => void;
 }) {
-  const styles = useMemo(() => createCameraStyles(colors, scale), [colors, scale]);
+  const styles = useMemo(() => createCameraStyles(colors, scale, isDark), [colors, scale, isDark]);
 
   return (
     <CameraView
@@ -89,7 +91,7 @@ const CameraContent = memo(function CameraContent({
           <TouchableOpacity
             style={styles.flipButton}
             onPress={onFlipCamera}
-            accessibilityLabel="切换前后摄像头"
+            accessibilityLabel="翻转摄像头"
             accessibilityRole="button"
           >
             <Ionicons name="camera-reverse" size={20} color="#FFF" />
@@ -116,7 +118,7 @@ export function ScanScreen({ navigation }: ScanScreenCompositeProps) {
   const syncConfigServerUrl = useSyncConfigStore((s) => s.serverUrl);
   const isManagement = useModeStore((s) => s.isManagement);
 
-  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
+  const styles = useMemo(() => createStyles(colors, scale, theme.isDark), [colors, scale, theme.isDark]);
 
   const [mode, setMode] = useState<ScanMode>('scan');
   const [barcodeInput, setBarcodeInput] = useState('');
@@ -446,6 +448,7 @@ export function ScanScreen({ navigation }: ScanScreenCompositeProps) {
         facing={facing}
         colors={colors}
         scale={scale}
+        isDark={theme.isDark}
         isLoading={isLoading}
         onBarcodeScanned={(event) => {
         if (mode === 'scan') handleBarcodeScanned(event.data);
@@ -580,7 +583,7 @@ export function ScanScreen({ navigation }: ScanScreenCompositeProps) {
 
 // ==================== Styles ====================
 
-function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number, isDark: boolean) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.surface.s0 },
     centerContainer: {
@@ -602,7 +605,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     resultCard: {
       backgroundColor: colors.surface.s1, marginHorizontal: 16, marginBottom: 12,
       borderRadius: 12, padding: 16,
-      shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+      shadowColor: isDark ? 'transparent' : '#000', shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
     },
     resultName: { fontSize: 17 * scale, fontWeight: '600', color: colors.text.primary },
@@ -632,7 +635,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     submitBtnDisabled: { opacity: 0.5 },
     submitBtnText: { color: colors.text.inverse, fontSize: 14 * scale, fontWeight: '600' },
     modalOverlay: {
-      flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end',
+      flex: 1, backgroundColor: colors.surface.overlay, justifyContent: 'flex-end',
     },
     candidateSheet: {
       backgroundColor: colors.surface.s1,
@@ -671,34 +674,34 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
 }
 
 // CameraContent 专属样式（不依赖 ScanScreen 内部的 mode/barcode 逻辑
-function createCameraStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+function createCameraStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number, isDark: boolean) {
   return StyleSheet.create({
     camera: { flex: 1 },
     scanOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     scanFrame: {
       width: 240, height: 240, borderWidth: 2, borderColor: colors.text.inverse,
-      borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)',
+      borderRadius: 12, backgroundColor: colors.text.inverse + '1A',
     },
     scanHint: {
       color: colors.text.inverse, fontSize: 14 * scale, marginTop: 16,
-      textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 },
+      textShadowColor: colors.surface.overlay, textShadowOffset: { width: 0, height: 1 },
       textShadowRadius: 2,
     },
     photoOverlay: {
       flex: 1, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 60,
     },
     captureButton: {
-      width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.3)',
+      width: 72, height: 72, borderRadius: 36, backgroundColor: colors.text.inverse + '4D',
       justifyContent: 'center', alignItems: 'center', marginBottom: 20,
     },
     captureInner: {
       width: 56, height: 56, borderRadius: 28, backgroundColor: colors.text.inverse,
       borderWidth: 4, borderColor: colors.brand.primary,
     },
-    flipButton: { padding: 12, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 8 },
+    flipButton: { padding: 12, backgroundColor: colors.surface.overlay, borderRadius: 8 },
     loadingOverlay: {
       position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-      justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)',
+      justifyContent: 'center', alignItems: 'center', backgroundColor: colors.text.inverse + '4D',
     },
   });
 }

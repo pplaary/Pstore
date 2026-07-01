@@ -32,6 +32,7 @@ export interface ThemeColors {
     s0: string;  // 页面背景
     s1: string;  // 卡片/列表项
     s2: string;  // 弹层/浮层
+    overlay: string; // 遮罩层
   };
   /** 输入区域背景 */
   input: string;
@@ -154,6 +155,7 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
       s0: '#F8FAFC',
       s1: '#FFFFFF',
       s2: '#FFFFFF',
+      overlay: 'rgba(0,0,0,0.5)',
     },
     input: '#F1F5F9',
     text: {
@@ -194,6 +196,7 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
       s0: '#0B1120',
       s1: '#111827',
       s2: '#1E293B',
+      overlay: 'rgba(0,0,0,0.7)',
     },
     input: '#1E293B',
     text: {
@@ -234,6 +237,7 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
       s0: '#FFFFFF',
       s1: '#FFFFFF',
       s2: '#FFFFFF',
+      overlay: 'rgba(0,0,0,0.6)',
     },
     input: '#FFFFFF',
     text: {
@@ -283,7 +287,7 @@ function buildTheme(
     colors: COLORS[mode],
     spacing: SPACING,
     radii: RADII,
-    shadows: makeShadows(mode === 'light' ? '#000000' : '#000000'),
+    shadows: makeShadows(mode === 'dark' ? 'transparent' : '#000000'),
     durations: DURATIONS,
     scale: mode === 'care' ? 1.25 : 1,
     minTouchTarget: mode === 'care' ? 48 : 0,

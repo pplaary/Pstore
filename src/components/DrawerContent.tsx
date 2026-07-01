@@ -339,7 +339,7 @@ function createStyles(theme: Theme) {
       width: 48 * scale,
       height: 48 * scale,
       borderRadius: radii.lg,
-      backgroundColor: 'rgba(255,255,255,0.2)',
+      backgroundColor: colors.text.inverse + '33',
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: spacing.sm,
@@ -352,7 +352,7 @@ function createStyles(theme: Theme) {
     },
     brandSubtitle: {
       fontSize: 13 * scale,
-      color: 'rgba(255,255,255,0.75)',
+      color: colors.text.inverse + 'BF',
       marginTop: spacing.xs,
     },
 
@@ -443,7 +443,7 @@ function createStyles(theme: Theme) {
     pinOverlay: {
       position: 'absolute',
       top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
+      backgroundColor: colors.surface.overlay,
       justifyContent: 'center',
       alignItems: 'center',
     },

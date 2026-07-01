@@ -18,7 +18,7 @@ export function ProductDetailScreen({ navigation, route }: ProductDetailScreenPr
   const { colors, scale } = theme;
   const productId = route.params?.id;
 
-  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
+  const styles = useMemo(() => createStyles(colors, scale, theme.isDark), [colors, scale, theme.isDark]);
 
   const handleEdit = useCallback(() => {
     if (productId) {
@@ -67,7 +67,7 @@ export function ProductDetailScreen({ navigation, route }: ProductDetailScreenPr
 function DetailContent({ db, productId }: { db: ReturnType<typeof useStore>['db']; productId: string }) {
   const { theme } = useTheme();
   const { colors, scale } = theme;
-  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
+  const styles = useMemo(() => createStyles(colors, scale, theme.isDark), [colors, scale, theme.isDark]);
 
   const [product, setProduct] = useState<Product | null>(null);
   const [history, setHistory] = useState<PriceHistory[]>([]);
@@ -172,7 +172,7 @@ function DetailContent({ db, productId }: { db: ReturnType<typeof useStore>['db'
         <View style={styles.cardHeaderRow}>
           <Text style={styles.sectionTitle}>价格历史</Text>
           {history.length > 0 && (
-            <TouchableOpacity onPress={handleExportPriceHistory} accessibilityLabel="导出价格历史 CSV">
+            <TouchableOpacity onPress={handleExportPriceHistory} accessibilityLabel="导出价格历史 CSV" accessibilityRole="button">
               <Text style={styles.exportButton}>📤</Text>
             </TouchableOpacity>
           )}
@@ -203,7 +203,7 @@ function DetailContent({ db, productId }: { db: ReturnType<typeof useStore>['db'
 function InfoRow({ label, value, highlight, sub }: { label: string; value: string; highlight?: boolean; sub?: boolean }) {
   const { theme } = useTheme();
   const { colors, scale } = theme;
-  const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
+  const styles = useMemo(() => createStyles(colors, scale, theme.isDark), [colors, scale, theme.isDark]);
 
   return (
     <View style={styles.infoRow}>
@@ -215,7 +215,7 @@ function InfoRow({ label, value, highlight, sub }: { label: string; value: strin
 
 // ==================== 样式 ====================
 
-function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number) {
+function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], scale: number, isDark: boolean) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -230,7 +230,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       borderRadius: 10,
       padding: 16,
       marginBottom: 12,
-      shadowColor: '#000',
+      shadowColor: isDark ? 'transparent' : '#000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.04,
       shadowRadius: 2,

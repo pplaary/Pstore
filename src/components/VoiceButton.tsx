@@ -81,7 +81,7 @@ function createStyles(theme: Theme) {
     },
     cancelZoneInner: {
       flex: 1,
-      backgroundColor: 'rgba(239, 68, 68, 0.9)',
+      backgroundColor: colors.brand.danger + 'E6',
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: radii.md,
@@ -402,7 +402,7 @@ export function VoiceButton({ onResult, available = true, onStatusChange }: Voic
         accessibilityRole="button"
         accessibilityState={{ busy: isActive }}
       >
-        <View {...panResponder.panHandlers} style={styles.touchTarget}>
+        <View {...panResponder.panHandlers} style={styles.touchTarget} accessibilityLabel="语音输入">
           {renderContent()}
         </View>
       </Animated.View>
