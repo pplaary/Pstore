@@ -8,7 +8,6 @@ import {
   ScrollView,
   StyleSheet,
   Platform,
-  type ViewStyle,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useModeStore } from '../store/mode';
