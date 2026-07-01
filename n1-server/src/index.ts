@@ -58,6 +58,6 @@ app.get('*', (_req: Request, res: Response) => {
   res.sendFile(path.join(webDist, 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`N1 server listening on :${PORT}`);
+app.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`N1 server listening on 0.0.0.0:${PORT}`);
 });

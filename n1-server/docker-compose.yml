@@ -14,12 +14,12 @@ services:
       - CONFIG_PIN=0000
       - DATA_DIR=/data
       - PORT=3141
-      # AI 配置
+      # AI 配置 — 主用模型（测试验证通过）
       - AI_API_KEY=sk-lqbWSSPJPfkvbyqHT9iIFHhI5o8Z1Sb9iDyZRbUQz2Qzm4tx
       - AI_BASE_URL=http://192.168.0.200:3000
-      - AI_MODEL=gemini-3.1-flash-lite-preview
-      - AI_VISION_MODEL=vision
-      - AI_CODE_MODEL=code
+      - AI_MODEL=deepseek-v4-flash
+      - AI_VISION_MODEL=glm-4v-flash
+      - AI_CODE_MODEL=deepseek-v4-flash
     restart: unless-stopped
 
 volumes:
