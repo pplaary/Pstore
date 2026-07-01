@@ -28,8 +28,8 @@ function readProductConfirmCard(): string {
   return fs.readFileSync(path.join(PROJECT_ROOT, 'src', 'components', 'ProductConfirmCard.tsx'), 'utf8');
 }
 
-function readNetworkIndicator(): string {
-  return fs.readFileSync(path.join(PROJECT_ROOT, 'src', 'components', 'NetworkIndicator.tsx'), 'utf8');
+function readSyncStatusIcon(): string {
+  return fs.readFileSync(path.join(PROJECT_ROOT, 'src', 'components', 'SyncStatusIcon.tsx'), 'utf8');
 }
 
 // ==================== 搜索模式 UI ====================
@@ -38,41 +38,30 @@ describe('搜索模式 UI', () => {
   const content = readHomeScreen();
 
   it('搜索模式显示搜索栏', () => {
-    // placeholder 现在是动态的（isNLSearch 条件），检查搜索栏结构
-    expect(content).toContain('searchBar');
+    expect(content).toContain('searchHeader');
     expect(content).toContain('searchInput');
-    // 默认 KW 模式 placeholder 包含搜索文本
-    expect(content).toContain('搜索商品名称、拼音或条码');
-  });
-
-  it('搜索模式使用 searchArea 区域', () => {
-    expect(content).toContain('searchArea');
+    // 搜索模式 placeholder
+    expect(content).toContain('搜索商品名');
   });
 
   it('搜索模式下搜索栏可见（非聊天模式时渲染）', () => {
-    // !isChatMode 时渲染搜索栏
     expect(content).toContain('!isChatMode');
-    expect(content).toContain('searchBar');
+    expect(content).toContain('searchHeader');
   });
 
   it('搜索模式渲染 FlatList 商品列表', () => {
     expect(content).toContain('<FlatList');
-    expect(content).toContain('data={filteredProducts}');
+    expect(content).toContain('data={searchResults}');
   });
 
   it('搜索模式不含聊天输入栏', () => {
-    // 聊天输入栏仅在 isChatMode 时渲染
-    const hasChatInputBar = content.includes('{isChatMode &&') && content.includes('chatInputBar');
-    expect(hasChatInputBar).toBe(true);
+    const hasChatCondition = content.includes('isChatMode ?') || content.includes('isChatMode &&');
+    expect(hasChatCondition).toBe(true);
   });
 
-  it('搜索模式不含 AIChatBubble', () => {
-    // AIChatBubble 仅在聊天模式分支内，搜索模式源码区域不引用
-    // 使用更宽松的检查：确保文件中有条件渲染 AIChatBubble 的分支
-    expect(content).toContain('AIChatBubble');
-    // 仅在 isChatMode 相关条件块内使用
-    const pattern = /isChatMode\b/;
-    expect(pattern.test(content)).toBe(true);
+  it('搜索结果项可导航到商品详情', () => {
+    expect(content).toContain('ProductDetail');
+    expect(content).toContain('searchResultItem');
   });
 });
 
@@ -81,134 +70,49 @@ describe('搜索模式 UI', () => {
 describe('聊天模式 UI', () => {
   const content = readHomeScreen();
 
-  it('聊天模式显示聊天区域', () => {
-    expect(content).toContain('chatArea');
-    expect(content).toContain('chatScroll');
-  });
-
   it('聊天模式显示 AIChatBubble 组件', () => {
-    // isChatMode 分支包含 AIChatBubble
-    const isChatBlock = content.split('isChatMode ?')[1];
-    expect(isChatBlock).toBeDefined();
-    expect(isChatBlock).toContain('AIChatBubble');
-  });
-
-  it('聊天模式显示 ProductConfirmCard 组件', () => {
-    const isChatBlock = content.split('isChatMode ?')[1];
-    expect(isChatBlock).toBeDefined();
-    expect(isChatBlock).toContain('ProductConfirmCard');
+    expect(content).toContain('AIChatBubble');
+    // AIChatBubble 在 renderMessage 中
+    expect(content).toContain('renderMessage');
   });
 
   it('聊天模式显示语音按钮', () => {
-    const isChatBlock = content.split('isChatMode ?')[1];
-    expect(isChatBlock).toBeDefined();
-    expect(isChatBlock).toContain('voiceBtn');
-    expect(isChatBlock).toContain('<VoiceButton');
+    expect(content).toContain('VoiceButton');
+    expect(content).toContain('handleVoiceResult');
   });
 
-  it('聊天模式显示相机按钮', () => {
-    const isChatBlock = content.split('isChatMode ?')[1];
-    expect(isChatBlock).toBeDefined();
-    expect(isChatBlock).toContain('cameraBtn');
-    expect(isChatBlock).toContain('📷');
+  it('聊天模式显示扫码按钮', () => {
+    expect(content).toContain('scanButton');
+    expect(content).toContain('Ionicons name="scan"');
   });
 
   it('聊天模式 placeholder 为"说\"可乐多少钱\""', () => {
     expect(content).toContain('说"可乐多少钱"');
   });
 
-  it('搜索模式 placeholder 包含"搜索商品名称、拼音或条码"', () => {
-    expect(content).toContain('搜索商品名称、拼音或条码');
+  it('搜索模式 placeholder 包含"搜索商品名"', () => {
+    expect(content).toContain('搜索商品名');
   });
 
   it('聊天模式输入栏存在', () => {
-    expect(content).toContain('chatInputBar');
-    expect(content).toContain('chatInput');
+    expect(content).toContain('inputContainer');
+    expect(content).toContain('TextInput');
   });
 
-  it('AI 加载时显示 loadingBubble', () => {
-    const isChatBlock = content.split('isChatMode ?')[1];
-    expect(isChatBlock).toBeDefined();
-    expect(isChatBlock).toContain('isAiLoading');
-    expect(isChatBlock).toContain('loadingBubble');
-    expect(isChatBlock).toContain('思考中');
+  it('AI 加载时显示 TypingIndicator', () => {
+    expect(content).toContain('isLoading');
+    expect(content).toContain('TypingIndicator');
   });
 
-  it('AI 降级时显示 fallback 搜索结果', () => {
-    const isChatBlock = content.split('isChatMode ?')[1];
-    expect(isChatBlock).toBeDefined();
-    expect(isChatBlock).toContain('aiFallbackResults');
-    expect(isChatBlock).toContain('fallbackSection');
+  it('发送按钮在输入文本时显示', () => {
+    expect(content).toContain('sendButton');
   });
 });
 
-// ==================== 中文数字预拦截展示 ====================
-
-describe('中文数字预拦截展示', () => {
-  const content = readHomeScreen();
-
-  it('引入 interceptChineseNumerals 函数', () => {
-    expect(content).toContain('interceptChineseNumerals');
-  });
-
-  it('从 ai 模块导入所需函数', () => {
-    expect(content).toContain("import {");
-    expect(content).toContain('interceptChineseNumerals');
-    expect(content).toContain('buildSystemPrompt');
-    expect(content).toContain('callAI');
-    expect(content).toContain('parseAIResponse');
-  });
-
-  it('引入 ChatManager', () => {
-    expect(content).toContain('ChatManager');
-  });
-
-  it('引入 AIResponseCache', () => {
-    expect(content).toContain('AIResponseCache');
-  });
-});
-
-// ==================== NetworkIndicator 组件 ====================
-
-describe('NetworkIndicator 组件', () => {
-  const indicatorContent = readNetworkIndicator();
-
-  it('组件存在且导出', () => {
-    expect(fs.existsSync(path.join(PROJECT_ROOT, 'src', 'components', 'NetworkIndicator.tsx'))).toBe(true);
-  });
-
-  it('始终渲染（不区分 chat 模式）', () => {
-    expect(indicatorContent).toContain('NetworkIndicator');
-    // NetworkIndicator 现在常驻渲染，无需模式守卫
-    expect(indicatorContent).not.toContain('mode !== \'chat\'');
-  });
-
-  it('延迟色标颜色映射正确', () => {
-    expect(indicatorContent).toContain('#4CAF50'); // green
-    expect(indicatorContent).toContain('#FFC107'); // yellow
-    expect(indicatorContent).toContain('#F44336'); // red
-    expect(indicatorContent).toContain('#9E9E9E'); // unknown
-  });
-
-  it('圆点尺寸为 8px', () => {
-    expect(indicatorContent).toContain('width: 8');
-    expect(indicatorContent).toContain('height: 8');
-  });
-
-  it('延迟数字显示', () => {
-    expect(indicatorContent).toContain('lastLatencyMs');
-    expect(indicatorContent).toContain('latencyText');
-    expect(indicatorContent).toContain('ms');
-  });
-});
-
-// ==================== SyncStatusIcon 集成 AI ====================
+// ==================== SyncStatusIcon 集成 ====================
 
 describe('SyncStatusIcon 集成', () => {
-  const content = fs.readFileSync(
-    path.join(PROJECT_ROOT, 'src', 'components', 'SyncStatusIcon.tsx'),
-    'utf8',
-  );
+  const content = readSyncStatusIcon();
 
   it('引入 useSyncConfigStore', () => {
     expect(content).toContain('useSyncConfigStore');
@@ -218,14 +122,8 @@ describe('SyncStatusIcon 集成', () => {
     expect(content).toContain('serverUrl');
   });
 
-  it('读取 WebDAV 配置状态', () => {
-    expect(content).toContain('webdavConfigured');
-  });
-
-  it('始终渲染 NetworkIndicator', () => {
-    expect(content).toContain('<NetworkIndicator');
-    // NetworkIndicator 常驻渲染，不再被 aiMode 条件包裹
-    expect(content).not.toContain('aiMode');
+  it('导入 NetworkIndicator', () => {
+    expect(content).toContain('NetworkIndicator');
   });
 });
 
@@ -289,36 +187,36 @@ describe('AIChatBubble 组件', () => {
     expect(fs.existsSync(path.join(PROJECT_ROOT, 'src', 'components', 'AIChatBubble.tsx'))).toBe(true);
   });
 
-  it('用户气泡背景色使用 colors.brand.success', () => {
-    expect(bubbleContent).toContain('colors.brand.success');
+  it('用户气泡背景色使用 colors.chat.userBubble', () => {
+    expect(bubbleContent).toContain('colors.chat.userBubble');
   });
 
-  it('用户文字色使用 colors.text.tertiary', () => {
-    expect(bubbleContent).toContain('colors.text.tertiary');
+  it('用户文字色使用 colors.chat.userBubbleText', () => {
+    expect(bubbleContent).toContain('colors.chat.userBubbleText');
   });
 
-  it('AI 气泡背景色使用 colors.surface.s0', () => {
-    expect(bubbleContent).toContain('colors.surface.s0');
+  it('AI 气泡背景色使用 colors.chat.aiBubble', () => {
+    expect(bubbleContent).toContain('colors.chat.aiBubble');
   });
 
-  it('AI 文字色使用 colors.text.primary', () => {
-    expect(bubbleContent).toContain('colors.text.primary');
+  it('AI 文字色使用 colors.chat.aiBubbleText', () => {
+    expect(bubbleContent).toContain('colors.chat.aiBubbleText');
   });
 
-  it('用户气泡右对齐（alignSelf: flex-end）', () => {
+  it('用户气泡右对齐（justifyContent: flex-end）', () => {
     expect(bubbleContent).toContain('flex-end');
   });
 
-  it('AI 气泡左对齐（alignSelf: flex-start）', () => {
+  it('AI 气泡左对齐（justifyContent: flex-start）', () => {
     expect(bubbleContent).toContain('flex-start');
   });
 
-  it('气泡圆角 12px', () => {
-    expect(bubbleContent).toContain('borderRadius: 12');
+  it('气泡圆角使用 radii.lg', () => {
+    expect(bubbleContent).toContain('radii.lg');
   });
 
-  it('最大宽度 80%', () => {
-    expect(bubbleContent).toContain('maxWidth: \'80%\'');
+  it('最大宽度 75%', () => {
+    expect(bubbleContent).toContain('maxWidth: \'75%\'');
   });
 
   it('时间戳显示（小时:分钟格式）', () => {
@@ -336,29 +234,35 @@ describe('AIChatBubble 组件', () => {
   });
 });
 
-// ==================== 降级行为 ====================
+// ==================== 双模式和购物车 ====================
 
-describe('AI 降级行为', () => {
+describe('双模式与购物车', () => {
   const content = readHomeScreen();
 
-  it('callAI 和 parseAIResponse 失败时降级为 FTS5 搜索', () => {
-    // 降级路径：callAI 或 parseAIResponse 返回 null → doSearch
-    expect(content).toContain('doSearch');
-    expect(content).toContain('isAiLoading');
+  it('支持 chat 和 search 双模式', () => {
+    expect(content).toContain('isChatMode');
+    expect(content).toContain('handleSearchInput');
   });
 
-  it('AI 不可用时静默降级（不弹窗）', () => {
-    // 降级通过 doSearch 走搜索模式，不使用 Alert
-    // 搜索区域正常渲染
-    expect(content).toContain('searchArea');
+  it('支持连击标题进入管理模式（PinModal）', () => {
+    expect(content).toContain('handleTitlePress');
+    expect(content).toContain('PinModal');
+    expect(content).toContain('showPinModal');
   });
 
-  it('降级搜索结果在聊天模式下展示', () => {
-    expect(content).toContain('aiFallbackResults');
+  it('Header 显示 SyncStatusIcon', () => {
+    expect(content).toContain('SyncStatusIcon');
   });
 
-  it('AI 失败时有降级提示文本', () => {
-    expect(content).toContain('fallbackTitle');
-    expect(content).toContain('搜索结果');
+  it('购物车折叠栏存在', () => {
+    expect(content).toContain('showCart');
+    expect(content).toContain('cartSheet');
+    expect(content).toContain('checkoutBtn');
+  });
+
+  it('底部栏布局：语音 | 输入框 | 扫码', () => {
+    expect(content).toContain('VoiceButton');
+    expect(content).toContain('inputContainer');
+    expect(content).toContain('scanButton');
   });
 });

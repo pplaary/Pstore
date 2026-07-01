@@ -22,13 +22,13 @@ describe('Commit 2: 入口与路由导航', () => {
     expect(content).toContain("import App from './App'");
   });
 
-  it('App.tsx 存在并包含 initDatabase + StoreProvider + NavigationContainer', () => {
+  it('App.tsx 存在并包含 initDatabase + StoreProvider + ThemeProvider', () => {
     const f = path.join(PROJECT_ROOT, 'App.tsx');
     expect(fs.existsSync(f)).toBe(true);
     const content = fs.readFileSync(f, 'utf8');
     expect(content).toContain('initDatabase');
     expect(content).toContain('StoreProvider');
-    expect(content).toContain('NavigationContainer');
+    expect(content).toContain('ThemeProvider');
   });
 
   // ==================== 导航模块 ====================
@@ -40,15 +40,15 @@ describe('Commit 2: 入口与路由导航', () => {
     expect(content).toContain('createNativeStackNavigator');
   });
 
-  it('src/navigation/types.ts 存在并包含 4 个路由', () => {
+  it('src/navigation/types.ts 存在并包含路由参数表', () => {
     const f = path.join(PROJECT_ROOT, 'src', 'navigation', 'types.ts');
     expect(fs.existsSync(f)).toBe(true);
     const content = fs.readFileSync(f, 'utf8');
     expect(content).toContain('ProductList');
     expect(content).toContain('ProductDetail');
     expect(content).toContain('ProductEdit');
-    expect(content).toContain('ScanBarcode');
-    expect(content).toContain('NativeStackScreenProps');
+    expect(content).toContain('Scan');
+    expect(content).toContain('DrawerScreenProps');
   });
 
   // ==================== Context 模块 ====================

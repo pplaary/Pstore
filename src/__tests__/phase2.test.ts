@@ -1,5 +1,9 @@
 /**
  * Phase 2 集成测试：验证新模块存在且导出正确
+ *
+ * 更新至 refactored 架构（v4.5 audit fix）：
+ * - HomeScreen: 新的双模式架构（chat + search），购物车折叠栏重命名为 cartSheet
+ * - FAB + 批量管理已迁移到 ProductListScreen
  */
 
 import { describe, expect, it } from 'vitest';
@@ -37,9 +41,10 @@ describe('Phase 2: 购物车 + 抽屉导航 + 管理模式 + 列表增强', () =
     const f = path.join(PROJECT_ROOT, 'src', 'screens', 'HomeScreen.tsx');
     expect(fs.existsSync(f)).toBe(true);
     const content = fs.readFileSync(f, 'utf8');
-    expect(content).toContain('cartBar');
-    expect(content).toContain('cartExpanded');
-    expect(content).toContain('checkoutVisible');
+    // 重构后使用新的购物车折叠栏（cartSheet / showCart / showCheckout）
+    expect(content).toContain('cartSheet');
+    expect(content).toContain('showCart');
+    expect(content).toContain('showCheckout');
   });
 
   it('src/components/DrawerContent.tsx 存在', () => {
@@ -75,15 +80,24 @@ describe('Phase 2: 购物车 + 抽屉导航 + 管理模式 + 列表增强', () =
     expect(content).toContain('PIN 错误');
   });
 
-  // ==================== Commit 4: FAB + 长按菜单 + 批量管理 ====================
+  // ==================== Commit 4: FAB + 批量管理 ====================
 
-  it('HomeScreen.tsx 包含 FAB + 批量管理工具栏', () => {
-    const f = path.join(PROJECT_ROOT, 'src', 'screens', 'HomeScreen.tsx');
+  it('ProductListScreen.tsx 包含 FAB + 长按操作菜单', () => {
+    const f = path.join(PROJECT_ROOT, 'src', 'screens', 'ProductListScreen.tsx');
+    expect(fs.existsSync(f)).toBe(true);
     const content = fs.readFileSync(f, 'utf8');
     expect(content).toContain('styles.fab');
-    expect(content).toContain('batchToolbar');
-    expect(content).toContain('selectAll');
-    expect(content).toContain('handleBatchDelete');
-    expect(content).toContain('handleBatchStatus');
+    expect(content).toContain('longPressItem');
+    expect(content).toContain('actionSheet');
+    expect(content).toContain('softDeleteProduct');
+  });
+
+  it('HomeScreen.tsx 包含双模式架构（chat + search）', () => {
+    const f = path.join(PROJECT_ROOT, 'src', 'screens', 'HomeScreen.tsx');
+    const content = fs.readFileSync(f, 'utf8');
+    expect(content).toContain('isChatMode');
+    expect(content).toContain('handleSearchInput');
+    expect(content).toContain('handleTitlePress');
+    expect(content).toContain('toggleCart');
   });
 });
