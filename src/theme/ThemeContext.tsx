@@ -2,7 +2,7 @@
  * ThemeContext — 现代化主题基础设施
  *
  * 设计系统：Modern Minimalist + Soft Tech
- * 主色调: Indigo (#6366F1) — 现代精致不落俗套
+ * 主色调: Blue (#2563EB) — 专业可靠聚焦
  * 风格: 干净表面、微妙景深、精致排版
  *
  * 三种实际模式: 'light' | 'dark' | 'care'
@@ -48,6 +48,7 @@ export interface ThemeColors {
     primary: string;
     primaryLight: string;
     primaryMuted: string;
+    tertiary: string;
     success: string;
     successMuted: string;
     danger: string;
@@ -156,16 +157,17 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
     },
     input: '#F1F5F9',
     text: {
-      primary: '#0F172A',
+      primary: '#1E293B',
       secondary: '#475569',
       tertiary: '#94A3B8',
       inverse: '#FFFFFF',
-      link: '#6366F1',
+      link: '#2563EB',
     },
     brand: {
-      primary: '#6366F1',
-      primaryLight: '#818CF8',
-      primaryMuted: '#EEF2FF',
+      primary: '#2563EB',
+      primaryLight: '#60A5FA',
+      primaryMuted: '#DBEAFE',
+      tertiary: '#8B5CF6',
       success: '#10B981',
       successMuted: '#ECFDF5',
       danger: '#EF4444',
@@ -179,10 +181,10 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
       strong: '#CBD5E1',
     },
     chat: {
-      userBubble: '#6366F1',
-      userBubbleText: '#FFFFFF',
+      userBubble: '#D1FAE5',
+      userBubbleText: '#065F46',
       aiBubble: '#F1F5F9',
-      aiBubbleText: '#0F172A',
+      aiBubbleText: '#1E293B',
     },
   },
 
@@ -199,12 +201,13 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
       secondary: '#94A3B8',
       tertiary: '#64748B',
       inverse: '#FFFFFF',
-      link: '#A5B4FC',
+      link: '#60A5FA',
     },
     brand: {
-      primary: '#818CF8',
-      primaryLight: '#A5B4FC',
-      primaryMuted: '#1E1B4B',
+      primary: '#60A5FA',
+      primaryLight: '#93C5FD',
+      primaryMuted: '#1E3A5F',
+      tertiary: '#A78BFA',
       success: '#34D399',
       successMuted: '#064E3B',
       danger: '#F87171',
@@ -218,8 +221,8 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
       strong: '#475569',
     },
     chat: {
-      userBubble: '#6366F1',
-      userBubbleText: '#FFFFFF',
+      userBubble: '#064E3B',
+      userBubbleText: '#A7F3D0',
       aiBubble: '#1E293B',
       aiBubbleText: '#F1F5F9',
     },
@@ -238,12 +241,13 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
       secondary: '#1A1A1A',
       tertiary: '#4D4D4D',
       inverse: '#FFFFFF',
-      link: '#3730A3',
+      link: '#1D4ED8',
     },
     brand: {
-      primary: '#3730A3',
-      primaryLight: '#4F46E5',
-      primaryMuted: '#E0E7FF',
+      primary: '#1D4ED8',
+      primaryLight: '#2563EB',
+      primaryMuted: '#DBEAFE',
+      tertiary: '#6D28D9',
       success: '#047857',
       successMuted: '#D1FAE5',
       danger: '#B91C1C',
@@ -257,8 +261,8 @@ const COLORS: Record<'light' | 'dark' | 'care', ThemeColors> = {
       strong: '#404040',
     },
     chat: {
-      userBubble: '#3730A3',
-      userBubbleText: '#FFFFFF',
+      userBubble: '#D1FAE5',
+      userBubbleText: '#065F46',
       aiBubble: '#F5F5F5',
       aiBubbleText: '#000000',
     },
