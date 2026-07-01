@@ -49,3 +49,4 @@ test-*.txt
 # Generated reports and development task artifacts
 pstore-audit-v4/
 tasks/
+pstore-v5-audit/
