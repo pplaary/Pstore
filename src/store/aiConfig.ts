@@ -22,7 +22,7 @@ import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import type { AITextConfig } from '../services/ai';
 import { useSyncConfigStore } from '../store/syncConfig';
-import { getConfig, type ConfigGetResult } from '../services/n1';
+import { getConfig } from '../services/n1';
 import { requestAudioPermission } from '../services/stt';
 
 // ==================== 常量 ====================
@@ -54,7 +54,7 @@ export interface AIConfigState {
   /** 麦克风权限是否已授权 */
   micPermissionGranted: boolean;
   /** 完整的 AI 配置（含 textModel 和 visionModel） */
-  aiConfig: ConfigGetResult | null;
+  aiConfig: (AITextConfig & { visionModel?: string }) | null;
 
   // Derived
   /** 语音按钮是否可用：mode=chat && reachable && micPermissionGranted */
@@ -83,7 +83,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
   lastLatencyMs: null,
   micPermissionGranted: false,
   isVoiceAvailable: false,
-  aiConfig: null as any,
+  aiConfig: null,
 
   detectReachability: async () => {
     const { micPermissionGranted } = get();
@@ -115,7 +115,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
             configured: true,
             reachable,
             mode: reachable ? 'chat' : 'search',
-            aiConfig: n1Config as any,
+            aiConfig: n1Config,
             isVoiceAvailable: computeVoiceAvailable(micPermissionGranted, reachable, reachable ? 'chat' : 'search'),
           });
           return;
@@ -125,7 +125,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
             configured: false,
             reachable: false,
             mode: 'search',
-            aiConfig: null as any,
+            aiConfig: null,
             isVoiceAvailable: false,
           });
           return;
@@ -147,7 +147,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
             configured: true,
             reachable,
             mode: reachable ? 'chat' : 'search',
-            aiConfig: aiConfig as any,
+            aiConfig: aiConfig,
             isVoiceAvailable: computeVoiceAvailable(micPermissionGranted, reachable, reachable ? 'chat' : 'search'),
           });
           return;
@@ -165,7 +165,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
       configured: false,
       reachable: false,
       mode: 'search',
-      aiConfig: null as any,
+      aiConfig: null,
       isVoiceAvailable: false,
     });
   },

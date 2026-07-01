@@ -301,7 +301,7 @@ export function ScanScreen({ navigation }: ScanScreenCompositeProps) {
         : Promise.reject(new Error('no n1 config'));
 
       const visionPromise = (aiConfig && aiConfig.apiUrl)
-        ? recognizeProduct(photo.base64, aiConfig).then(r => ({ source: 'vision' as const, result: r }))
+        ? recognizeProduct(photo.base64, { ...aiConfig, visionModel: aiConfig.visionModel ?? 'gpt-4o' }).then(r => ({ source: 'vision' as const, result: r }))
         : Promise.reject(new Error('no vision config'));
 
       const settled = await Promise.allSettled([n1Promise, visionPromise]);

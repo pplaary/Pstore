@@ -19,6 +19,7 @@ import {
   Alert,
 } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
+import type { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { useModeStore } from '../store/mode';
 import { useCartStore } from '../store/cart';
@@ -28,7 +29,7 @@ import { useStore } from '../context/store';
 import { exportProductsCSV, type ExportScope } from '../services/backup/exportCSV';
 import { exportProducts } from '../db/search';
 
-export default function DrawerContent(props: any) {
+export default function DrawerContent(props: DrawerContentComponentProps) {
   const { theme } = useTheme();
   const { isManagement, enterManagement, exitManagement } = useModeStore();
   const { items, total, clearCart } = useCartStore();
@@ -288,7 +289,7 @@ function DrawerMenuItem({
   scale,
   showChevron,
 }: {
-  icon: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   onPress: () => void;
   colors: Theme['colors'];
@@ -308,7 +309,7 @@ function DrawerMenuItem({
       accessibilityLabel={label}
       accessibilityRole="menuitem"
     >
-      <Ionicons name={icon as any} size={20 * scale} color={colors.text.secondary} style={{ marginRight: 12 * scale }} />
+      <Ionicons name={icon} size={20 * scale} color={colors.text.secondary} style={{ marginRight: 12 * scale }} />
       <Text style={{ flex: 1, fontSize: 15 * scale, color: colors.text.primary }}>{label}</Text>
       {showChevron && (
         <Ionicons name="chevron-forward" size={16 * scale} color={colors.text.tertiary} />

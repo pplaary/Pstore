@@ -29,6 +29,7 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
+import type { RootStackParamList, DrawerParamList, HomeTabParamList } from './types';
 
 import { ScanScreen } from '../screens/ScanScreen';
 import { ProductListScreen } from '../screens/ProductListScreen';
@@ -43,9 +44,9 @@ import HomeScreen from '../screens/HomeScreen';
 
 // ==================== 导航器实例 ====================
 
-const Stack = createNativeStackNavigator();
-const Drawer = createDrawerNavigator();
-const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
+const Drawer = createDrawerNavigator<DrawerParamList>();
+const Tab = createBottomTabNavigator<HomeTabParamList>();
 
 // ==================== 底部 Tab 导航 ====================
 
@@ -85,7 +86,7 @@ function HomeTabs() {
       />
       <Tab.Screen
         name="Scan"
-        component={ScanScreen as any}
+        component={ScanScreen}
         options={{
           tabBarLabel: '扫码',
           tabBarIcon: ({ color, size }) => (
@@ -121,37 +122,37 @@ function MainDrawer() {
       <Drawer.Screen name="HomeTabs" component={HomeTabs} />
       <Drawer.Screen
         name="ProductList"
-        component={ProductListScreen as any}
+        component={ProductListScreen}
         options={{ drawerItemStyle: { display: 'none' } }}
       />
       <Drawer.Screen
         name="ProductDetail"
-        component={ProductDetailScreen as any}
+        component={ProductDetailScreen}
         options={{ drawerItemStyle: { display: 'none' } }}
       />
       <Drawer.Screen
         name="ProductEdit"
-        component={ProductEditScreen as any}
+        component={ProductEditScreen}
         options={{ drawerItemStyle: { display: 'none' } }}
       />
       <Drawer.Screen
         name="Config"
-        component={ConfigScreen as any}
+        component={ConfigScreen}
         options={{ drawerItemStyle: { display: 'none' } }}
       />
       <Drawer.Screen
         name="DuplicateList"
-        component={DuplicateScreen as any}
+        component={DuplicateScreen}
         options={{ drawerItemStyle: { display: 'none' } }}
       />
       <Drawer.Screen
         name="PendingItems"
-        component={PendingItemsScreen as any}
+        component={PendingItemsScreen}
         options={{ drawerItemStyle: { display: 'none' } }}
       />
       <Drawer.Screen
         name="LooseGoodsManage"
-        component={LooseGoodsManageScreen as any}
+        component={LooseGoodsManageScreen}
         options={{ drawerItemStyle: { display: 'none' } }}
       />
     </Drawer.Navigator>
