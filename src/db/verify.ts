@@ -7,7 +7,7 @@
 
 import type { VerifyResult } from './types';
 import { tokenizeChinese } from './tokenizer';
-import { escapeFts5 } from './init';
+import { escapeFts5 } from './fts5';
 
 /**
  * 运行全部验证项，返回结果数组。
