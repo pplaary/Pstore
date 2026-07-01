@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
 import { initDatabase } from './src/db/init';
 import { StoreProvider } from './src/context/store';
 import RootNavigator from './src/navigation/RootNavigator';
@@ -68,9 +67,7 @@ export default function App() {
     <StoreProvider db={db}>
       <ThemeProvider>
         <AIInit />
-        <NavigationContainer>
-          <RootNavigator />
-        </NavigationContainer>
+        <RootNavigator />
       </ThemeProvider>
     </StoreProvider>
   );
