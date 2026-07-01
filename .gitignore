@@ -45,3 +45,7 @@ android/app/src/main/res/drawable-*/node_modules_reactnavigation_*
 
 # Test artifacts
 test-*.txt
+
+# Generated reports and development task artifacts
+pstore-audit-v4/
+tasks/
