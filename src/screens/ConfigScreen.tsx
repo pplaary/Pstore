@@ -26,6 +26,7 @@ import type { ConfigScreenProps } from '../navigation/types';
 import { useStore } from '../context/store';
 import { WebDAVConfig } from '../components/WebDAVConfig';
 import { useTheme } from '../theme/ThemeContext';
+import { useNavigation } from '@react-navigation/native';
 
 type Props = ConfigScreenProps;
 
@@ -37,6 +38,7 @@ export function ConfigScreen(_props: Props) {
   const setServerUrl = useSyncConfigStore((s) => s.setServerUrl);
   const isManagement = useModeStore((s) => s.isManagement);
   const { db } = useStore();
+  const navigation = useNavigation();
   const [inputUrl, setInputUrl] = useState(serverUrl ?? '');
   const [checking, setChecking] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -292,6 +294,18 @@ export function ConfigScreen(_props: Props) {
             <Text style={styles.buttonText}>重置数据库</Text>
           </TouchableOpacity>
         </View>
+      </View>
+    {/* 扫码入口 */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>快速操作</Text>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.brand.primary }]}
+          onPress={() => (navigation as any).navigate('Scan')}
+          accessibilityLabel="打开扫码"
+          accessibilityRole="button"
+        >
+          <Text style={styles.buttonText}>📷 打开扫码</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );

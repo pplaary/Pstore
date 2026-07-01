@@ -154,6 +154,7 @@ function DetailContent({ db, productId }: { db: ReturnType<typeof useStore>['db'
           <InfoRow label="价格" value={`¥${product.price.toFixed(2)}`} highlight />
           {product.spec && <InfoRow label="规格" value={product.spec} />}
           {product.barcode && <InfoRow label="条码" value={product.barcode} />}
+          {product.aliases && <InfoRow label="别名" value={product.aliases} />}
           {product.category && <InfoRow label="分类" value={product.category} />}
           <View style={styles.statusRow}>
             <Text style={styles.infoLabel}>状态</Text>
