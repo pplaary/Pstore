@@ -73,11 +73,13 @@ AI Agent 写代码时能可靠地完成「看得见的 80%」，但会在「看�
 ```
 React Native 0.76 + Expo SDK 52
 TypeScript
-React Navigation（抽屉 + Stack）
-react-native-vision-camera（扫码+拍照，使用 MLKit 原生扫码引擎）
+React Navigation（抽屉 + Stack + BottomTab）
+expo-camera（扫码，稳定可靠）
+react-native-vision-camera（扫码+拍照，使用 MLKit 原生扫码引擎）— ⏱ 迁移已延期，保持 expo-camera
 expo-sqlite（本地数据库，WAL 模式，FTS5 全文搜索）
 Zustand（状态管理）
-NativeWind v4（样式，Tailwind 工具类）
+StyleSheet.create（样式，轻量无依赖）
+NativeWind v4（样式，Tailwind 工具类）— ❌ 不采用，保持 StyleSheet.create
 ```
 
 > 当前目标平台：Android。iOS 需额外适配 MLKit → Apple Vision Framework，不在首批交付范围。
