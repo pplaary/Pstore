@@ -3,6 +3,10 @@
  *
  * 调用 AI 视觉模型 API（OpenAI 兼容格式）进行拍照商品识别。
  * 超时 10s（spec §14.2），失败时静默降级返回空候选列表。
+ *
+ * 推荐模型：
+ *   主用：glm-4v-flash（智谱视觉专用）
+ *   备用：gemini-3.5-flash（Google 通用多模态）
  */
 
 export interface VisionCandidate {
@@ -51,7 +55,7 @@ export async function recognizeProduct(
         messages: [
           {
             role: 'system',
-            content: '识别图中的商品，返回候选列表及置信度。',
+            content: '识别图中的商品，返回候选列表。输出纯 JSON（不要 markdown 代码块）：[{"name":"商品名","confidence":0.0-1.0,"spec":"规格"}]',
           },
           {
             role: 'user',
@@ -99,7 +103,11 @@ export async function recognizeProduct(
 
 /**
  * 从 AI 回复文本中解析候选列表。
- * 支持纯 JSON 数组或 Markdown 代码块中的 JSON。
+ *
+ * 兼容两种格式：
+ *   1. 纯 JSON 数组：[{"name":"...","confidence":0.95,"spec":"..."}]  （glm-4v-flash）
+ *   2. 对象包裹：{"candidates":[{...}]}                              （gemini-3.5-flash）
+ * 同时支持 Markdown 代码块中的 JSON。
  */
 function parseVisionResponse(content: string): VisionCandidate[] {
   // 尝试提取 markdown 代码块中的 JSON
@@ -108,20 +116,34 @@ function parseVisionResponse(content: string): VisionCandidate[] {
 
   try {
     const parsed = JSON.parse(jsonStr);
+
+    // 格式 1: 纯数组 [{...}]
     if (Array.isArray(parsed)) {
-      return parsed
-        .filter((item): item is { name: string; confidence: number; spec?: string } =>
-          typeof item.name === 'string' && typeof item.confidence === 'number',
-        )
-        .map((item) => ({
-          name: item.name,
-          confidence: Math.max(0, Math.min(1, item.confidence)),
-          spec: (item as any).spec,
-        }));
+      return normalizeCandidates(parsed);
+    }
+
+    // 格式 2: 对象包裹 {"candidates":[{...}]}
+    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.candidates)) {
+      return normalizeCandidates(parsed.candidates);
     }
   } catch {
     // 非 JSON 格式，返回空
   }
 
   return [];
+}
+
+/** 校验并规范化候选列表 */
+function normalizeCandidates(raw: unknown[]): VisionCandidate[] {
+  return raw
+    .filter((item): item is { name: string; confidence: number; spec?: string } =>
+      typeof item === 'object' && item !== null &&
+      typeof (item as any).name === 'string' &&
+      typeof (item as any).confidence === 'number',
+    )
+    .map((item) => ({
+      name: item.name,
+      confidence: Math.max(0, Math.min(1, item.confidence)),
+      spec: (item as any).spec,
+    }));
 }
