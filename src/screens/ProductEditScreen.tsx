@@ -350,7 +350,7 @@ export function ProductEditScreen({ navigation, route }: ProductEditScreenProps)
             activeOpacity={0.7}
             accessibilityRole="button"
           >
-            <Text style={[styles.aiSubmitText, { color: '#fff' }]}>
+            <Text style={[styles.aiSubmitText, { color: colors.text.inverse }]}>
               {aiTextLoading ? '解析中...' : 'AI 解析'}
             </Text>
           </TouchableOpacity>

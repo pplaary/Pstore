@@ -674,7 +674,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     },
     statusText: {
       fontSize: 11 * scale,
-      color: '#FFFFFF',
+      color: colors.text.inverse,
       fontWeight: '600',
     },
     // 空状态
@@ -799,10 +799,10 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
       shadowRadius: 4,
     },
     fabText: {
-      color: '#FFFFFF',
-      fontSize: 28,
+      fontSize: 28 * scale,
+      color: colors.text.inverse,
       fontWeight: '300',
-      lineHeight: 30,
+      lineHeight: 30 * scale,
     },
   });
 }

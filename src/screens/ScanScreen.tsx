@@ -651,7 +651,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['theme']['colors'], sc
     candidateInfo: { flex: 1 },
     candidateName: { fontSize: 15 * scale, fontWeight: '600', color: colors.text.primary },
     candidateSpec: { fontSize: 13 * scale, color: colors.text.secondary, marginTop: 2 },
-    candidateConfidence: { fontSize: 12 * scale, color: '#8B5CF6', marginTop: 2 },
+    candidateConfidence: { fontSize: 12 * scale, color: colors.brand.tertiary, marginTop: 2 },
     candidateAddBtn: {
       backgroundColor: colors.brand.primary, borderRadius: 6,
       paddingHorizontal: 16, paddingVertical: 8,
