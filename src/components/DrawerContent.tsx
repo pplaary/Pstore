@@ -188,27 +188,12 @@ export default function DrawerContent(props: any) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>设置</Text>
         <DrawerMenuItem
-          icon="moon"
-          label="深色模式"
-          onPress={() => props.navigation.navigate('Config')}
-          colors={colors}
-          scale={scale}
-          showChevron
-        />
-        <DrawerMenuItem
-          icon="accessibility"
-          label="关怀模式"
-          onPress={() => props.navigation.navigate('Config')}
-          colors={colors}
-          scale={scale}
-          showChevron
-        />
-        <DrawerMenuItem
           icon="settings"
           label="设置"
-          onPress={() => alert('设置页开发中')}
+          onPress={() => props.navigation.navigate('Config')}
           colors={colors}
           scale={scale}
+          showChevron
         />
       </View>
 
