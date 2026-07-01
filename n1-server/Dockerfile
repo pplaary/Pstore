@@ -34,9 +34,8 @@ COPY --from=web-builder /app/web/dist ./web/dist
 COPY n1-server/package.json ./
 
 # APK download (optional — skip if not built yet)
-RUN mkdir -p /app/web/dist/apk && \
-    cp android/app/build/outputs/apk/release/app-release.apk ./web/dist/apk/ 2>/dev/null || \
-    echo "No APK found — will be added after Android build"
+RUN mkdir -p /app/web/dist/apk
+COPY android/app/build/outputs/apk/release/app-release.apk ./web/dist/apk/
 
 RUN mkdir -p /data
 
