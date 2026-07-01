@@ -20,7 +20,7 @@ export interface SyncConfigState {
   setServerUrl: (url: string | null) => void;
   setSyncStatus: (status: { lastSyncAt?: string; lastPushAt?: string }) => void;
   setIsSyncing: (v: boolean) => void;
-  reset: () => void;
+  reset: () => Promise<void>;
   /** 从 SecureStore 加载持久化的配置 */
   load: () => Promise<void>;
 }
@@ -56,14 +56,14 @@ export const useSyncConfigStore = create<SyncConfigState>()((set, get) => ({
 
   setIsSyncing: (v) => set({ isSyncing: v }),
 
-  reset: () => {
+  reset: async () => {
     set({
       serverUrl: null,
       lastSyncAt: null,
       lastPushAt: null,
       isSyncing: false,
     });
-    SecureStore.deleteItemAsync(SYNC_CONFIG_KEY).catch(() => {});
+    await SecureStore.deleteItemAsync(SYNC_CONFIG_KEY).catch(() => {});
   },
 
   load: async () => {
