@@ -196,6 +196,7 @@ export const useAIConfigStore = create<AIConfigState>((set, get) => ({
       mode: reachable ? 'chat' : 'search',
       latencyTier: 'unknown',
       lastLatencyMs: null,
+      isVoiceAvailable: computeVoiceAvailable(get().micPermissionGranted, reachable, reachable ? 'chat' : 'search'),
     });
   },
 

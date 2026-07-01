@@ -13,6 +13,8 @@ export interface PinState {
   setPin: (pin: string) => Promise<void>;
   verifyPin: (input: string) => Promise<boolean>;
   resetPin: (oldPin: string) => Promise<boolean>;
+  /** 安全恢复 PIN：验证当前应用态（如管理模式已开启）可强制清除 PIN */
+  recoverPin: () => void;
 }
 
 export const usePinStore = create<PinState>()((set) => ({
@@ -38,6 +40,11 @@ export const usePinStore = create<PinState>()((set) => ({
     if (oldHash !== state.pinHash) return false;
     set({ pinHash: null, isPinSet: false });
     return true;
+  },
+
+  recoverPin: () => {
+    // 强制清除 PIN（适用于管理员忘记 PIN 时，通过管理模式入口恢复）
+    set({ pinHash: null, isPinSet: false });
   },
 }));
 
