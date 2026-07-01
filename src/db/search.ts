@@ -48,6 +48,11 @@ function sanitizeLimit(limit: unknown): number {
   return n;
 }
 
+/** 转义 LIKE 通配符 % 和 _ */
+function escapeLikePattern(pattern: string): string {
+  return pattern.replace(/%/g, '\\%').replace(/_/g, '\\_');
+}
+
 /**
  * 将数据库行映射为 Product 对象。
  */
@@ -163,8 +168,8 @@ export async function searchProducts(
              ORDER BY
                CASE
                  WHEN p.name = ? THEN 1
-                 WHEN p.aliases LIKE '%' || ? || '%' THEN 2
-                 WHEN p.pinyin LIKE '%' || ? || '%' THEN 3
+                 WHEN p.aliases LIKE '%' || ? || '%' ESCAPE '\\' THEN 2
+                 WHEN p.pinyin LIKE '%' || ? || '%' ESCAPE '\\' THEN 3
                  ELSE 4
                END,
                CASE WHEN p.status = 'IN_SHOP' THEN 0 ELSE 1 END,

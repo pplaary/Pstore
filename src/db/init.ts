@@ -212,24 +212,26 @@ export async function fastRefresh(
   db: SQLite.SQLiteDatabase,
   products?: readonly Product[],
 ): Promise<void> {
-  // 清空 FTS 索引
-  await db.runAsync('DELETE FROM product_fts');
+  await db.withTransactionAsync(async () => {
+    // 清空 FTS 索引
+    await db.runAsync('DELETE FROM product_fts');
 
-  if (products && products.length > 0) {
-    for (const p of products) {
-      if (p.isDeleted) continue;
+    if (products && products.length > 0) {
+      for (const p of products) {
+        if (p.isDeleted) continue;
+        await db.runAsync(
+          'INSERT INTO product_fts (rowid, pinyin, searchText) VALUES ((SELECT rowid FROM product WHERE id = ?), ?, ?)',
+          p.id,
+          p.pinyin,
+          p.searchText,
+        );
+      }
+    } else {
+      // 从 product 表全量重建
       await db.runAsync(
-        'INSERT INTO product_fts (rowid, pinyin, searchText) VALUES ((SELECT rowid FROM product WHERE id = ?), ?, ?)',
-        p.id,
-        p.pinyin,
-        p.searchText,
+        `INSERT INTO product_fts (rowid, pinyin, searchText)
+         SELECT rowid, pinyin, searchText FROM product WHERE isDeleted = 0`,
       );
     }
-  } else {
-    // 从 product 表全量重建
-    await db.runAsync(
-      `INSERT INTO product_fts (rowid, pinyin, searchText)
-       SELECT rowid, pinyin, searchText FROM product WHERE isDeleted = 0`,
-    );
-  }
+  });
 }

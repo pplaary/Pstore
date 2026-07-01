@@ -47,11 +47,13 @@ export function tokenizeChinese(text: string): string[] {
     if (isCJK(cp)) {
       // CJK 字符先 flush 非 CJK buffer，再单字加入
       flush();
-      tokens.push(text[i]);
+      tokens.push(String.fromCodePoint(cp));
     } else {
       // 非 CJK 字符拼入 buffer
-      buffer += text[i];
+      buffer += String.fromCodePoint(cp);
     }
+    // 跳过 low surrogate（BMP 之外字符占据两个 UTF-16 码元）
+    if (cp > 0xFFFF) i++;
   }
 
   // 末尾残留 buffer flush

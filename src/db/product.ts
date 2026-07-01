@@ -293,22 +293,27 @@ export async function softDeleteProduct(
   db: SQLite.SQLiteDatabase,
   id: string,
 ): Promise<void> {
-  const now = new Date().toISOString();
+  try {
+    const now = new Date().toISOString();
 
-  await db.withTransactionAsync(async () => {
-    // 先从 FTS 索引移除
-    await db.runAsync(
-      `DELETE FROM product_fts WHERE rowid = (SELECT rowid FROM product WHERE id = ?)`,
-      id,
-    );
+    await db.withTransactionAsync(async () => {
+      // 先从 FTS 索引移除
+      await db.runAsync(
+        `DELETE FROM product_fts WHERE rowid = (SELECT rowid FROM product WHERE id = ?)`,
+        id,
+      );
 
-    // 软删除
-    await db.runAsync(
-      `UPDATE product SET isDeleted = 1, updatedAt = ? WHERE id = ?`,
-      now,
-      id,
-    );
-  });
+      // 软删除
+      await db.runAsync(
+        `UPDATE product SET isDeleted = 1, updatedAt = ? WHERE id = ?`,
+        now,
+        id,
+      );
+    });
+  } catch (error) {
+    console.error('softDeleteProduct failed:', error);
+    throw new Error(`删除商品失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 // ==================== 4. getAllProducts ====================
@@ -368,26 +373,31 @@ export async function addPriceRecord(
   oldPrice: number,
   newPrice: number,
 ): Promise<PriceHistory> {
-  const id = randomUUID();
-  const now = new Date().toISOString();
+  try {
+    const id = randomUUID();
+    const now = new Date().toISOString();
 
-  await db.runAsync(
-    `INSERT INTO price_history (id, productId, oldPrice, newPrice, changedAt)
-     VALUES (?, ?, ?, ?, ?)`,
-    id,
-    productId,
-    oldPrice,
-    newPrice,
-    now,
-  );
+    await db.runAsync(
+      `INSERT INTO price_history (id, productId, oldPrice, newPrice, changedAt)
+       VALUES (?, ?, ?, ?, ?)`,
+      id,
+      productId,
+      oldPrice,
+      newPrice,
+      now,
+    );
 
-  return {
-    id,
-    productId,
-    oldPrice,
-    newPrice,
-    changedAt: now,
-  };
+    return {
+      id,
+      productId,
+      oldPrice,
+      newPrice,
+      changedAt: now,
+    };
+  } catch (error) {
+    console.error('addPriceRecord failed:', error);
+    throw new Error(`添加价格记录失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 // ==================== 9. clearInventory ====================
@@ -417,18 +427,23 @@ export async function getPriceHistory(
   db: SQLite.SQLiteDatabase,
   productId: string,
 ): Promise<PriceHistory[]> {
-  const rows = await db.getAllAsync<Record<string, unknown>>(
-    `SELECT * FROM price_history WHERE productId = ? ORDER BY changedAt DESC`,
-    productId,
-  );
+  try {
+    const rows = await db.getAllAsync<Record<string, unknown>>(
+      `SELECT * FROM price_history WHERE productId = ? ORDER BY changedAt DESC`,
+      productId,
+    );
 
-  return rows.map(
-    (row): PriceHistory => ({
-      id: row.id as string,
-      productId: row.productId as string,
-      oldPrice: row.oldPrice as number,
-      newPrice: row.newPrice as number,
-      changedAt: row.changedAt as string,
-    }),
-  );
+    return rows.map(
+      (row): PriceHistory => ({
+        id: row.id as string,
+        productId: row.productId as string,
+        oldPrice: row.oldPrice as number,
+        newPrice: row.newPrice as number,
+        changedAt: row.changedAt as string,
+      }),
+    );
+  } catch (error) {
+    console.error('getPriceHistory failed:', error);
+    return [];
+  }
 }
