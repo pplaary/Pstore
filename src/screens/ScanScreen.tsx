@@ -21,7 +21,9 @@ import { searchProducts } from '../db/search';
 import { recognizeProduct } from '../services/vision';
 import { aiParse, aiParseImage } from '../services/n1';
 import { useSyncConfigStore } from '../store/syncConfig';
+import { useModeStore } from '../store/mode';
 import { useTheme } from '../theme/ThemeContext';
+import { showToast } from '../utils/toast';
 import type { Product } from '../db/types';
 import type { ScanScreenCompositeProps } from '../navigation/types';
 
@@ -112,6 +114,7 @@ export function ScanScreen({ navigation }: ScanScreenCompositeProps) {
   const aiConfig = useAIConfigStore((s) => s.aiConfig);
   const aiConfigured = useAIConfigStore((s) => s.configured);
   const syncConfigServerUrl = useSyncConfigStore((s) => s.serverUrl);
+  const isManagement = useModeStore((s) => s.isManagement);
 
   const styles = useMemo(() => createStyles(colors, scale), [colors, scale]);
 
@@ -196,34 +199,29 @@ export function ScanScreen({ navigation }: ScanScreenCompositeProps) {
 
   // ==================== 扫码处理 ====================
 
-  const showUnmatchedAlert = useCallback((barcode: string) => {
+  const showUnmatchedAlert = useCallback(async (barcode: string) => {
+    // 普通模式：自动创建 PendingItem
+    if (!isManagement) {
+      try {
+        const { createOrUpdate } = await import('../db/pending');
+        await createOrUpdate(db, barcode);
+        showToast('未匹配条码已保存到待处理列表');
+      } catch {
+        Alert.alert('提示', `条码 ${barcode} 未匹配到商品，且保存失败。`);
+      }
+      return;
+    }
+    // 管理模式：弹出三选一对话框
     Alert.alert(
-      '未找到商品',
-      `条码 ${barcode}`,
+      '未匹配的条码',
+      `条码：${barcode}\n未匹配到任何商品`,
       [
-        {
-          text: '仅记录',
-          style: 'cancel',
-          onPress: async () => {
-            try {
-              await createOrUpdate(db, barcode);
-              Alert.alert('已记录', `条码 ${barcode} 已写入，可在管理模式中补充`);
-            } catch {
-              Alert.alert('记录失败', '数据库写入失败，请重试');
-            }
-          },
-        },
-        {
-          text: 'AI 识别',
-          onPress: () => handleAiBarcode(barcode),
-        },
-        {
-          text: '手动录入',
-          onPress: () => navigation.navigate('ProductEdit', { barcode }),
-        },
+        { text: '取消', style: 'cancel' },
+        { text: '手动输入', onPress: () => navigation.navigate('ProductEdit', { barcode }) },
+        { text: '添加为新商品', onPress: () => navigation.navigate('ProductEdit', { barcode }) },
       ],
     );
-  }, [db, navigation, handleAiBarcode]);
+  }, [db, navigation, isManagement]);
 
   const handleBarcodeScanned = useCallback(
     async (scannedBarcode: string) => {
